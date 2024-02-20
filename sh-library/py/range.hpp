@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cstddef>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -10,17 +11,19 @@ struct Range {
     using value_type = long long;
     struct const_iterator {
         const value_type step;
-        const value_type value;
+        value_type value;
         constexpr const_iterator(value_type __step, value_type __value)
-            : step(__step), value(__value) {}
+            : step(__step), value(__value) {
+        }
         constexpr value_type operator*() const {
             return value;
         }
-        constexpr const_iterator operator++() const {
-            return {step, value + step};
+        constexpr const_iterator& operator++() {
+            value += step;
+            return *this;
         }
-        constexpr bool operator!=(const_iterator&& o) const {
-            return value != o.value;
+        constexpr friend bool operator!=(const const_iterator& a, const const_iterator& b) {
+            return a.value != b.value;
         }
     };
 
@@ -82,6 +85,9 @@ struct Range {
     constexpr value_type at(size_t i) const {
         assert(0 <= i and i < size());
         return start + i * step;
+    }
+    constexpr value_type operator[](size_t i) const {
+        return at(i);
     }
     constexpr value_type __sum__() const {
         Range&& norm = normalize();
