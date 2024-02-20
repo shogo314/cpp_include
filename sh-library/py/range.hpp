@@ -5,9 +5,25 @@
 #include <string>
 #include <vector>
 
-class Range {
+struct Range {
    public:
     using value_type = long long;
+    struct const_iterator {
+        const value_type step;
+        const value_type value;
+        constexpr const_iterator(value_type __step, value_type __value)
+            : step(__step), value(__value) {}
+        constexpr value_type operator*() const {
+            return value;
+        }
+        constexpr const_iterator operator++() const {
+            return {step, value + step};
+        }
+        constexpr bool operator!=(const_iterator&& o) const {
+            return value != o.value;
+        }
+    };
+
     const value_type start;
     const value_type step;
     const value_type stop;
@@ -17,6 +33,14 @@ class Range {
     }
     constexpr Range(value_type __start, value_type __stop) : start(__start), stop(__stop), step(1) {}
     constexpr Range(value_type __stop) : start(0), stop(__stop), step(1) {}
+    constexpr const_iterator begin() const {
+        Range&& norm = normalize();
+        return {norm.step, norm.start};
+    }
+    constexpr const_iterator end() const {
+        Range&& norm = normalize();
+        return {norm.step, norm.stop};
+    }
     constexpr size_t count(value_type x) const {
         if (step > 0) {
             if (start <= x and x < stop) {
