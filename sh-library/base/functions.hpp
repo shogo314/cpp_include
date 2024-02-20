@@ -1,4 +1,8 @@
-#include <bits/stdc++.h>
+#pragma once
+
+#include <vector>
+
+#include "base/traits.hpp"
 
 template <typename T1, typename T2>
 inline bool chmin(T1& a, T2 b) {
@@ -31,6 +35,11 @@ inline T min(const std::vector<T>& v) {
 template <typename T>
 std::vector<T> sorted(std::vector<T> v) {
     std::sort(v.begin(), v.end()) return v;
+}
+
+template <typename T>
+std::vector<T> reversed(std::vector<T> v) {
+    std::reverse(v.begin(), v.end()) return v;
 }
 
 template <typename T>
