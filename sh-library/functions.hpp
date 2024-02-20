@@ -63,5 +63,5 @@ inline T median(const std::vector<T>& v) {
     if (v.size() & 1) {
         return v[u[v.size() / 2]];
     }
-    return (v[u[v.size() / 2]] + v[u[(v.size() - 1) / 2]]) / 2;
+    return (v[u[v.size() / 2]] + v[u[v.size() / 2 - 1]]) / 2;
 }
