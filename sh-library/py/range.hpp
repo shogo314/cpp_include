@@ -71,16 +71,13 @@ struct Range {
             return (start - x) / (-step);
         }
     }
-    constexpr size_t __len__() const {
+    constexpr size_t size() const {
         Range&& norm = normalize();
         if (norm.step > 0) {
             return (norm.stop - norm.start) / norm.step;
         } else {
             return (norm.start - norm.stop) / (-norm.step);
         }
-    }
-    constexpr size_t size() const {
-        return __len__();
     }
     constexpr value_type at(size_t i) const {
         assert(0 <= i and i < size());
@@ -92,7 +89,7 @@ struct Range {
     constexpr value_type __sum__() const {
         Range&& norm = normalize();
         value_type ret = 0;
-        value_type l = __len__();
+        value_type l = size();
         return l * (l - 1) / 2 * norm.step + l * norm.start;
     }
     constexpr Range __reversed__() const {
@@ -108,7 +105,7 @@ struct Range {
     }
     std::vector<value_type> to_vector() const {
         std::vector<value_type> ret;
-        ret.reserve(__len__());
+        ret.reserve(size());
         if (step > 0) {
             for (value_type x = start; x < stop; x += step) {
                 ret.push_back(x);
