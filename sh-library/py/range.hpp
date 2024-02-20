@@ -12,7 +12,7 @@ struct Range {
     struct iterator {
         const value_type step;
         value_type value;
-        constexpr iterator(value_type __step, value_type __value)
+        constexpr iterator(value_type __step, value_type __value) noexcept
             : step(__step), value(__value) {
         }
         constexpr value_type operator*() const noexcept {
@@ -30,7 +30,7 @@ struct Range {
     const value_type start;
     const value_type step;
     const value_type stop;
-    constexpr Range(value_type __start, value_type __stop, value_type __step) noexcept
+    constexpr Range(value_type __start, value_type __stop, value_type __step)
         : start(__start), stop(__stop), step(__step) {
         assert(__step != 0);
     }
