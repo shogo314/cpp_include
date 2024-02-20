@@ -45,8 +45,8 @@ std::vector<T> reversed(std::vector<T> v) {
 }
 
 template <typename T>
-inline T sum(const std::vector<T>& v) {
-    return std::accumulate(v.begin(), v.end(), T{});
+inline T sum(const std::vector<T>& v, T init = T{}) {
+    return std::accumulate(v.begin(), v.end(), init);
 }
 
 template <typename T>
