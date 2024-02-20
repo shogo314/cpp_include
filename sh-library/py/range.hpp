@@ -15,14 +15,14 @@ struct Range {
         constexpr const_iterator(value_type __step, value_type __value)
             : step(__step), value(__value) {
         }
-        constexpr value_type operator*() const {
+        constexpr value_type operator*() const noexcept {
             return value;
         }
-        constexpr const_iterator& operator++() {
+        constexpr const_iterator& operator++() noexcept {
             value += step;
             return *this;
         }
-        constexpr friend bool operator!=(const const_iterator& a, const const_iterator& b) {
+        constexpr friend bool operator!=(const const_iterator& a, const const_iterator& b) noexcept {
             return a.value != b.value;
         }
     };
@@ -30,21 +30,21 @@ struct Range {
     const value_type start;
     const value_type step;
     const value_type stop;
-    constexpr Range(value_type __start, value_type __stop, value_type __step)
+    constexpr Range(value_type __start, value_type __stop, value_type __step) noexcept
         : start(__start), stop(__stop), step(__step) {
         assert(__step != 0);
     }
-    constexpr Range(value_type __start, value_type __stop) : start(__start), stop(__stop), step(1) {}
-    constexpr Range(value_type __stop) : start(0), stop(__stop), step(1) {}
-    constexpr const_iterator begin() const {
+    constexpr Range(value_type __start, value_type __stop) noexcept : start(__start), stop(__stop), step(1) {}
+    constexpr Range(value_type __stop) noexcept : start(0), stop(__stop), step(1) {}
+    constexpr const_iterator begin() const noexcept {
         Range&& norm = normalize();
         return {norm.step, norm.start};
     }
-    constexpr const_iterator end() const {
+    constexpr const_iterator end() const noexcept {
         Range&& norm = normalize();
         return {norm.step, norm.stop};
     }
-    constexpr size_t count(value_type x) const {
+    constexpr size_t count(value_type x) const noexcept {
         if (step > 0) {
             if (start <= x and x < stop) {
                 if ((x - start) % step == 0) {
@@ -60,7 +60,7 @@ struct Range {
         }
         return 0;
     }
-    constexpr bool contains(value_type x) const {
+    constexpr bool contains(value_type x) const noexcept {
         return count(x) != 0;
     }
     constexpr size_t index(value_type x) const {
@@ -71,7 +71,7 @@ struct Range {
             return (start - x) / (-step);
         }
     }
-    constexpr size_t size() const {
+    constexpr size_t size() const noexcept {
         Range&& norm = normalize();
         if (norm.step > 0) {
             return (norm.stop - norm.start) / norm.step;
@@ -86,13 +86,13 @@ struct Range {
     constexpr value_type operator[](size_t i) const {
         return at(i);
     }
-    constexpr value_type __sum__() const {
+    constexpr value_type __sum__() const noexcept {
         Range&& norm = normalize();
         value_type ret = 0;
         value_type l = size();
         return l * (l - 1) / 2 * norm.step + l * norm.start;
     }
-    constexpr Range __reversed__() const {
+    constexpr Range __reversed__() const noexcept {
         Range&& norm = normalize();
         if (norm.start == norm.stop) {
             return {norm.start, norm.start, -norm.step};
@@ -118,7 +118,7 @@ struct Range {
         return ret;
     }
 
-    constexpr Range normalize() const {
+    constexpr Range normalize() const noexcept {
         if (step > 0) {
             if (start >= stop) {
                 return {start, start, step};
