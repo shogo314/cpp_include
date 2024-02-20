@@ -9,20 +9,20 @@
 struct Range {
    public:
     using value_type = long long;
-    struct const_iterator {
+    struct iterator {
         const value_type step;
         value_type value;
-        constexpr const_iterator(value_type __step, value_type __value)
+        constexpr iterator(value_type __step, value_type __value)
             : step(__step), value(__value) {
         }
         constexpr value_type operator*() const noexcept {
             return value;
         }
-        constexpr const_iterator& operator++() noexcept {
+        constexpr iterator& operator++() noexcept {
             value += step;
             return *this;
         }
-        constexpr friend bool operator!=(const const_iterator& a, const const_iterator& b) noexcept {
+        constexpr friend bool operator!=(const iterator& a, const iterator& b) noexcept {
             return a.value != b.value;
         }
     };
@@ -36,11 +36,11 @@ struct Range {
     }
     constexpr Range(value_type __start, value_type __stop) noexcept : start(__start), stop(__stop), step(1) {}
     constexpr Range(value_type __stop) noexcept : start(0), stop(__stop), step(1) {}
-    constexpr const_iterator begin() const noexcept {
+    constexpr iterator begin() const noexcept {
         Range&& norm = normalize();
         return {norm.step, norm.start};
     }
-    constexpr const_iterator end() const noexcept {
+    constexpr iterator end() const noexcept {
         Range&& norm = normalize();
         return {norm.step, norm.stop};
     }
