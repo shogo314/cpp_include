@@ -2,28 +2,27 @@
 
 #include <cassert>
 #include <cstddef>
-#include <iostream>
 #include <string>
 #include <vector>
 
 struct Range {
    public:
     using value_type = long long;
-    struct iterator {
+    struct const_iterator {
         const value_type step;
         value_type value;
-        constexpr iterator(value_type __step, value_type __value) noexcept
+        constexpr const_iterator(value_type __step, value_type __value) noexcept
             : step(__step), value(__value) {
         }
         constexpr value_type operator*() const noexcept {
             return value;
         }
-        constexpr iterator& operator++() noexcept {
+        constexpr const_iterator& operator++() noexcept {
             value += step;
             return *this;
         }
-        constexpr friend bool operator!=(const iterator& a, const iterator& b) noexcept {
-            return a.value != b.value;
+        constexpr friend bool operator!=(const const_iterator& a, const const_iterator& b) noexcept {
+            return a.step != b.step and a.value != b.value;
         }
     };
 
@@ -36,11 +35,26 @@ struct Range {
     }
     constexpr Range(value_type __start, value_type __stop) noexcept : start(__start), stop(__stop), step(1) {}
     constexpr Range(value_type __stop) noexcept : start(0), stop(__stop), step(1) {}
-    constexpr iterator begin() const noexcept {
+    constexpr Range normalize() const noexcept {
+        if (step > 0) {
+            if (start >= stop) {
+                return {start, start, step};
+            } else {
+                return {start, start + (stop - start + step - 1) / step * step, step};
+            }
+        } else {
+            if (start <= stop) {
+                return {start, start, step};
+            } else {
+                return {start, start - (start - stop - step - 1) / (-step) * (-step), step};
+            }
+        }
+    }
+    constexpr const_iterator begin() noexcept {
         Range&& norm = normalize();
         return {norm.step, norm.start};
     }
-    constexpr iterator end() const noexcept {
+    constexpr const_iterator end() noexcept {
         Range&& norm = normalize();
         return {norm.step, norm.stop};
     }
@@ -69,6 +83,34 @@ struct Range {
             return (x - start) / step;
         } else {
             return (start - x) / (-step);
+        }
+    }
+    constexpr const_iterator find(value_type x) const noexcept {
+        Range&& norm = normalize();
+        if (contains(x)) {
+            return {norm.step, x};
+        } else {
+            return {norm.step, norm.stop};
+        }
+    }
+    constexpr const_iterator lower_bound(value_type x) const noexcept {
+        Range&& norm = normalize();
+        if (norm.step > 0) {
+            if (norm.stop <= x) {
+                return {norm.step, norm.stop};
+            } else if (x < norm.start) {
+                return {norm.step, norm.start};
+            } else {
+                return {norm.step, norm.start + (x - norm.start + norm.step - 1) / norm.step * norm.step};
+            }
+        } else {
+            if (x <= norm.stop) {
+                return {norm.step, norm.stop};
+            } else if (norm.start < x) {
+                return {norm.step, norm.start};
+            } else {
+                return {norm.step, norm.start - (norm.start - x - norm.step - 1) / (-norm.step) * (-norm.step)};
+            }
         }
     }
     constexpr size_t size() const noexcept {
@@ -116,21 +158,5 @@ struct Range {
             }
         }
         return ret;
-    }
-
-    constexpr Range normalize() const noexcept {
-        if (step > 0) {
-            if (start >= stop) {
-                return {start, start, step};
-            } else {
-                return {start, start + (stop - start + step - 1) / step * step, step};
-            }
-        } else {
-            if (start <= stop) {
-                return {start, start, step};
-            } else {
-                return {start, start - (start - stop - step - 1) / (-step) * (-step), step};
-            }
-        }
     }
 };
