@@ -41,8 +41,21 @@ def download_ou_library():
     subprocess.run(["mv", "./tmp/library-main/cpp", "./ou-library"])
 
 
+def download_sh_library():
+    reset_dir("./tmp")
+    url = "https://github.com/shogo314/sh-library/archive/refs/heads/main.zip"
+    zipfilename = "tmp/main.zip"
+    urlData = requests.get(url).content
+    with open(zipfilename, mode="wb") as f:  # wb でバイト型を書き込める
+        f.write(urlData)
+    subprocess.run(["unzip", "-d", "./tmp/", zipfilename])
+    delete("./sh-library")
+    subprocess.run(["mv", "./tmp/sh-library-main", "./sh-library"])
+
+
 def main():
     download_ou_library()
+    download_sh_library()
     delete("./tmp")
 
 
