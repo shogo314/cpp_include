@@ -2,8 +2,8 @@
 
 #include <bits/stdc++.h>
 
-#include "sh-library/base/functions.hpp"
-#include "sh-library/base/macro.hpp"
-#include "sh-library/base/traits.hpp"
-#include "sh-library/base/type_alias.hpp"
-#include "sh-library/base/vector_func.hpp"
+#include "base/functions.hpp"
+#include "base/macro.hpp"
+#include "base/traits.hpp"
+#include "base/type_alias.hpp"
+#include "base/vector_func.hpp"

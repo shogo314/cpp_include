@@ -16,31 +16,31 @@ struct Range {
    private:
     value_type norm_stop;
 
-    constexpr static value_type normalize(value_type __start, value_type __stop, value_type __step) {
-        assert(__step != 0);
-        if (__step > 0) {
-            if (__start >= __stop) {
-                return __start;
+    constexpr static value_type normalize(value_type _start, value_type _stop, value_type _step) {
+        assert(_step != 0);
+        if (_step > 0) {
+            if (_start >= _stop) {
+                return _start;
             } else {
-                return __start + (__stop - __start + __step - 1) / __step * __step;
+                return _start + (_stop - _start + _step - 1) / _step * _step;
             }
         } else {
-            if (__start <= __stop) {
-                return __start;
+            if (_start <= _stop) {
+                return _start;
             } else {
-                return __start - (__start - __stop - __step - 1) / (-__step) * (-__step);
+                return _start - (_start - _stop - _step - 1) / (-_step) * (-_step);
             }
         }
     }
 
    public:
-    constexpr Range(value_type __start, value_type __stop, value_type __step)
-        : start(__start), stop(__stop), step(__step), norm_stop(normalize(__start, __stop, __step)) {
+    constexpr Range(value_type _start, value_type _stop, value_type _step)
+        : start(_start), stop(_stop), step(_step), norm_stop(normalize(_start, _stop, _step)) {
     }
-    constexpr Range(value_type __start, value_type __stop)
-        : start(__start), stop(__stop), step(1), norm_stop(normalize(__start, __stop, 1)) {}
-    constexpr Range(value_type __stop)
-        : start(0), stop(__stop), step(1), norm_stop(normalize(0, __stop, 1)) {}
+    constexpr Range(value_type _start, value_type _stop)
+        : start(_start), stop(_stop), step(1), norm_stop(normalize(_start, _stop, 1)) {}
+    constexpr Range(value_type _stop)
+        : start(0), stop(_stop), step(1), norm_stop(normalize(0, _stop, 1)) {}
 
     struct const_iterator {
        private:
@@ -52,8 +52,8 @@ struct Range {
         }
 
        public:
-        constexpr const_iterator(const Range& __range, value_type __value) noexcept
-            : range(__range), value(__value) {}
+        constexpr const_iterator(const Range& _range, value_type _value) noexcept
+            : range(_range), value(_value) {}
         constexpr const_iterator(const const_iterator& o) noexcept
             : range(o.range), value(o.value) {}
         constexpr const value_type& base() const noexcept {
@@ -72,13 +72,13 @@ struct Range {
             value += range.step;
             return ret;
         }
-        constexpr const_iterator& operator+=(std::ptrdiff_t __n) noexcept {
-            value += __n * range.step;
+        constexpr const_iterator& operator+=(std::ptrdiff_t _n) noexcept {
+            value += _n * range.step;
             return *this;
         }
-        constexpr const_iterator operator+(std::ptrdiff_t __n) const noexcept {
+        constexpr const_iterator operator+(std::ptrdiff_t _n) const noexcept {
             const_iterator ret(*this);
-            ret += __n;
+            ret += _n;
             return ret;
         }
         constexpr const_iterator& operator--() noexcept {
@@ -90,13 +90,13 @@ struct Range {
             value -= range.step;
             return ret;
         }
-        constexpr const_iterator& operator-=(std::ptrdiff_t __n) noexcept {
-            value -= __n * range.step;
+        constexpr const_iterator& operator-=(std::ptrdiff_t _n) noexcept {
+            value -= _n * range.step;
             return *this;
         }
-        constexpr const_iterator operator-(std::ptrdiff_t __n) const noexcept {
+        constexpr const_iterator operator-(std::ptrdiff_t _n) const noexcept {
             const_iterator ret(*this);
-            ret -= __n;
+            ret -= _n;
             return ret;
         }
         constexpr value_type operator*() const noexcept {
@@ -195,15 +195,15 @@ struct Range {
     constexpr bool empty() const noexcept {
         return start == norm_stop;
     }
-    constexpr value_type __sum__() const noexcept {
+    constexpr value_type _sum() const noexcept {
         value_type ret = 0;
         value_type l = size();
         return l * (l - 1) / 2 * step + l * start;
     }
-    constexpr Range __reversed__() const noexcept {
+    constexpr Range _reversed() const noexcept {
         return {norm_stop - step, start - step, -step};
     }
-    std::string __repr__() const {
+    std::string _repr() const {
         using std::string, std::to_string;
         return string("Range(") + to_string(start) + ", " + to_string(stop) + ", " + to_string(step) + string(")");
     }

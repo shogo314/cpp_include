@@ -1,5 +1,7 @@
 #pragma once
 
+#include "type_alias.hpp"
+
 #pragma GCC target("avx2")
 #pragma GCC optimize("O3")
 #pragma GCC optimize("unroll-loops")
@@ -15,3 +17,13 @@
 #define rep2(i, j, x, y) rep(i, x) rep(j, y)
 
 #define IN(a, x) a x; std::cin >> x;
+#define LL(x) ll x; std::cin >> x;
+#define VL(a,n) vl a(n); std::cin >> a;
+#define AL(a,k) al<k> a; std::cin >> a;
+#define VC(a,n) vc a(n); std::cin >> a;
+#define VS(a,n) vs a(n); std::cin >> a;
+#define STR(s) str s; std::cin >> s;
+#define VPL(a,n) vpl a(n); std::cin >> a;
+#define VAL(a,n,k) val<k> a(n); std::cin >> a;
+#define VVL(a,n,m) vvl a(n,vl(m)); std::cin >> a;
+#define SL(a,n) sl a;{VL(b,n);a=sl(all(b));}
