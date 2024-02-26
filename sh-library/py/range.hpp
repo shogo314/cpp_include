@@ -195,15 +195,15 @@ struct Range {
     constexpr bool empty() const noexcept {
         return start == norm_stop;
     }
-    constexpr value_type _sum() const noexcept {
+    constexpr value_type sum() const noexcept {
         value_type ret = 0;
         value_type l = size();
         return l * (l - 1) / 2 * step + l * start;
     }
-    constexpr Range _reversed() const noexcept {
+    constexpr Range reversed() const noexcept {
         return {norm_stop - step, start - step, -step};
     }
-    std::string _repr() const {
+    std::string repr() const {
         using std::string, std::to_string;
         return string("Range(") + to_string(start) + ", " + to_string(stop) + ", " + to_string(step) + string(")");
     }

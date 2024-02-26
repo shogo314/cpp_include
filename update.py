@@ -50,7 +50,7 @@ def download_sh_library():
         f.write(urlData)
     subprocess.run(["unzip", "-d", "./tmp/", zipfilename])
     delete("./sh-library")
-    subprocess.run(["mv", "./tmp/sh-library-main", "./sh-library"])
+    subprocess.run(["mv", "./tmp/sh-library-main/src", "./sh-library"])
 
 
 def main():

@@ -1,0 +1,9 @@
+#pragma once
+
+#include <bits/stdc++.h>
+
+#include "functions.hpp"
+#include "macro.hpp"
+#include "traits.hpp"
+#include "type_alias.hpp"
+#include "vector_func.hpp"
