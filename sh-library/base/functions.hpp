@@ -42,6 +42,7 @@ signed_common_type_t<T1, T2> min(const T1& t1, const T2& t2) {
     return std::min<signed_common_type_t<T1, T2>>(t1, t2);
 }
 
+using std::abs;
 using std::gcd;
 using std::max;
 using std::max_element;
