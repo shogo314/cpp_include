@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cmath>
 #include <functional>
 #include <iterator>
 #include <type_traits>
@@ -8,7 +9,7 @@
 #include "traits.hpp"
 
 template <typename T1, typename T2>
-inline bool chmin(T1& a, T2 b) {
+inline constexpr bool chmin(T1& a, T2 b) {
     if (a > b) {
         a = b;
         return true;
@@ -17,7 +18,7 @@ inline bool chmin(T1& a, T2 b) {
 }
 
 template <typename T1, typename T2>
-inline bool chmax(T1& a, T2 b) {
+inline constexpr bool chmax(T1& a, T2 b) {
     if (a < b) {
         a = b;
         return true;
@@ -33,20 +34,18 @@ inline bool contains(const C& c, const T& t) {
 }
 
 template <typename T1, typename T2>
-signed_common_type_t<T1, T2> max(const T1& t1, const T2& t2) {
-    return std::max<signed_common_type_t<T1, T2>>(t1, t2);
+constexpr arithmetic_common_type_t<T1, T2> max(const T1& t1, const T2& t2) {
+    return std::max<arithmetic_common_type_t<T1, T2>>(t1, t2);
 }
 
 template <typename T1, typename T2>
-signed_common_type_t<T1, T2> min(const T1& t1, const T2& t2) {
-    return std::min<signed_common_type_t<T1, T2>>(t1, t2);
+constexpr arithmetic_common_type_t<T1, T2> min(const T1& t1, const T2& t2) {
+    return std::min<arithmetic_common_type_t<T1, T2>>(t1, t2);
 }
 
 using std::abs;
 using std::gcd;
-using std::max;
 using std::max_element;
-using std::min;
 using std::min_element;
 
 template <typename T>

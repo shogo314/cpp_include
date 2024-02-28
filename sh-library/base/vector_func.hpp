@@ -4,7 +4,7 @@
 #include <numeric>
 #include <vector>
 
-#include "type_traits"
+#include "traits.hpp"
 
 template <typename T>
 inline T max(const std::vector<T> &v) {
