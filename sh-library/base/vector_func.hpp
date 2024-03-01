@@ -67,9 +67,9 @@ inline T median(const std::vector<T> &v) {
     return (v[u[v.size() / 2]] + v[u[v.size() / 2 - 1]]) / 2;
 }
 
-template <typename T>
-inline size_t index(const std::vector<T> &v, const T &x) {
-    return std::distance(v.begin(), std::find(v.begin(), v.end(), x));
+template <typename T, typename U, std::enable_if_t<std::is_convertible_v<T, U>, std::nullptr_t> = nullptr>
+inline size_t index(const std::vector<T> &v, const U &x) {
+    return std::distance(v.begin(), std::find(v.begin(), v.end(), T(x)));
 }
 
 template <typename T>

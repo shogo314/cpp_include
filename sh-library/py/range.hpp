@@ -62,6 +62,7 @@ struct Range {
         constexpr const_iterator& operator=(const const_iterator& o) {
             assert(same_range(o));
             value = o.value;
+            return *this;
         };
         constexpr const_iterator& operator++() noexcept {
             value += range.step;
@@ -76,8 +77,13 @@ struct Range {
             value += _n * range.step;
             return *this;
         }
-        constexpr const_iterator operator+(std::ptrdiff_t _n) const noexcept {
-            const_iterator ret(*this);
+        constexpr friend const_iterator operator+(const const_iterator& i, std::ptrdiff_t _n) noexcept {
+            const_iterator ret(i);
+            ret += _n;
+            return ret;
+        }
+        constexpr friend const_iterator operator+(std::ptrdiff_t _n, const const_iterator& i) noexcept {
+            const_iterator ret(i);
             ret += _n;
             return ret;
         }
@@ -94,8 +100,8 @@ struct Range {
             value -= _n * range.step;
             return *this;
         }
-        constexpr const_iterator operator-(std::ptrdiff_t _n) const noexcept {
-            const_iterator ret(*this);
+        constexpr friend const_iterator operator-(const const_iterator& i, std::ptrdiff_t _n) noexcept {
+            const_iterator ret(i);
             ret -= _n;
             return ret;
         }
@@ -198,7 +204,7 @@ struct Range {
     constexpr value_type sum() const noexcept {
         value_type ret = 0;
         value_type l = size();
-        return l * (l - 1) / 2 * step + l * start;
+        return l * (norm_stop - step + start) / 2;
     }
     constexpr Range reversed() const noexcept {
         return {norm_stop - step, start - step, -step};

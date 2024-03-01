@@ -60,3 +60,8 @@ constexpr T extgcd(const T& a, const T& b, T& x, T& y) {
     }
     return d;
 }
+
+template <typename T, std::enable_if_t<has_sum_v<T>, std::nullptr_t> = nullptr>
+constexpr auto sum(const T& t) -> decltype(t.sum()) {
+    return t.sum();
+}
