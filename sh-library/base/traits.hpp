@@ -1,5 +1,4 @@
 #pragma once
-
 #include <type_traits>
 
 template <typename T1, typename T2>

@@ -1,5 +1,4 @@
 #pragma once
-
 #include "type_alias.hpp"
 
 #pragma GCC target("avx2")

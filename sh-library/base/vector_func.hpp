@@ -1,9 +1,7 @@
 #pragma once
-
 #include <cmath>
 #include <numeric>
 #include <vector>
-
 #include "traits.hpp"
 
 template <typename T>

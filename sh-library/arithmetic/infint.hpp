@@ -1,12 +1,10 @@
 #pragma once
-
 #include <algorithm>
 #include <iostream>
 #include <limits>
 #include <string>
 #include <string_view>
 #include <type_traits>
-
 #include "../base/repr.hpp"
 
 /**

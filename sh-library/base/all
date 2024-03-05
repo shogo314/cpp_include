@@ -1,7 +1,5 @@
 #pragma once
-
 #include <bits/stdc++.h>
-
 #include "functions.hpp"
 #include "io.hpp"
 #include "macro.hpp"

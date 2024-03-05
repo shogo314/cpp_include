@@ -1,11 +1,9 @@
 #pragma once
-
 #include <algorithm>
 #include <cmath>
 #include <functional>
 #include <iterator>
 #include <type_traits>
-
 #include "traits.hpp"
 
 template <typename T1, typename T2>
