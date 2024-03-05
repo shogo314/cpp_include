@@ -63,3 +63,14 @@ template <typename T, std::enable_if_t<has_sum_v<T>, std::nullptr_t> = nullptr>
 constexpr auto sum(const T& t) -> decltype(t.sum()) {
     return t.sum();
 }
+
+template <typename T, std::enable_if_t<has_reversed_v<T>, std::nullptr_t> = nullptr>
+constexpr auto reversed(const T& t) -> decltype(t.reversed()) {
+    return t.reversed();
+}
+
+template <typename T, std::enable_if_t<not has_reversed_v<T>, std::nullptr_t> = nullptr>
+constexpr T reversed(T t) {
+    std::reverse(t.begin(), t.end());
+    return t;
+}

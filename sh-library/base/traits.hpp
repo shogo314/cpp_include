@@ -75,15 +75,12 @@ template <class T>
 inline constexpr bool has_sum_v = has_sum<T>::value;
 
 namespace detail {
-struct is_addible_with_impl {
-    template <class... Args>
-    static auto check(...) -> std::bool_constant<false>;
-
-    template <class T, class U>
-    static auto check(T*, U*) -> decltype(std::declval<T>() + std::declval<U>(), std::bool_constant<true>{});
-};
+template <class T, class = void>
+struct has_reversed_impl : std::false_type {};
+template <class T>
+struct has_reversed_impl<T, std::void_t<decltype(std::declval<T>().reversed())>> : std::true_type {};
 }  // namespace detail
-template <class T, class U>
-struct is_addible_with : decltype(detail::is_addible_with_impl::check<T, U>(nullptr, nullptr)) {};
-template <class T, class U>
-inline constexpr bool is_addible_with_v = is_addible_with<T, U>::value;
+template <class T>
+struct has_reversed : detail::has_reversed_impl<T>::type {};
+template <class T>
+inline constexpr bool has_reversed_v = has_reversed<T>::value;
