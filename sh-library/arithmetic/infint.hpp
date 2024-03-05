@@ -57,8 +57,14 @@ struct infint {
     constexpr bool isInf() const noexcept { return _v == _PlusInf; }
     constexpr bool isfinite() const noexcept { return _MinusInf < _v and _v < _PlusInf; }
 
-    constexpr infint& operator=(const infint& o) noexcept { return _v = o._v; }
-    constexpr infint& operator=(const T& t) noexcept { return _v = t; }
+    constexpr infint& operator=(const infint& o) noexcept {
+        _v = o._v;
+        return *this;
+    }
+    constexpr infint& operator=(const T& t) noexcept {
+        _v = t;
+        return *this;
+    }
 
     constexpr infint operator+() const noexcept { return _v; }
     constexpr infint operator-() const noexcept {
@@ -217,37 +223,37 @@ struct infint {
     /**
      * 正の無限大
      */
-    constexpr static T PlusInf() noexcept {
+    constexpr static infint PlusInf() noexcept {
         return _PlusInf;
     }
     /**
      * 負の無限大
      */
-    constexpr static T MinusInf() noexcept {
+    constexpr static infint MinusInf() noexcept {
         return _MinusInf;
     }
     /**
      * Not a Number
      */
-    constexpr static T NaN() noexcept {
+    constexpr static infint NaN() noexcept {
         return _NaN;
     }
     /**
      * 正の無限大(PlusInfと同じ)
      */
-    constexpr static T Inf() noexcept {
+    constexpr static infint Inf() noexcept {
         return _PlusInf;
     }
     /**
      * 正の無限大でない最大値
      */
-    constexpr static T Max() noexcept {
+    constexpr static infint Max() noexcept {
         return _PlusInf - 1;
     }
     /**
      * 負の無限大でない最小値
      */
-    constexpr static T Min() noexcept {
+    constexpr static infint Min() noexcept {
         return _MinusInf + 1;
     }
 
