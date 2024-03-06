@@ -65,6 +65,28 @@ inline constexpr bool has_repr_v = has_repr<T>::value;
 
 namespace detail {
 template <class T, class = void>
+struct has_type_str_impl : std::false_type {};
+template <class T>
+struct has_type_str_impl<T, std::void_t<decltype(std::declval<T>().type_str())>> : std::true_type {};
+}  // namespace detail
+template <class T>
+struct has_type_str : detail::has_type_str_impl<T>::type {};
+template <class T>
+inline constexpr bool has_type_str_v = has_type_str<T>::value;
+
+namespace detail {
+template <class T, class = void>
+struct has_initializer_str_impl : std::false_type {};
+template <class T>
+struct has_initializer_str_impl<T, std::void_t<decltype(std::declval<T>().initializer_str())>> : std::true_type {};
+}  // namespace detail
+template <class T>
+struct has_initializer_str : detail::has_initializer_str_impl<T>::type {};
+template <class T>
+inline constexpr bool has_initializer_str_v = has_initializer_str<T>::value;
+
+namespace detail {
+template <class T, class = void>
 struct has_sum_impl : std::false_type {};
 template <class T>
 struct has_sum_impl<T, std::void_t<decltype(std::declval<T>().sum())>> : std::true_type {};

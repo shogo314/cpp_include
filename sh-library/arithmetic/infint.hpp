@@ -203,21 +203,23 @@ struct infint {
         T t;
         return "infint<" + ::type_str(t) + ">";
     }
-
-    std::string repr() const noexcept {
-        std::ostringstream ret;
-        ret << type_str() << "(";
+    std::string initializer_str() const noexcept {
+        std::string ret;
+        ret += "{";
         if (_v == _PlusInf) {
-            ret << "\"plusinf\"";
+            ret += "\"plusinf\"";
         } else if (_v == _MinusInf) {
-            ret << "\"minusinf\"";
+            ret += "\"minusinf\"";
         } else if (_v == _NaN) {
-            ret << "\"nan\"";
+            ret += "\"nan\"";
         } else {
-            ret << ::repr(_v);
+            ret += ::initializer_str(_v);
         }
-        ret << ")";
-        return ret.str();
+        ret += "}";
+        return ret;
+    }
+    std::string repr() const noexcept {
+        return this->type_str() + this->initializer_str(_v);
     }
 
     /**

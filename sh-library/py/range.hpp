@@ -40,6 +40,9 @@ struct Range {
         : start(_start), stop(_stop), step(1), norm_stop(normalize(_start, _stop, 1)) {}
     constexpr Range(value_type _stop)
         : start(0), stop(_stop), step(1), norm_stop(normalize(0, _stop, 1)) {}
+    constexpr Range()
+        : start(0), stop(1), step(1), norm_stop(1) {
+    }
 
     struct const_iterator {
        private:
@@ -208,10 +211,17 @@ struct Range {
     constexpr Range reversed() const noexcept {
         return {norm_stop - step, start - step, -step};
     }
-    std::string repr() const {
-        using std::string, std::to_string;
-        return string("Range(") + to_string(start) + ", " + to_string(stop) + ", " + to_string(step) + string(")");
+
+    static std::string type_str() {
+        return "Range";
     }
+    std::string initializer_str() const {
+        return "{" + std::to_string(start) + ", " + std::to_string(stop) + ", " + std::to_string(step) + "}";
+    }
+    std::string repr() const {
+        return "Range(" + std::to_string(start) + ", " + std::to_string(stop) + ", " + std::to_string(step) + ")";
+    }
+
     std::vector<value_type> to_vector() const {
         std::vector<value_type> ret;
         ret.reserve(size());
