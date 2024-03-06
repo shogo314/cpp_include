@@ -3,13 +3,16 @@
 #include <map>
 #include <vector>
 
+template <typename T>
 class CounterSegTree {
-    using S = int;
+    using key_type = T;
+    using mapped_type = int;
+
     int n, sz, height;
-    std::vector<std::map<S, int>> data;
+    std::vector<std::map<key_type, mapped_type>> data;
 
    public:
-    explicit CounterSegTree(const std::vector<S>& v) {
+    explicit CounterSegTree(const std::vector<key_type>& v) {
         n = v.size();
         sz = 1;
         height = 0;
@@ -28,13 +31,13 @@ class CounterSegTree {
             }
         }
     }
-    S get(int k) const {
+    key_type get(int k) const {
         assert(0 <= k and k < n);
         return data[k + sz].begin()->first;
     }
-    void set(int k, const S& x) {
+    void set(int k, const key_type& x) {
         k += sz;
-        S y = data[k].begin()->first;
+        key_type y = data[k].begin()->first;
         while (k > 0) {
             auto itr = data[k].find(y);
             if (itr->second == 1) {
@@ -46,8 +49,8 @@ class CounterSegTree {
             k >>= 1;
         }
     }
-    std::pair<S, int> lower_bound(int l, int r, int x) const {
-        std::pair<S, int> ret = {{}, 0};
+    std::pair<key_type, mapped_type> lower_bound(int l, int r, key_type x) const {
+        std::pair<key_type, mapped_type> ret = {{}, 0};
         l += sz;
         r += sz;
         while (l < r) {
@@ -75,6 +78,30 @@ class CounterSegTree {
                     } else if (itr->first < ret.first) {
                         ret = *itr;
                     }
+                }
+            }
+            l >>= 1;
+            r >>= 1;
+        }
+        return ret;
+    }
+    std::pair<key_type, mapped_type> find(int l, int r, key_type x) const {
+        std::pair<key_type, mapped_type> ret = {x, 0};
+        l += sz;
+        r += sz;
+        while (l < r) {
+            if (l & 1) {
+                auto itr = data[l].find(x);
+                if (itr != data[l].end()) {
+                    ret.second += itr->second;
+                }
+                ++l;
+            }
+            if (r & 1) {
+                --r;
+                auto itr = data[r].find(x);
+                if (itr != data[r].end()) {
+                    ret.second += itr->second;
                 }
             }
             l >>= 1;

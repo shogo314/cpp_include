@@ -109,7 +109,7 @@ void print(const T& x, const Tail&... tail) {
 /**
  * @brief 空行出力
  */
-void err() { std::cerr << '\n'; }
+void err() { std::cerr << std::endl; }
 /**
  * @brief 出力して改行
  *
@@ -117,7 +117,7 @@ void err() { std::cerr << '\n'; }
  * @param x 出力する値
  */
 template <typename T>
-void err(const T& x) { std::cerr << x << '\n'; }
+void err(const T& x) { std::cerr << x << std::endl; }
 /**
  * @brief 空白区切りで出力して改行
  *

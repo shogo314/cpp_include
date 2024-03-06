@@ -6,36 +6,42 @@
 #include <utility>
 #include <vector>
 
+namespace detail {
+template <typename S>
+struct Default {
+    S operator()() const {
+        return {};
+    }
+};
+}  // namespace detail
+
 /**
- * K key_type
  * S value_type
+ * K key_type
+ * Sは群である必要がある
  */
-template <typename K = long long, typename S = long long>
+template <typename S = long long,
+          typename K = long long,
+          class Operator = std::plus<S>,
+          class Element = detail::Default<S>,
+          class Inverse = std::negate<S>,
+          class Compare = std::less<K>>
 class MergeSortTree {
-    using Compare = std::less<K>;
-    using Operator = std::plus<S>;
-    using Inverse = std::negate<S>;
-
-    struct Element {
-        S operator()() const {
-            return {};
-        }
-    };
-
    public:
-    using key_type = K;
     using value_type = S;
+    using key_type = K;
 
-    inline constexpr static auto comp = Compare();
     inline constexpr static auto op = Operator();
     inline constexpr static auto inv = Inverse();
     inline constexpr static auto e = Element();
+    inline constexpr static auto comp = Compare();
 
+   private:
     int n, sz, height;
     std::vector<key_type> key_data;
     std::vector<value_type> cumulative_value;
 
-    void initialize(const std::vector<key_type>& key, const std::vector<value_type>& value) {
+    void initialize(const std::vector<value_type>& value, const std::vector<key_type>& key) {
         n = key.size();
         sz = 1;
         height = 1;
@@ -97,13 +103,13 @@ class MergeSortTree {
     value_type _prod_section(int l, int r, std::optional<key_type> a, std::optional<key_type> b) const {
         value_type ret = e();
         if (a.has_value()) {
-            int i = std::lower_bound(key_data.begin() + l, key_data.begin() + r, a.value()) - key_data.begin();
+            int i = std::lower_bound(key_data.begin() + l, key_data.begin() + r, a.value(), comp) - key_data.begin();
             if (i != l) {
                 ret = inv(cumulative_value[i - 1]);
             }
         }
         if (b.has_value()) {
-            int i = std::lower_bound(key_data.begin() + l, key_data.begin() + r, b.value()) - key_data.begin();
+            int i = std::lower_bound(key_data.begin() + l, key_data.begin() + r, b.value(), comp) - key_data.begin();
             if (i != l) {
                 ret = op(ret, cumulative_value[i - 1]);
             }
@@ -118,12 +124,12 @@ class MergeSortTree {
         int t = 1;
         while (l < r) {
             if (l & t) {
-                ret += _prod_section(h * sz + l, h * sz + l + t, a, b);
+                ret = op(ret, _prod_section(h * sz + l, h * sz + l + t, a, b));
                 l += t;
             }
             if (r & t) {
                 r -= t;
-                ret += _prod_section(h * sz + r, h * sz + r + t, a, b);
+                ret = op(ret, _prod_section(h * sz + r, h * sz + r + t, a, b));
             }
             h--;
             t <<= 1;
@@ -133,31 +139,31 @@ class MergeSortTree {
 
    public:
     MergeSortTree() = default;
-    explicit MergeSortTree(const std::vector<std::pair<key_type, value_type>>& key_value) {
+    explicit MergeSortTree(const std::vector<std::pair<value_type, key_type>>& value_key) {
         std::vector<key_type> key;
         std::vector<value_type> value;
-        key.reserve(key_value.size());
-        value.reserve(key_value.size());
-        for (size_t i = 0; i < key_value.size(); i++) {
-            key.push_back(key_value[i].first);
-            value.push_back(key_value[i].second);
+        key.reserve(value_key.size());
+        value.reserve(value_key.size());
+        for (size_t i = 0; i < value_key.size(); i++) {
+            value.push_back(value_key[i].first);
+            key.push_back(value_key[i].second);
         }
-        this->initialize(key, value);
+        this->initialize(value, key);
     }
     /**
-     * key ソートする基準
      * value prodで計算する対象
+     * key ソートする基準
      */
-    MergeSortTree(const std::vector<key_type>& key, const std::vector<value_type>& value) {
+    MergeSortTree(const std::vector<value_type>& value, const std::vector<key_type>& key) {
         assert(key.size() == value.size());
-        this->initialize(key, value);
+        this->initialize(value, key);
     }
 
     /**
      * ploduct value[i] s.t. a <= key[i] < b , i in [l, r)
      */
     value_type prod(std::optional<int> l = std::nullopt, std::optional<int> r = std::nullopt, std::optional<key_type> a = std::nullopt, std::optional<key_type> b = std::nullopt) const {
-        if (a.has_value() and b.has_value() and not(a.value() < b.value())) return e();
+        if (a.has_value() and b.has_value() and not comp(a.value(), b.value())) return e();
         if (l.has_value() and r.has_value() and l >= r) return e();
         return _prod(l.value_or(0), r.value_or(n), a, b);
     }
