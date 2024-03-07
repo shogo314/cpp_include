@@ -1,108 +1,20 @@
 #pragma once
 #include <type_traits>
 
-template <typename T1, typename T2>
-struct arithmetic_common_type {
-    using type = std::common_type_t<T1, T2>;
-};
-template <typename T>
-struct arithmetic_common_type<T, T> {
-    using type = T;
-};
-template <>
-struct arithmetic_common_type<int, unsigned long long> {
-    using type = long long;
-};
-template <>
-struct arithmetic_common_type<unsigned long long, int> {
-    using type = long long;
-};
-template <>
-struct arithmetic_common_type<long, unsigned long long> {
-    using type = long long;
-};
-template <>
-struct arithmetic_common_type<unsigned long long, long> {
-    using type = long long;
-};
-template <>
-struct arithmetic_common_type<long long, unsigned long long> {
-    using type = long long;
-};
-template <>
-struct arithmetic_common_type<unsigned long long, long long> {
-    using type = long long;
-};
-template <>
-struct arithmetic_common_type<int, unsigned long> {
-    using type = long;
-};
-template <>
-struct arithmetic_common_type<unsigned long, int> {
-    using type = long;
-};
-template <>
-struct arithmetic_common_type<long, unsigned long> {
-    using type = long;
-};
-template <>
-struct arithmetic_common_type<unsigned long, long> {
-    using type = long;
-};
-template <typename T1, typename T2>
-using arithmetic_common_type_t = typename arithmetic_common_type<T1, T2>::type;
+#define HAS_METHOD(func_name)                                                                                   \
+    namespace detail {                                                                                          \
+    template <class T, class = void>                                                                            \
+    struct has_##func_name##_impl : std::false_type {};                                                         \
+    template <class T>                                                                                          \
+    struct has_##func_name##_impl<T, std::void_t<decltype(std::declval<T>().func_name())>> : std::true_type {}; \
+    }                                                                                                           \
+    template <class T>                                                                                          \
+    struct has_##func_name : detail::has_##func_name##_impl<T>::type {};                                        \
+    template <class T>                                                                                          \
+    inline constexpr bool has_##func_name##_v = has_##func_name<T>::value;
 
-namespace detail {
-template <class T, class = void>
-struct has_repr_impl : std::false_type {};
-template <class T>
-struct has_repr_impl<T, std::void_t<decltype(std::declval<T>().repr())>> : std::true_type {};
-}  // namespace detail
-template <class T>
-struct has_repr : detail::has_repr_impl<T>::type {};
-template <class T>
-inline constexpr bool has_repr_v = has_repr<T>::value;
-
-namespace detail {
-template <class T, class = void>
-struct has_type_str_impl : std::false_type {};
-template <class T>
-struct has_type_str_impl<T, std::void_t<decltype(std::declval<T>().type_str())>> : std::true_type {};
-}  // namespace detail
-template <class T>
-struct has_type_str : detail::has_type_str_impl<T>::type {};
-template <class T>
-inline constexpr bool has_type_str_v = has_type_str<T>::value;
-
-namespace detail {
-template <class T, class = void>
-struct has_initializer_str_impl : std::false_type {};
-template <class T>
-struct has_initializer_str_impl<T, std::void_t<decltype(std::declval<T>().initializer_str())>> : std::true_type {};
-}  // namespace detail
-template <class T>
-struct has_initializer_str : detail::has_initializer_str_impl<T>::type {};
-template <class T>
-inline constexpr bool has_initializer_str_v = has_initializer_str<T>::value;
-
-namespace detail {
-template <class T, class = void>
-struct has_sum_impl : std::false_type {};
-template <class T>
-struct has_sum_impl<T, std::void_t<decltype(std::declval<T>().sum())>> : std::true_type {};
-}  // namespace detail
-template <class T>
-struct has_sum : detail::has_sum_impl<T>::type {};
-template <class T>
-inline constexpr bool has_sum_v = has_sum<T>::value;
-
-namespace detail {
-template <class T, class = void>
-struct has_reversed_impl : std::false_type {};
-template <class T>
-struct has_reversed_impl<T, std::void_t<decltype(std::declval<T>().reversed())>> : std::true_type {};
-}  // namespace detail
-template <class T>
-struct has_reversed : detail::has_reversed_impl<T>::type {};
-template <class T>
-inline constexpr bool has_reversed_v = has_reversed<T>::value;
+HAS_METHOD(repr)
+HAS_METHOD(type_str)
+HAS_METHOD(initializer_str)
+HAS_METHOD(sum)
+HAS_METHOD(reversed)
