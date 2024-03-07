@@ -18,23 +18,26 @@ struct Default {
 /**
  * S value_type
  * K key_type
- * Sは群である必要がある
+ * Op Sに対する演算
+ * E Sの単位元
+ * Inv Sの逆元
+ * Comp Eの比較関数
  */
 template <typename S = long long,
           typename K = long long,
-          class Operator = std::plus<S>,
-          class Element = detail::Default<S>,
-          class Inverse = std::negate<S>,
-          class Compare = std::less<K>>
+          class Op = std::plus<S>,
+          class E = detail::Default<S>,
+          class Inv = std::negate<S>,
+          class Comp = std::less<K>>
 class MergeSortTree {
    public:
     using value_type = S;
     using key_type = K;
 
-    inline constexpr static auto op = Operator();
-    inline constexpr static auto inv = Inverse();
-    inline constexpr static auto e = Element();
-    inline constexpr static auto comp = Compare();
+    inline constexpr static auto op = Op();
+    inline constexpr static auto inv = Inv();
+    inline constexpr static auto e = E();
+    inline constexpr static auto comp = Comp();
 
    private:
     int n, sz, height;
@@ -63,7 +66,7 @@ class MergeSortTree {
                 int j1 = h * sz + i;
                 int j2 = h * sz + std::min(n, i + t);
                 int j0 = (h - 1) * sz + i;
-                int last1 = h * sz + std::min(n, i + t);
+                int last1 = j2;
                 int last2 = h * sz + std::min(n, i + t * 2);
                 while (j1 != last1 or j2 != last2) {
                     if (j1 == last1) {
@@ -139,6 +142,9 @@ class MergeSortTree {
 
    public:
     MergeSortTree() = default;
+    /**
+     * value_key valueとkeyのpairのvector
+     */
     explicit MergeSortTree(const std::vector<std::pair<value_type, key_type>>& value_key) {
         std::vector<key_type> key;
         std::vector<value_type> value;
