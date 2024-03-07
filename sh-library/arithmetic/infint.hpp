@@ -5,7 +5,6 @@
 #include <string>
 #include <string_view>
 #include <type_traits>
-#include "../base/repr.hpp"
 
 /**
  * infをもつ整数型
@@ -198,28 +197,20 @@ struct infint {
         _v -= o._v;
         return *this;
     }
-
-    static std::string type_str() noexcept {
-        T t;
-        return "infint<" + ::type_str(t) + ">";
-    }
-    std::string initializer_str() const noexcept {
-        std::string ret;
-        ret += "{";
+    static std::string type_str() { return "infint<>"; }
+    std::string initializer_str() const {
         if (_v == _PlusInf) {
-            ret += "\"plusinf\"";
+            return "{\"plusinf\"}";
         } else if (_v == _MinusInf) {
-            ret += "\"minusinf\"";
+            return "{\"minusinf\"}";
         } else if (_v == _NaN) {
-            ret += "\"nan\"";
+            return "{\"nan\"}";
         } else {
-            ret += ::initializer_str(_v);
+            return "{" + std::to_string(_v) + "}";
         }
-        ret += "}";
-        return ret;
     }
-    std::string repr() const noexcept {
-        return this->type_str() + this->initializer_str(_v);
+    std::string repr() const {
+        return this->type_str() + this->initializer_str();
     }
 
     /**
