@@ -15,22 +15,13 @@ inline T min(const std::vector<T> &v) {
 }
 
 template <typename T>
-inline std::vector<T> sorted(std::vector<T> v) {
-    std::sort(v.begin(), v.end());
-    return v;
-}
-
-template <typename T>
 inline T sum(const std::vector<T> &v, T init = {}) {
     return std::accumulate(v.begin(), v.end(), init);
 }
 
 template <typename T>
 inline T product(const std::vector<T> &v, T init = {1}) {
-    for (size_t i = 0; i < v.size(); i++) {
-        init = init * v[i];
-    }
-    return init;
+    return std::accumulate(v.begin(), v.end(), init, std::multiplies<T>());
 }
 
 template <typename T>
@@ -59,12 +50,12 @@ inline T median(const std::vector<T> &v) {
     return (v[u[v.size() / 2]] + v[u[v.size() / 2 - 1]]) / 2;
 }
 
-template <typename T, typename U, std::enable_if_t<std::is_convertible_v<T, U>, std::nullptr_t> = nullptr>
+template <typename T, typename U, ENABLE_IF_T(std::is_convertible_v<U, T>)>
 inline size_t index(const std::vector<T> &v, const U &x) {
     return std::distance(v.begin(), std::find(v.begin(), v.end(), T(x)));
 }
 
-template <typename T, std::enable_if_t<std::is_integral_v<T>, std::nullptr_t> = nullptr>
+template <typename T, ENABLE_IF_T(std::is_integral_v<T>)>
 inline T mex(const std::vector<T> &v) {
     std::vector<bool> b(v.size() + 1);
     for (const auto &a : v) {
@@ -105,7 +96,7 @@ inline std::vector<T> operator--(std::vector<T> &v, int) {
     return res;
 }
 
-template <typename T, typename U, std::enable_if_t<std::is_convertible_v<U, T>, std::nullptr_t> = nullptr>
+template <typename T, typename U, ENABLE_IF_T(std::is_convertible_v<U, T>)>
 inline std::vector<T> &operator+=(std::vector<T> &v1, const std::vector<U> &v2) {
     if (v2.size() > v1.size()) {
         v1.resize(v2.size());
@@ -116,13 +107,13 @@ inline std::vector<T> &operator+=(std::vector<T> &v1, const std::vector<U> &v2) 
     return v1;
 }
 
-template <typename T, typename U, std::enable_if_t<std::is_convertible_v<U, T>, std::nullptr_t> = nullptr>
+template <typename T, typename U, ENABLE_IF_T(std::is_convertible_v<U, T>)>
 inline std::vector<T> operator+(const std::vector<T> &v1, const std::vector<U> &v2) {
     std::vector<T> res(v1);
     return res += v2;
 }
 
-template <typename T, typename U, std::enable_if_t<std::is_convertible_v<U, T>, std::nullptr_t> = nullptr>
+template <typename T, typename U, ENABLE_IF_T(std::is_convertible_v<U, T>)>
 inline std::vector<T> &operator+=(std::vector<T> &v, const U &u) {
     for (T &e : v) {
         e += u;
@@ -130,19 +121,19 @@ inline std::vector<T> &operator+=(std::vector<T> &v, const U &u) {
     return v;
 }
 
-template <typename T, typename U, std::enable_if_t<std::is_convertible_v<U, T>, std::nullptr_t> = nullptr>
+template <typename T, typename U, ENABLE_IF_T(std::is_convertible_v<U, T>)>
 inline std::vector<T> operator+(const std::vector<T> &v, const U &u) {
     std::vector<T> res(v);
     return res += u;
 }
 
-template <typename T, typename U, std::enable_if_t<std::is_convertible_v<U, T>, std::nullptr_t> = nullptr>
+template <typename T, typename U, ENABLE_IF_T(std::is_convertible_v<U, T>)>
 inline std::vector<T> operator+(const U &u, const std::vector<T> &v) {
     std::vector<T> res(v);
     return res += u;
 }
 
-template <typename T, typename U, std::enable_if_t<std::is_convertible_v<U, T>, std::nullptr_t> = nullptr>
+template <typename T, typename U, ENABLE_IF_T(std::is_convertible_v<U, T>)>
 inline std::vector<T> &operator*=(std::vector<T> &v1, const std::vector<U> &v2) {
     if (v2.size() > v1.size()) {
         v1.resize(v2.size());
@@ -156,13 +147,13 @@ inline std::vector<T> &operator*=(std::vector<T> &v1, const std::vector<U> &v2) 
     return v1;
 }
 
-template <typename T, typename U, std::enable_if_t<std::is_convertible_v<U, T>, std::nullptr_t> = nullptr>
+template <typename T, typename U, ENABLE_IF_T(std::is_convertible_v<U, T>)>
 inline std::vector<T> operator*(const std::vector<T> &v1, const std::vector<U> &v2) {
     std::vector<T> res(v1);
     return res *= v2;
 }
 
-template <typename T, typename U, std::enable_if_t<std::is_convertible_v<U, T>, std::nullptr_t> = nullptr>
+template <typename T, typename U, ENABLE_IF_T(std::is_convertible_v<U, T>)>
 inline std::vector<T> &operator*=(std::vector<T> &v, const U &u) {
     for (T &e : v) {
         e *= u;
@@ -170,13 +161,13 @@ inline std::vector<T> &operator*=(std::vector<T> &v, const U &u) {
     return v;
 }
 
-template <typename T, typename U, std::enable_if_t<std::is_convertible_v<U, T>, std::nullptr_t> = nullptr>
+template <typename T, typename U, ENABLE_IF_T(std::is_convertible_v<U, T>)>
 inline std::vector<T> operator*(const std::vector<T> &v, const U &u) {
     std::vector<T> res(v);
     return res *= u;
 }
 
-template <typename T, typename U, std::enable_if_t<std::is_convertible_v<U, T>, std::nullptr_t> = nullptr>
+template <typename T, typename U, ENABLE_IF_T(std::is_convertible_v<U, T>)>
 inline std::vector<T> operator*(const U &u, const std::vector<T> &v) {
     std::vector<T> res(v);
     return res *= u;
@@ -194,12 +185,12 @@ inline std::vector<T> &extend(std::vector<T> &v1, const std::vector<U> &v2) {
     return v1;
 }
 
-template <typename T, typename U, std::enable_if_t<std::is_convertible_v<T, U>, std::nullptr_t> = nullptr>
+template <typename T, typename U, ENABLE_IF_T(std::is_convertible_v<U, T>)>
 inline std::vector<T> &operator|=(std::vector<T> &v1, const std::vector<U> &v2) {
     return extend(v1, v2);
 }
 
-template <typename T, typename U, std::enable_if_t<std::is_integral_v<U>, std::nullptr_t> = nullptr>
+template <typename T, typename U, ENABLE_IF_T(std::is_integral_v<U>)>
 inline std::vector<T> &operator|=(std::vector<T> &v, const U &u) {
     std::vector<T> w(v);
     v.clear();
@@ -209,13 +200,13 @@ inline std::vector<T> &operator|=(std::vector<T> &v, const U &u) {
     return v;
 }
 
-template <typename T, typename U, std::enable_if_t<std::is_integral_v<U>, std::nullptr_t> = nullptr>
+template <typename T, typename U, ENABLE_IF_T(std::is_integral_v<U>)>
 inline std::vector<T> operator|(const std::vector<T> &v, const U &u) {
     std::vector<T> res(v);
     return res |= u;
 }
 
-template <typename T, typename U, std::enable_if_t<std::is_integral_v<U>, std::nullptr_t> = nullptr>
+template <typename T, typename U, ENABLE_IF_T(std::is_integral_v<U>)>
 inline std::vector<T> operator|(const U &u, const std::vector<T> &v) {
     std::vector<T> res(v);
     return res |= u;
