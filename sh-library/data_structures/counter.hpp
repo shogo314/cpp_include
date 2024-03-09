@@ -28,19 +28,11 @@ struct Counter : public std::map<T, long long> {
             this->operator[](i)++;
         }
     }
-    template <std::enable_if_t<std::is_same_v<char, key_type>, std::nullptr_t> = nullptr>
-    void add(const std::string_view& s) {
-        for (const auto& c : s) {
-            this->operator[](c)++;
-        }
-    }
     Counter(const key_type& x) : map<key_type, mapped_type>{} { this->operator[](x)++; }
     Counter(const std::vector<key_type>& v) : map<key_type, mapped_type>{} { add(v); }
     template <size_t N>
     Counter(const std::array<key_type, N>& v) { add(v); }
     Counter(const std::set<key_type>& v) { add(v); }
-    template <std::enable_if_t<std::is_same_v<char, key_type>, std::nullptr_t> = nullptr>
-    Counter(const std::string_view& s) { add(s); }
 
     bool contains(const key_type& x) const {
         return this->find(x) != this->end();
