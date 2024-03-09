@@ -9,8 +9,8 @@ struct Range {
    public:
     using value_type = long long;
     const value_type start;
-    const value_type step;
     const value_type stop;
+    const value_type step;
 
    private:
     value_type norm_stop;
@@ -194,7 +194,7 @@ struct Range {
         }
     }
     constexpr value_type at(size_t i) const {
-        assert(0 <= i and i < size());
+        assert(i < size());
         return start + i * step;
     }
     constexpr value_type operator[](size_t i) const {
@@ -204,7 +204,6 @@ struct Range {
         return start == norm_stop;
     }
     constexpr value_type sum() const noexcept {
-        value_type ret = 0;
         value_type l = size();
         return l * (norm_stop - step + start) / 2;
     }
