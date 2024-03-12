@@ -57,7 +57,7 @@ template <typename M, typename N, class F, ENABLE_IF_T(std::is_integral_v<std::c
 inline constexpr std::common_type_t<M, N> binary_search(const M &ok, const N &ng, F f) {
     std::common_type_t<M, N> _ok = ok, _ng = ng;
     assert(f(_ok));
-    while (std::abs(ok - ng) > 1) {
+    while (std::abs(_ok - _ng) > 1) {
         std::common_type_t<M, N> mid = (_ok + _ng) / 2;
         if (f(mid)) {
             _ok = mid;
