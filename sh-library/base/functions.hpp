@@ -56,7 +56,7 @@ constexpr T extgcd(const T &a, const T &b, T &x, T &y) {
 template <typename M, typename N, class F, ENABLE_IF_T(std::is_integral_v<M> and std::is_integral_v<N> and is_lambda_func_v<F, std::common_type_t<M, N>>)>
 inline constexpr std::common_type_t<M, N> binary_search(M ok, N ng, F f) {
     std::common_type_t<M, N> _ok = ok, _ng = ng;
-    assert(not f(_ng));
+    assert(f(_ok));
     while (std::abs(ok - ng) > 1) {
         std::common_type_t<M, N> mid = (ok + ng) / 2;
         if (f(mid)) {
@@ -71,7 +71,7 @@ inline constexpr std::common_type_t<M, N> binary_search(M ok, N ng, F f) {
 template <typename M, typename N, class F, ENABLE_IF_T(not std::is_integral_v<M> and not std::is_integral_v<N> and is_lambda_func_v<F, std::common_type_t<M, N>>)>
 inline constexpr std::common_type_t<M, N> binary_search(M ok, N ng, F f) {
     std::common_type_t<M, N> _ok = ok, _ng = ng;
-    assert(not f(_ng));
+    assert(f(_ok));
     for (int i = 0; i < 100; i++) {
         std::common_type_t<M, N> mid = (ok + ng) / 2;
         if (f(mid)) {
