@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 #include <type_traits>
 
 #define HAS_METHOD(func_name)                                                              \
@@ -30,9 +31,12 @@
 HAS_METHOD(repr)
 HAS_METHOD(type_str)
 HAS_METHOD(initializer_str)
+HAS_METHOD(max)
+HAS_METHOD(min)
+HAS_METHOD(reversed)
+HAS_METHOD(sorted)
 HAS_METHOD(sum)
 HAS_METHOD(product)
-HAS_METHOD(reversed)
 HAS_METHOD_ARG(count)
 HAS_METHOD_ARG(find)
 HAS_METHOD_ARG(lower_bound)
@@ -40,3 +44,6 @@ HAS_METHOD_ARG(upper_bound)
 
 #define ENABLE_IF_T_IMPL(expr) std::enable_if_t<expr, std::nullptr_t> = nullptr
 #define ENABLE_IF_T(...) ENABLE_IF_T_IMPL((__VA_ARGS__))
+
+template <class C>
+using add_value_type = typename C::value_type;

@@ -8,12 +8,16 @@
 struct Range {
    public:
     using value_type = long long;
+    using const_reference = const value_type&;
+    using size_type = std::size_t;
+    using difference_type = std::ptrdiff_t;
+
     const value_type start;
     const value_type stop;
     const value_type step;
 
    private:
-    value_type norm_stop;
+    const value_type norm_stop;
 
     constexpr static value_type normalize(value_type _start, value_type _stop, value_type _step) {
         assert(_step != 0);
@@ -45,6 +49,13 @@ struct Range {
     }
 
     struct const_iterator {
+       public:
+        using difference_type = Range::difference_type;
+        using value_type = Range::value_type;
+        using pointer = const Range::value_type*;
+        using reference = const Range::value_type&;
+        using iterator_category = std::random_access_iterator_tag;
+
        private:
         const Range& range;
         value_type value;
@@ -75,16 +86,16 @@ struct Range {
             value += range.step;
             return ret;
         }
-        constexpr const_iterator& operator+=(std::ptrdiff_t _n) noexcept {
+        constexpr const_iterator& operator+=(difference_type _n) noexcept {
             value += _n * range.step;
             return *this;
         }
-        constexpr friend const_iterator operator+(const const_iterator& i, std::ptrdiff_t _n) noexcept {
+        constexpr friend const_iterator operator+(const const_iterator& i, difference_type _n) noexcept {
             const_iterator ret(i);
             ret += _n;
             return ret;
         }
-        constexpr friend const_iterator operator+(std::ptrdiff_t _n, const const_iterator& i) noexcept {
+        constexpr friend const_iterator operator+(difference_type _n, const const_iterator& i) noexcept {
             const_iterator ret(i);
             ret += _n;
             return ret;
@@ -98,16 +109,16 @@ struct Range {
             value -= range.step;
             return ret;
         }
-        constexpr const_iterator& operator-=(std::ptrdiff_t _n) noexcept {
+        constexpr const_iterator& operator-=(difference_type _n) noexcept {
             value -= _n * range.step;
             return *this;
         }
-        constexpr friend const_iterator operator-(const const_iterator& i, std::ptrdiff_t _n) noexcept {
+        constexpr friend const_iterator operator-(const const_iterator& i, difference_type _n) noexcept {
             const_iterator ret(i);
             ret -= _n;
             return ret;
         }
-        constexpr value_type operator*() const noexcept {
+        constexpr reference operator*() const noexcept {
             return value;
         }
         constexpr friend bool operator!=(const const_iterator& a, const const_iterator& b) noexcept {
@@ -116,7 +127,7 @@ struct Range {
         constexpr friend bool operator==(const const_iterator& a, const const_iterator& b) noexcept {
             return !(a != b);
         }
-        constexpr friend std::ptrdiff_t operator-(const const_iterator& a, const const_iterator& b) {
+        constexpr friend difference_type operator-(const const_iterator& a, const const_iterator& b) {
             assert(a.same_range(b));
             if (a.range.step > 0) {
                 return (a.value - b.value) / a.range.step;
@@ -132,7 +143,7 @@ struct Range {
     constexpr const_iterator end() const noexcept {
         return {*this, norm_stop};
     }
-    constexpr std::ptrdiff_t count(value_type x) const noexcept {
+    constexpr difference_type count(value_type x) const noexcept {
         if (step > 0) {
             if (start <= x and x < stop) {
                 if ((x - start) % step == 0) {
@@ -151,7 +162,7 @@ struct Range {
     constexpr bool contains(value_type x) const noexcept {
         return count(x) != 0;
     }
-    constexpr size_t index(value_type x) const {
+    constexpr size_type index(value_type x) const {
         assert(contains(x));
         if (step > 0) {
             return (x - start) / step;
@@ -186,18 +197,18 @@ struct Range {
             return {*this, start + (x - start + step) / step * step};
         }
     }
-    constexpr size_t size() const noexcept {
+    constexpr size_type size() const noexcept {
         if (step > 0) {
             return (norm_stop - start) / step;
         } else {
             return (start - norm_stop) / (-step);
         }
     }
-    constexpr value_type at(size_t i) const {
+    constexpr value_type at(size_type i) const {
         assert(i < size());
         return start + i * step;
     }
-    constexpr value_type operator[](size_t i) const {
+    constexpr value_type operator[](size_type i) const {
         return at(i);
     }
     constexpr bool empty() const noexcept {
@@ -246,13 +257,4 @@ struct Range {
     constexpr friend bool operator!=(const Range& a, const Range& b) noexcept {
         return !(a == b);
     }
-};
-
-template <>
-struct std::iterator_traits<Range::const_iterator> {
-    using difference_type = std::ptrdiff_t;
-    using value_type = Range::const_iterator;
-    using pointer = const Range::value_type*;
-    using reference = const Range::value_type&;
-    using iterator_category = std::random_access_iterator_tag;
 };
