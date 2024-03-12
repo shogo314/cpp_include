@@ -139,7 +139,7 @@ inline constexpr mem_value_type<C> mex(const C &v) {
             b[a] = true;
         }
     }
-    add_value_type<C> ret;
+    mem_value_type<C> ret;
     for (size_t i = 0; i < b.size(); i++) {
         if (not b[i]) {
             ret = i;
@@ -151,9 +151,9 @@ inline constexpr mem_value_type<C> mex(const C &v) {
 
 template <class C>
 inline constexpr mem_difference_type<C> bisect_left(const C &v, const mem_value_type<C> &x) {
-    return std::distance(v.begin(), lower_bound(v, x))
+    return std::distance(v.begin(), lower_bound(v, x));
 }
 template <class C>
 inline constexpr mem_difference_type<C> bisect_right(const C &v, const mem_value_type<C> &x) {
-    return std::distance(v.begin(), upper_bound(v, x))
+    return std::distance(v.begin(), upper_bound(v, x));
 }
