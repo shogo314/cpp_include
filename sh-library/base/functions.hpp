@@ -54,7 +54,7 @@ constexpr T extgcd(const T &a, const T &b, T &x, T &y) {
     return d;
 }
 
-template <class F, ENABLE_IF_T(std::is_function_v<F>)>
+template <class F, ENABLE_IF_T(is_lambda_func_v<F, long long>)>
 inline constexpr long long binary_search(long long ok, long long ng, F f) {
     assert(f(ok));
     assert(not f(ng));
@@ -69,7 +69,7 @@ inline constexpr long long binary_search(long long ok, long long ng, F f) {
     return ok;
 }
 
-template <class F, ENABLE_IF_T(std::is_function_v<F>)>
+template <class F, ENABLE_IF_T(is_lambda_func_v<F, long double>)>
 inline constexpr long double binary_search(long double ok, long double ng, F f) {
     assert(f(ok));
     assert(not f(ng));
