@@ -149,3 +149,10 @@ inline std::vector<T> abs(const std::vector<T> &v) {
     for (const T &e : v) ret.push_back(std::abs(e));
     return ret;
 }
+
+template <typename T>
+std::vector<T> partial_sum(const std::vector<T> &v) {
+    std::vector<T> ret(v.size());
+    std::partial_sum(v.begin(), v.end(), ret.begin());
+    return ret;
+}
