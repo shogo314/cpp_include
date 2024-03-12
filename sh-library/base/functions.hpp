@@ -53,32 +53,32 @@ constexpr T extgcd(const T &a, const T &b, T &x, T &y) {
     return d;
 }
 
-template <typename M, typename N, class F, ENABLE_IF_T(std::is_integral_v<M> and std::is_integral_v<N> and is_lambda_func_v<F, std::common_type_t<M, N>>)>
-inline constexpr std::common_type_t<M, N> binary_search(M ok, N ng, F f) {
+template <typename M, typename N, class F, ENABLE_IF_T(std::is_integral_v<std::common_type_t<M, N>> and is_lambda_func_v<F, std::common_type_t<M, N>>)>
+inline constexpr std::common_type_t<M, N> binary_search(const M &ok, const N &ng, F f) {
     std::common_type_t<M, N> _ok = ok, _ng = ng;
     assert(f(_ok));
     while (std::abs(ok - ng) > 1) {
-        std::common_type_t<M, N> mid = (ok + ng) / 2;
+        std::common_type_t<M, N> mid = (_ok + _ng) / 2;
         if (f(mid)) {
-            ok = mid;
+            _ok = mid;
         } else {
-            ng = mid;
+            _ng = mid;
         }
     }
-    return ok;
+    return _ok;
 }
 
-template <typename M, typename N, class F, ENABLE_IF_T(not std::is_integral_v<M> and not std::is_integral_v<N> and is_lambda_func_v<F, std::common_type_t<M, N>>)>
-inline constexpr std::common_type_t<M, N> binary_search(M ok, N ng, F f) {
+template <typename M, typename N, class F, ENABLE_IF_T(not std::is_integral_v<std::common_type_t<M, N>> and is_lambda_func_v<F, std::common_type_t<M, N>>)>
+inline constexpr std::common_type_t<M, N> binary_search(const M &ok, const N &ng, F f) {
     std::common_type_t<M, N> _ok = ok, _ng = ng;
     assert(f(_ok));
     for (int i = 0; i < 100; i++) {
-        std::common_type_t<M, N> mid = (ok + ng) / 2;
+        std::common_type_t<M, N> mid = (_ok + _ng) / 2;
         if (f(mid)) {
-            ok = mid;
+            _ok = mid;
         } else {
-            ng = mid;
+            _ng = mid;
         }
     }
-    return ok;
+    return _ok;
 }

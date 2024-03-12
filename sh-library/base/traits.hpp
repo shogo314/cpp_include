@@ -46,7 +46,9 @@ HAS_METHOD_ARG(upper_bound)
 #define ENABLE_IF_T(...) ENABLE_IF_T_IMPL((__VA_ARGS__))
 
 template <class C>
-using add_value_type = typename C::value_type;
+using mem_value_type = typename C::value_type;
+template <class C>
+using mem_difference_type = typename C::difference_type;
 
 namespace detail {
 template <class F, typename ARG, class = void>

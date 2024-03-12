@@ -52,43 +52,43 @@ inline constexpr void reverse(C &t) {
 
 METHOD_EXPAND(max)
 template <class C, ENABLE_IF_T(not has_max_v<C>)>
-inline add_value_type<C> max(const C &v) {
+inline constexpr mem_value_type<C> max(const C &v) {
     assert(v.begin() != v.end());
     return *std::max_element(v.begin(), v.end());
 }
 template <typename T>
-inline T max(const std::initializer_list<T> &v) {
+inline constexpr T max(const std::initializer_list<T> &v) {
     return std::max(v);
 }
 
 METHOD_EXPAND(min)
 template <class C, ENABLE_IF_T(not has_max_v<C>)>
-inline add_value_type<C> min(const C &v) {
+inline constexpr mem_value_type<C> min(const C &v) {
     assert(v.begin() != v.end());
     return *std::min_element(v.begin(), v.end());
 }
 template <typename T>
-inline T min(const std::initializer_list<T> &v) {
+inline constexpr T min(const std::initializer_list<T> &v) {
     return std::min(v);
 }
 
 METHOD_EXPAND(sum)
 template <class C, ENABLE_IF_T(not has_sum_v<C>)>
-inline add_value_type<C> sum(const C &v) {
-    return std::accumulate(v.begin(), v.end(), add_value_type<C>{});
+inline constexpr mem_value_type<C> sum(const C &v) {
+    return std::accumulate(v.begin(), v.end(), mem_value_type<C>{});
 }
 template <typename T>
-inline T sum(const std::initializer_list<T> &v) {
+inline constexpr T sum(const std::initializer_list<T> &v) {
     return std::accumulate(v.begin(), v.end(), T{});
 }
 
 METHOD_EXPAND(product)
 template <class C, ENABLE_IF_T(not has_product_v<C>)>
-inline add_value_type<C> product(const C &v) {
-    return std::accumulate(v.begin(), v.end(), add_value_type<C>{1}, std::multiplies<add_value_type<C>>());
+inline constexpr mem_value_type<C> product(const C &v) {
+    return std::accumulate(v.begin(), v.end(), mem_value_type<C>{1}, std::multiplies<mem_value_type<C>>());
 }
 template <typename T>
-inline T product(const std::initializer_list<T> &v) {
+inline constexpr T product(const std::initializer_list<T> &v) {
     return std::accumulate(v.begin(), v.end(), T{1}, std::multiplies<T>());
 }
 
@@ -98,19 +98,20 @@ METHOD_AND_FUNC_ARG_EXPAND(lower_bound)
 METHOD_AND_FUNC_ARG_EXPAND(upper_bound)
 
 template <class C>
-inline add_value_type<C> gcd(const C &v, add_value_type<C> init = {0}) {
+inline constexpr mem_value_type<C> gcd(const C &v) {
+    mem_value_type<C> init(0);
     for (const auto &e : v) init = std::gcd(init, e);
     return init;
 }
 
 template <class C>
-inline add_value_type<C> average(const C &v) {
+inline constexpr mem_value_type<C> average(const C &v) {
     assert(v.size());
     return sum(v) / v.size();
 }
 
 template <class C>
-inline add_value_type<C> median(const C &v) {
+inline constexpr mem_value_type<C> median(const C &v) {
     assert(not v.empty());
     std::vector<size_t> u(v.size());
     std::iota(u.begin(), u.end(), 0);
@@ -126,12 +127,12 @@ inline add_value_type<C> median(const C &v) {
 }
 
 template <class C, typename U>
-inline size_t index(const C &v, const U &x) {
+inline constexpr size_t index(const C &v, const U &x) {
     return std::distance(v.begin(), std::find(v.begin(), v.end(), x));
 }
 
-template <class C, ENABLE_IF_T(std::is_integral_v<add_value_type<C>>)>
-inline add_value_type<C> mex(const C &v) {
+template <class C, ENABLE_IF_T(std::is_integral_v<mem_value_type<C>>)>
+inline constexpr mem_value_type<C> mex(const C &v) {
     std::vector<bool> b(v.size() + 1);
     for (const auto &a : v) {
         if (0 <= a and a < b.size()) {
@@ -146,4 +147,13 @@ inline add_value_type<C> mex(const C &v) {
         }
     }
     return ret;
+}
+
+template <class C>
+inline constexpr mem_difference_type<C> bisect_left(const C &v, const mem_value_type<C> &x) {
+    return std::distance(v.begin(), lower_bound(v, x))
+}
+template <class C>
+inline constexpr mem_difference_type<C> bisect_right(const C &v, const mem_value_type<C> &x) {
+    return std::distance(v.begin(), upper_bound(v, x))
 }
