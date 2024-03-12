@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <cmath>
 #include <numeric>
-#include <type_traits>
 #include "traits.hpp"
 
 template <typename T1, typename T2>
@@ -54,12 +53,13 @@ constexpr T extgcd(const T &a, const T &b, T &x, T &y) {
     return d;
 }
 
-template <class F, ENABLE_IF_T(is_lambda_func_v<F, long long>)>
-inline constexpr long long binary_search(long long ok, long long ng, F f) {
-    assert(f(ok));
-    assert(not f(ng));
+template <typename M, typename N, class F, ENABLE_IF_T(std::is_integral_v<M> and std::is_integral_v<N> and is_lambda_func_v<F, std::common_type_t<M, N>>)>
+inline constexpr std::common_type_t<M, N> binary_search(M ok, N ng, F f) {
+    std::common_type_t<M, N> _ok = ok, _ng = ng;
+    assert(f(_ok));
+    assert(not f(_ng));
     while (std::abs(ok - ng) > 1) {
-        long long mid = (ok + ng) / 2;
+        std::common_type_t<M, N> mid = (ok + ng) / 2;
         if (f(mid)) {
             ok = mid;
         } else {
@@ -69,12 +69,13 @@ inline constexpr long long binary_search(long long ok, long long ng, F f) {
     return ok;
 }
 
-template <class F, ENABLE_IF_T(is_lambda_func_v<F, long double>)>
-inline constexpr long double binary_search(long double ok, long double ng, F f) {
-    assert(f(ok));
-    assert(not f(ng));
+template <typename M, typename N, class F, ENABLE_IF_T(not std::is_integral_v<M> and not std::is_integral_v<N> and is_lambda_func_v<F, std::common_type_t<M, N>>)>
+inline constexpr std::common_type_t<M, N> binary_search(M ok, N ng, F f) {
+    std::common_type_t<M, N> _ok = ok, _ng = ng;
+    assert(f(_ok));
+    assert(not f(_ng));
     for (int i = 0; i < 100; i++) {
-        long double mid = (ok + ng) / 2;
+        std::common_type_t<M, N> mid = (ok + ng) / 2;
         if (f(mid)) {
             ok = mid;
         } else {
