@@ -49,14 +49,3 @@ template <class C>
 using mem_value_type = typename C::value_type;
 template <class C>
 using mem_difference_type = typename C::difference_type;
-
-namespace detail {
-template <class F, typename ARG, class = void>
-struct is_lambda_func_impl : std::false_type {};
-template <class F, typename ARG>
-struct is_lambda_func_impl<F, ARG, std::void_t<decltype(std::declval<F>()(std::declval<ARG>()))>> : std::true_type {};
-}  // namespace detail
-template <class F, typename ARG>
-struct is_lambda_func : detail::is_lambda_func_impl<F, ARG>::type {};
-template <class F, typename ARG>
-inline constexpr bool is_lambda_func_v = is_lambda_func<F, ARG>::value;
