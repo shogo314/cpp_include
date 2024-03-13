@@ -1,7 +1,20 @@
 #pragma once
+#include <algorithm>
 #include <cmath>
+#include <cstddef>
+#include <numeric>
 #include <vector>
 #include "traits.hpp"
+
+template <typename T>
+std::vector<std::ptrdiff_t> sorted_idx(const std::vector<T> &v) {
+    std::vector<std::ptrdiff_t> ret(v.size());
+    std::iota(ret.begin(), ret.end(), 0);
+    std::sort(ret.begin(), ret.end(), [&](std::ptrdiff_t i, std::ptrdiff_t j) {
+        return v[i] < v[j];
+    });
+    return ret;
+}
 
 template <typename T>
 inline std::vector<T> &operator++(std::vector<T> &v) {
