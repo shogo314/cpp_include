@@ -1,11 +1,13 @@
 #pragma once
 #include <array>
+#include <iostream>
 #include <map>
 #include <set>
 #include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
+
 #include "../base/traits.hpp"
 
 namespace detail {
@@ -378,3 +380,5 @@ template <typename T>
 inline std::string repr(const T& t) {
     return detail::repr(t);
 }
+
+#define DEBUG(x) { std::cerr << #x << " = " << repr(x) << std::endl; }

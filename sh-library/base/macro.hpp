@@ -15,16 +15,24 @@
 #define rrepd(i, n) repds(i, 1, (n) + 1)
 #define rep2(i, j, x, y) rep(i, x) rep(j, y)
 
+inline void scan(){}
+template<class Head,class... Tail>
+inline void scan(Head&head,Tail&... tail){std::cin>>head;scan(tail...);}
+#define LL(...) ll __VA_ARGS__;scan(__VA_ARGS__)
+#define STR(...) str __VA_ARGS__;scan(__VA_ARGS__)
 #define IN(a, x) a x; std::cin >> x;
 #define CHAR(x) char x; std::cin >> x;
-#define LL(x) ll x; std::cin >> x;
 #define VL(a,n) vl a(n); std::cin >> a;
 #define AL(a,k) al<k> a; std::cin >> a;
 #define AAL(a,n,m) aal<n,m> a; std::cin >> a;
 #define VC(a,n) vc a(n); std::cin >> a;
 #define VS(a,n) vs a(n); std::cin >> a;
-#define STR(s) str s; std::cin >> s;
 #define VPL(a,n) vpl a(n); std::cin >> a;
 #define VAL(a,n,k) val<k> a(n); std::cin >> a;
 #define VVL(a,n,m) vvl a(n,vl(m)); std::cin >> a;
 #define SL(a,n) sl a;{VL(b,n);a=sl(all(b));}
+
+#define NO std::cout << "NO" << std::endl; return;
+#define YES std::cout << "YES" << std::endl; return;
+#define No std::cout << "No" << std::endl; return;
+#define Yes std::cout << "Yes" << std::endl; return;

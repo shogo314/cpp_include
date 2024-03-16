@@ -44,6 +44,8 @@ template <int N1, int N2>
 using aal = ary<ary<ll, N2>, N1>;
 template <int N>
 using val = vec<al<N>>;
+template <int N>
+using avl = ary<vl,N>;
 
 template <typename T>
 using ml = std::map<ll, T>;
@@ -52,6 +54,8 @@ using sl = std::set<ll>;
 using spl = set<pl>;
 template <int N>
 using sal = set<al<N>>;
+template <int N>
+using asl = ary<sl,N>;
 
 template <typename T>
 using heap_max = std::priority_queue<T, std::vector<T>, std::less<T>>;
