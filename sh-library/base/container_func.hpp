@@ -107,6 +107,15 @@ inline constexpr T product(const std::initializer_list<T> &v) {
     return std::accumulate(v.begin(), v.end(), T{1}, std::multiplies<T>());
 }
 
+template <class C>
+inline constexpr mem_value_type<C> product_xor(const C &v) {
+    return std::accumulate(v.begin(), v.end(), mem_value_type<C>{0}, std::bit_xor<mem_value_type<C>>());
+}
+template <typename T>
+inline constexpr T product_xor(const std::initializer_list<T> &v) {
+    return std::accumulate(v.begin(), v.end(), T{0}, std::bit_xor<T>());
+}
+
 METHOD_AND_FUNC_ARG_EXPAND(count)
 METHOD_AND_FUNC_ARG_EXPAND(find)
 METHOD_AND_FUNC_ARG_EXPAND(lower_bound)
