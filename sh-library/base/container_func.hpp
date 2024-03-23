@@ -107,13 +107,40 @@ inline constexpr T product(const std::initializer_list<T> &v) {
     return std::accumulate(v.begin(), v.end(), T{1}, std::multiplies<T>());
 }
 
-template <class C>
+METHOD_EXPAND(product_xor)
+template <class C, ENABLE_IF_T(not has_product_xor_v<C>)>
 inline constexpr mem_value_type<C> product_xor(const C &v) {
     return std::accumulate(v.begin(), v.end(), mem_value_type<C>{0}, std::bit_xor<mem_value_type<C>>());
 }
 template <typename T>
 inline constexpr T product_xor(const std::initializer_list<T> &v) {
     return std::accumulate(v.begin(), v.end(), T{0}, std::bit_xor<T>());
+}
+
+template <class C>
+inline constexpr mem_value_type<C> maximum_subarray(const C &v) {
+    assert(not v.empty());
+    auto itr = v.begin();
+    mem_value_type<C> tmp = *itr++;
+    mem_value_type<C> res = tmp;
+    while (itr != v.end()) {
+        tmp += *itr;
+        if (tmp < *itr) tmp = *itr;
+        if (res < tmp) res = tmp;
+        ++itr;
+    }
+    return res;
+}
+template <class C, ENABLE_IF_T(std::is_scalar_v<mem_value_type<C>>)>
+inline constexpr mem_value_type<C> maximum_subarray0(const C &v) {
+    mem_value_type<C> res = 0;
+    mem_value_type<C> tmp = 0;
+    for (const auto &a : v) {
+        tmp += a;
+        if (tmp < 0) tmp = 0;
+        if (res < tmp) res = tmp;
+    }
+    return res;
 }
 
 METHOD_AND_FUNC_ARG_EXPAND(count)
