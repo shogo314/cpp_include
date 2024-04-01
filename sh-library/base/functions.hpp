@@ -22,11 +22,6 @@ inline constexpr bool chmax(T1 &a, T2 b) {
     return false;
 }
 
-template <class C, typename T>
-inline constexpr bool contains(const C &c, const T &t) {
-    return c.find(t) != c.end();
-}
-
 inline constexpr long long max(const long long &t1, const long long &t2) {
     return std::max<long long>(t1, t2);
 }

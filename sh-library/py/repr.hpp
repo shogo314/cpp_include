@@ -7,7 +7,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
 #include "../base/traits.hpp"
 
 namespace detail {

@@ -21,9 +21,8 @@
     }                                                                             \
     template <typename T, typename U, ENABLE_IF_T(not has_##func_name##_v<T, U>)> \
     inline constexpr auto func_name(const T &t, const U &u)                       \
-        -> decltype(func_name(t.begin(), t.end(), u)) {                           \
-        using namespace std;                                                      \
-        return func_name(t.begin(), t.end(), u);                                  \
+        -> decltype(std::func_name(t.begin(), t.end(), u)) {                      \
+        return std::func_name(t.begin(), t.end(), u);                             \
     }
 
 METHOD_EXPAND(reversed)
@@ -131,13 +130,12 @@ inline constexpr mem_value_type<C> maximum_subarray(const C &v) {
     }
     return res;
 }
-template <class C, ENABLE_IF_T(std::is_scalar_v<mem_value_type<C>>)>
-inline constexpr mem_value_type<C> maximum_subarray0(const C &v) {
-    mem_value_type<C> res = 0;
-    mem_value_type<C> tmp = 0;
+template <class C>
+inline constexpr mem_value_type<C> maximum_subarray(const C &v, mem_value_type<C> init) {
+    mem_value_type<C> res = init, tmp = init;
     for (const auto &a : v) {
         tmp += a;
-        if (tmp < 0) tmp = 0;
+        if (tmp < init) tmp = init;
         if (res < tmp) res = tmp;
     }
     return res;
@@ -147,6 +145,11 @@ METHOD_AND_FUNC_ARG_EXPAND(count)
 METHOD_AND_FUNC_ARG_EXPAND(find)
 METHOD_AND_FUNC_ARG_EXPAND(lower_bound)
 METHOD_AND_FUNC_ARG_EXPAND(upper_bound)
+
+template <class C, typename T>
+inline constexpr bool contains(const C &c, const T &t) {
+    return find(c, t) != c.end();
+}
 
 template <class C>
 inline constexpr mem_value_type<C> gcd(const C &v) {
@@ -178,8 +181,8 @@ inline constexpr mem_value_type<C> median(const C &v) {
 }
 
 template <class C, typename U>
-inline constexpr size_t index(const C &v, const U &x) {
-    return std::distance(v.begin(), std::find(v.begin(), v.end(), x));
+inline constexpr std::ptrdiff_t index(const C &v, const U &x) {
+    return std::distance(v.begin(), find(v, x));
 }
 
 template <class C, ENABLE_IF_T(std::is_integral_v<mem_value_type<C>>)>

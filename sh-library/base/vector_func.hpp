@@ -169,3 +169,11 @@ std::vector<T> partial_sum(const std::vector<T> &v) {
     std::partial_sum(v.begin(), v.end(), ret.begin());
     return ret;
 }
+
+template <typename T, ENABLE_IF_T(std::is_integral_v<T>)>
+std::vector<T> iota(T n) {
+    assert(n >= 0);
+    std::vector<T> ret(n);
+    std::iota(ret.begin(), ret.end(), 0);
+    return ret;
+}

@@ -7,6 +7,7 @@
 
 #define all(obj) (obj).begin(), (obj).end()
 
+#define repts(i, a, n, t) for (long long i = (a); i < (n); i+=(t))
 #define reps(i, a, n) for (long long i = (a); i < (n); i++)
 #define rep(i, n) reps(i, 0, (n))
 #define rrep(i, n) reps(i, 1, (n) + 1)
