@@ -1,5 +1,6 @@
 #pragma once
 #include <cstddef>
+#include <set>
 #include <type_traits>
 
 #define HAS_METHOD(func_name)                                                              \
@@ -50,3 +51,16 @@ template <class C>
 using mem_value_type = typename C::value_type;
 template <class C>
 using mem_difference_type = typename C::difference_type;
+
+namespace detail {
+template <class T, class = void>
+struct is_sorted_container_impl : std::false_type {};
+template <class T>
+struct is_sorted_container_impl<std::set<T>> : std::true_type {};
+template <class T>
+struct is_sorted_container_impl<std::multiset<T>> : std::true_type {};
+}  // namespace detail
+template <class T>
+struct is_sorted_container : detail::is_sorted_container_impl<T>::type {};
+template <class T>
+inline constexpr bool is_sorted_container_v = is_sorted_container<T>::value;
