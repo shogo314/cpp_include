@@ -225,7 +225,7 @@ struct Range {
     }
     /**
      * @brief コンテナの要素数
-    */
+     */
     constexpr size_type size() const noexcept {
         if (step > 0) {
             return (norm_stop - start) / step;
@@ -244,7 +244,7 @@ struct Range {
         return start == norm_stop;
     }
     constexpr value_type sum() const noexcept {
-        return size() * (norm_stop - step + start) / 2;
+        return static_cast<Range::value_type>(size()) * (norm_stop - step + start) / 2;
     }
     /**
      * @brief 最小値
@@ -326,38 +326,44 @@ struct Range {
     constexpr Range clipped(value_type l, value_type r) const {
         if (l > r) return {};
         if (step > 0) {
-            value_type _start, _stop;
-            if (norm_stop <= l) {
-                _start = norm_stop;
-            } else if (l < start) {
-                _start = start;
-            } else {
-                _start = start + (l - start + step - 1) / step * step;
-            }
-            if (norm_stop <= r) {
-                _stop = norm_stop;
-            } else if (r < start) {
-                _stop = start;
-            } else {
-                _stop = start + (r - start + step) / step * step;
-            }
+            value_type _start = [&] {
+                if (norm_stop <= l) {
+                    return norm_stop;
+                } else if (l < start) {
+                    return start;
+                } else {
+                    return start + (l - start + step - 1) / step * step;
+                }
+            }();
+            value_type _stop = [&] {
+                if (norm_stop <= r) {
+                    return norm_stop;
+                } else if (r < start) {
+                    return start;
+                } else {
+                    return start + (r - start + step) / step * step;
+                }
+            }();
             return {_start, _stop, step, _stop};
         } else {
-            value_type _start, _stop;
-            if (start - step <= r) {
-                _start = start;
-            } else if (r < norm_stop - step) {
-                _start = norm_stop;
-            } else {
-                _start = norm_stop + (r - norm_stop) / step * step;
-            }
-            if (start - step <= l) {
-                _stop = start;
-            } else if (l < norm_stop - step) {
-                _stop = norm_stop;
-            } else {
-                _stop = norm_stop + (l - norm_stop - 1) / step * step;
-            }
+            value_type _start = [&] {
+                if (start - step <= r) {
+                    return start;
+                } else if (r < norm_stop - step) {
+                    return norm_stop;
+                } else {
+                    return norm_stop + (r - norm_stop) / step * step;
+                }
+            }();
+            value_type _stop = [&] {
+                if (start - step <= l) {
+                    return start;
+                } else if (l < norm_stop - step) {
+                    return norm_stop;
+                } else {
+                    return norm_stop + (l - norm_stop - 1) / step * step;
+                }
+            }();
             return {_start, _stop, step, _stop};
         }
     }
@@ -367,13 +373,12 @@ struct Range {
     constexpr Range slice(const Range& r) const {
         if (r.empty()) return {};
         if (r.max() < 0) return {};
-        if (r.min() >= size()) return {};
-        Range trimmed_range(r.clipped(0, size() - 1));
+        if (r.min() >= static_cast<Range::value_type>(size())) return {};
+        Range trimmed_range(r.clipped(0, static_cast<Range::value_type>(size()) - 1));
         if (trimmed_range.empty()) return {};
-        value_type _start, _stop, _step;
-        _step = step * trimmed_range.step;
-        _start = at(trimmed_range.start);
-        _stop = _start + _step * trimmed_range.size();
+        value_type _step = step * trimmed_range.step;
+        value_type _start = at(trimmed_range.start);
+        value_type _stop = _start + _step * static_cast<Range::value_type>(trimmed_range.size());
         return {_start, _stop, _step, _stop};
     }
 

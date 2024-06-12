@@ -37,3 +37,5 @@ inline void scan(Head&head,Tail&... tail){std::cin>>head;scan(tail...);}
 #define YES std::cout << "YES" << std::endl; return;
 #define No std::cout << "No" << std::endl; return;
 #define Yes std::cout << "Yes" << std::endl; return;
+#define Takahashi std::cout << "Takahashi" << std::endl; return;
+#define Aoki std::cout << "Aoki" << std::endl; return;

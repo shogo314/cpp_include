@@ -34,8 +34,9 @@ inline constexpr C reversed(C t) {
 
 METHOD_EXPAND(sorted)
 template <class C, ENABLE_IF_T(not has_sorted_v<C>)>
-inline constexpr C sorted(C t) {
+inline constexpr C sorted(C t, bool reverse = false) {
     std::sort(t.begin(), t.end());
+    if (reverse) std::reverse(t.begin(), t.end());
     return t;
 }
 template <class C, class F, ENABLE_IF_T(not has_sorted_v<C> and std::is_invocable_r_v<bool, F, mem_value_type<C>, mem_value_type<C>>)>
@@ -45,8 +46,9 @@ inline constexpr C sorted(C t, F f) {
 }
 
 template <class C>
-inline constexpr void sort(C &t) {
+inline constexpr void sort(C &t, bool reverse = false) {
     std::sort(t.begin(), t.end());
+    if (reverse) std::reverse(t.begin(), t.end());
 }
 template <class C, class F, ENABLE_IF_T(std::is_invocable_r_v<bool, F, mem_value_type<C>, mem_value_type<C>>)>
 inline constexpr void sort(C &t, F f) {
