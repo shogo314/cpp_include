@@ -13,6 +13,8 @@ using str = std::string;
 using std::deque;
 using std::list;
 using std::map;
+using std::multimap;
+using std::multiset;
 using std::pair;
 using std::set;
 

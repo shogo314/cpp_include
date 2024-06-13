@@ -165,7 +165,8 @@ inline std::vector<T> abs(const std::vector<T> &v) {
 }
 
 template <typename T>
-std::vector<T> partial_sum(const std::vector<T> &v) {
+std::vector<T> cumulative_sum(std::vector<T> v) {
+    v.insert(v.begin(), T{});
     std::vector<T> ret(v.size());
     std::partial_sum(v.begin(), v.end(), ret.begin());
     return ret;
