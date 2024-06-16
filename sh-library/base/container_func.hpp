@@ -7,22 +7,22 @@
 #include <numeric>
 #include "traits.hpp"
 
-#define METHOD_EXPAND(func_name)                                             \
-    template <typename T, ENABLE_IF_T(has_##func_name##_v<T>)>               \
-    inline constexpr auto func_name(const T &t) -> decltype(t.func_name()) { \
-        return t.func_name();                                                \
+#define METHOD_EXPAND(func)                                        \
+    template <typename T, ENABLE_IF_T(has_##func##_v<T>)>          \
+    inline constexpr auto func(const T &t) -> decltype(t.func()) { \
+        return t.func();                                           \
     }
 
-#define METHOD_AND_FUNC_ARG_EXPAND(func_name)                                     \
-    template <typename T, typename U, ENABLE_IF_T(has_##func_name##_v<T, U>)>     \
-    inline constexpr auto func_name(const T &t, const U &u)                       \
-        -> decltype(t.func_name(u)) {                                             \
-        return t.func_name(u);                                                    \
-    }                                                                             \
-    template <typename T, typename U, ENABLE_IF_T(not has_##func_name##_v<T, U>)> \
-    inline constexpr auto func_name(const T &t, const U &u)                       \
-        -> decltype(std::func_name(t.begin(), t.end(), u)) {                      \
-        return std::func_name(t.begin(), t.end(), u);                             \
+#define METHOD_AND_FUNC_ARG_EXPAND(func)                                     \
+    template <typename T, typename U, ENABLE_IF_T(has_##func##_v<T, U>)>     \
+    inline constexpr auto func(const T &t, const U &u)                       \
+        -> decltype(t.func(u)) {                                             \
+        return t.func(u);                                                    \
+    }                                                                        \
+    template <typename T, typename U, ENABLE_IF_T(not has_##func##_v<T, U>)> \
+    inline constexpr auto func(const T &t, const U &u)                       \
+        -> decltype(std::func(t.begin(), t.end(), u)) {                      \
+        return std::func(t.begin(), t.end(), u);                             \
     }
 
 METHOD_EXPAND(reversed)
