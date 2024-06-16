@@ -149,7 +149,7 @@ struct infint {
                 if (isPlusInf() ^ o.isPlusInf()) {
                     _v = _NaN;
                 }
-            } else if (o.isfinite()) {
+            } else if (not o.isfinite()) {
                 _v = o._v;
             }
             return *this;
@@ -178,7 +178,7 @@ struct infint {
                 if (isPlusInf() == o.isPlusInf()) {
                     _v = _NaN;
                 }
-            } else if (o.isfinite()) {
+            } else if (not o.isfinite()) {
                 _v = -o._v;
             }
             return *this;

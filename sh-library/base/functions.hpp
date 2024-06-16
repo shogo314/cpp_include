@@ -96,3 +96,21 @@ inline constexpr bool inrange(long long x, long long a, long long b) {
 inline constexpr bool inrect(long long x, long long y, long long a, long long b) {
     return 0 <= x and x < a and 0 <= y and y < b;
 }
+
+long long radix_convert(const std::vector<long long> &v, int base = 10) {
+    long long res = 0;
+    for (int i = v.size() - 1; i >= 0; i--) {
+        res <<= base;
+        res += v[i];
+    }
+    return res;
+}
+std::vector<long long> radix_convert(long long v, int base = 10) {
+    std::vector<long long> res;
+    while (v > 0) {
+        res.push_back(v % base);
+        v /= base;
+    }
+    std::reverse(res.begin(), res.end());
+    return res;
+}

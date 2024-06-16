@@ -7,3 +7,4 @@
 #include "traits.hpp"
 #include "type_alias.hpp"
 #include "vector_func.hpp"
+#include "bit.hpp"
