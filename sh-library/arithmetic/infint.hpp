@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <iostream>
 #include <limits>
+#include <ostream>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -10,9 +11,10 @@
  * infをもつ整数型
  * Tは符号付き整数であり、2の補数表現で表されることを期待する
  */
-template <typename T = int, std::enable_if_t<std::is_integral_v<T> and std::is_signed_v<T>, std::nullptr_t> = nullptr>
+template <typename T = long long>
 struct infint {
    private:
+    static_assert(std::is_integral_v<T> and std::is_signed_v<T>);
     static_assert(std::numeric_limits<T>::min() + 1 == -std::numeric_limits<T>::max());
 
     T _v;
@@ -20,6 +22,9 @@ struct infint {
     inline constexpr static T _PlusInf = std::numeric_limits<T>::max();       //<! 正の無限大
     inline constexpr static T _MinusInf = std::numeric_limits<T>::min() + 1;  //<! 負の無限大
     inline constexpr static T _NaN = std::numeric_limits<T>::min();           //<! Not a Number
+    static std::string str_plusinf;
+    static std::string str_minusinf;
+    static std::string str_nan;
 
    public:
     constexpr infint() noexcept : _v(0) {}
@@ -212,6 +217,31 @@ struct infint {
     std::string repr() const {
         return this->type_str() + this->initializer_str();
     }
+    std::string to_string() const {
+        if (_v == _PlusInf) {
+            return str_plusinf;
+        } else if (_v == _MinusInf) {
+            return str_minusinf;
+        } else if (_v == _NaN) {
+            return str_nan;
+        } else {
+            return std::to_string(_v);
+        }
+    }
+    template <class CharT, class Traits>
+    friend std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os, const infint& rhs) {
+        os << rhs.to_string();
+        return os;
+    }
+    static void set_str_plusinf(std::string s) {
+        str_plusinf = s;
+    }
+    static void set_str_minusinf(std::string s) {
+        str_minusinf = s;
+    }
+    static void set_str_nan(std::string s) {
+        str_nan = s;
+    }
 
     /**
      * 正の無限大
@@ -293,3 +323,9 @@ struct infint {
         return t1._v != t2._v;
     }
 };
+template <typename T>
+std::string infint<T>::str_plusinf = "inf";
+template <typename T>
+std::string infint<T>::str_minusinf = "-inf";
+template <typename T>
+std::string infint<T>::str_nan = "nan";
