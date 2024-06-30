@@ -3,6 +3,7 @@ shogo314が使っているライブラリです。[atcoder/ac-library](https://g
 
 `update.py`を実行すると`ou-library`と`sh-library`を最新版にできます。このとき`./tmp`が消されることに注意してください。
 
+このフォルダをホームディレクトリに置いて、
 `.bash_profile`に
 ```bash
 export CPLUS_INCLUDE_PATH="$HOME/cpp_include"
