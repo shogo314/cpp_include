@@ -135,13 +135,14 @@ struct RootedTree : private Tree<Cost> {
     using Tree<Cost>::operator[];
     using Tree<Cost>::edges;
     using Tree<Cost>::shortest_path;
-    using Tree<Cost>::Tree;
 
     int root; //!< 根
     std::vector<Edge> par; //!< 親へ向かう辺
     std::vector<std::vector<Edge>> child; //!< 子へ向かう辺のリスト
     std::vector<Cost> depth; //!< 深さのリスト
     std::vector<Cost> height; //!< 部分木の高さのリスト
+    std::vector<int> unweighted_depth; //!< 重みなしの深さのリスト
+    std::vector<int> unweighted_height; //!< 重みなしの部分木の高さのリスト
     std::vector<int> sz; //!< 部分期の頂点数のリスト
     std::vector<int> preorder; //!< 先行順巡回
     std::vector<int> postorder; //!< 後行順巡回
@@ -207,7 +208,9 @@ private:
         par[root] = {root, -1, 0, -1};
         child.resize(n);
         depth.resize(n);
+        unweighted_depth.resize(n);
         height.resize(n);
+        unweighted_height.resize(n);
         sz.resize(n);
         std::vector<int> iter(n);
         std::stack<std::pair<int, int>> stk;
@@ -221,10 +224,14 @@ private:
                 postorder.push_back(u);
                 sz[u] = 1;
                 height[u] = 0;
+                unweighted_height[u] = 0;
                 for(auto& e : child[u]) {
                     sz[u] += sz[e.dst];
                     if(height[u] < height[e.dst] + e.cost) {
                         height[u] = height[e.dst] + e.cost;
+                    }
+                    if(unweighted_height[u] < unweighted_height[e.dst] + 1) {
+                        unweighted_height[u] = unweighted_height[e.dst] + 1;
                     }
                 }
             } else {
@@ -232,6 +239,7 @@ private:
                 par[e.dst] = {e.dst, u, e.cost, e.id};
                 child[u].push_back(e);
                 depth[e.dst] = depth[u] + e.cost;
+                unweighted_depth[e.dst] = unweighted_depth[u] + 1;
                 stk.emplace(u, cnt + 1);
                 stk.emplace(e.dst, 0);
             }
@@ -253,7 +261,6 @@ struct DoublingClimbTree : private RootedTree<Cost> {
     using RootedTree<Cost>::operator[];
     using RootedTree<Cost>::edges;
     using RootedTree<Cost>::shortest_path;
-    using RootedTree<Cost>::RootedTree;
     using RootedTree<Cost>::root;
     using RootedTree<Cost>::par;
     using RootedTree<Cost>::child;
@@ -288,6 +295,34 @@ struct DoublingClimbTree : private RootedTree<Cost> {
     }
     
     /**
+     * @brief 親の頂点のリストから根が0のダブリング済み根付き木を構築するコンストラクタ
+     * 
+     * @param par_ 頂点0以外の親の頂点のリスト
+     * @param padding = -1 parの頂点番号をいくつずらすか
+     */
+    DoublingClimbTree(const std::vector<int>& par_, int padding = -1) : RootedTree<Cost>(par_, padding) {
+        build();
+    }
+    /**
+     * @brief Treeからダブリング済み根付き木を構築するコンストラクタ(コピー)
+     *
+     * @param tree Tree
+     * @param root 根
+     */
+    DoublingClimbTree(const Tree<Cost>& tree, int root) : RootedTree<Cost>(tree, root) {
+        build();
+    }
+    /**
+     * @brief Treeからダブリング済み根付き木を構築するコンストラクタ(ムーブ)
+     *
+     * @param tree Tree
+     * @param root 根
+     */
+    DoublingClimbTree(Tree<Cost>&& tree, int root) : RootedTree<Cost>(std::move(tree), root) {
+        build();
+    }
+    
+    /**
      * @brief 頂点uからk回を根の方向に遡った頂点
      * 
      * @param u 元の頂点
@@ -310,9 +345,8 @@ struct DoublingClimbTree : private RootedTree<Cost> {
      * @return int LCAの頂点番号
      */
     int lca(int u, int v) const {
-        if(this->depth[u] > this->depth[v]) std::swap(u, v);
-        v = climb(v, this->depth[v] - this->depth[u]);
-        if(this->depth[u] > this->depth[v]) u = climb(u, this->depth[u] - this->depth[v]);
+        if(this->unweighted_depth[u] > this->unweighted_depth[v]) std::swap(u, v);
+        v = climb(v, this->unweighted_depth[v] - this->unweighted_depth[u]);
         if(u == v) return u;
         for(int i = h - 1; i >= 0; i--) {
             int nu = doubling_par[i][u];
@@ -333,14 +367,14 @@ struct DoublingClimbTree : private RootedTree<Cost> {
      * @param v 頂点2
      * @return int uとv間の最短経路の辺の本数
      */
-    int dist(int u, int v) const {
+    Cost dist(int u, int v) const {
         return this->depth[u] + this->depth[v] - this->depth[lca(u, v)] * 2;
     }
     
 private:
     void build() {
         int n = this->n;
-        h = 0;
+        h = 1;
         while((1 << h) < n) h++;
         doubling_par.assign(h, std::vector<int>(n, -1));
         for(int i = 0; i < n; i++) doubling_par[0][i] = this->par[i];

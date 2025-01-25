@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <numeric>
 #include <vector>
+
 #include "traits.hpp"
 
 template <typename T>
@@ -178,4 +179,12 @@ std::vector<T> iota(T n) {
     std::vector<T> ret(n);
     std::iota(ret.begin(), ret.end(), 0);
     return ret;
+}
+
+template <typename T>
+std::vector<T> unique(const std::vector<T> &v) {
+    std::vector<T> res(v);
+    std::sort(res.begin(), res.end());
+    res.erase(std::unique(res.begin(), res.end()), res.end());
+    return res;
 }
