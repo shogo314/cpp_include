@@ -11,3 +11,10 @@ export CPLUS_INCLUDE_PATH="$HOME/cpp_include"
 ```
 
 と書いています。
+
+# その他外部ライブラリ
+## boost1.87.0
+```
+cd tmp
+wget -O https://archives.boost.io/release/1.87.0/source/boost_1_87_0.tar.gz
+```
