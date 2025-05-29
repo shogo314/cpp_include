@@ -86,3 +86,4 @@ using StaticRAddQ = Imos<S, S, std::plus<S>, std::plus<S>, more_functional::None
  */
 template <typename S>
 using StaticRMulQ = Imos<S, S, std::multiplies<S>, std::multiplies<S>, more_functional::One<S>, more_functional::Div<S>>;
+

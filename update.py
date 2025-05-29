@@ -54,6 +54,7 @@ def download_sh_library():
 
 
 def main():
+    download_atcoder()
     download_ou_library()
     download_sh_library()
     delete("./tmp")
