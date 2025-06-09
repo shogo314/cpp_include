@@ -7,14 +7,24 @@
 
 #define all(obj) (obj).begin(), (obj).end()
 
-#define repts(i, a, n, t) for (long long i = (a); i < (n); i+=(t))
-#define reps(i, a, n) for (long long i = (a); i < (n); i++)
-#define rep(i, n) reps(i, 0, (n))
-#define rrep(i, n) reps(i, 1, (n) + 1)
-#define repds(i, a, n) for (long long i = (n)-1; i >= (a); i--)
-#define repd(i, n) repds(i, 0, (n))
-#define rrepd(i, n) repds(i, 1, (n) + 1)
-#define rep2(i, j, x, y) rep(i, x) rep(j, y)
+#define CONCAT_IMPL(x, y) __CONCAT(x, y)
+#define UNIQUE_ID(base) CONCAT_IMPL(base, __COUNTER__)
+
+#define GET_MACRO(_1, _2, _3, _4, NAME, ...) NAME
+
+#define rep4(i, a, n, t) for (long long i = static_cast<long long>(a), i##_loop_end = static_cast<long long>(n), i##_loop_step = static_cast<long long>(t); i < i##_loop_end; i += i##_loop_step)
+#define rep3(i, a, n) for (long long i = static_cast<long long>(a), i##_loop_end = static_cast<long long>(n); i < i##_loop_end; ++i)
+#define rep2(i, n) rep3(i, 0, n)
+#define rep1(n) rep2(UNIQUE_ID(loop_counter_), n)
+#define rep(...) GET_MACRO(__VA_ARGS__, rep4, rep3, rep2, rep1)(__VA_ARGS__)
+
+#define repd4(i, a, n, t) for (long long i = static_cast<long long>(n) - 1, i##_loop_end = static_cast<long long>(a), i##_loop_step = static_cast<long long>(t); i >= i##_loop_end; i -= i##_loop_step)
+#define repd3(i, a, n) for (long long i = static_cast<long long>(n) - 1, i##_loop_end = static_cast<long long>(a); i >= i##_loop_end; --i)
+#define repd2(i, n) repd3(i, 0, n)
+#define repd(...) GET_MACRO(__VA_ARGS__, repd4, repd3, repd2)(__VA_ARGS__)
+
+#define rrep(i, n) rep(i, 1, (n) + 1)
+#define rrepd(i, n) repd(i, 1, (n) + 1)
 
 inline void scan(){}
 template<class Head,class... Tail>

@@ -188,3 +188,22 @@ std::vector<T> unique(const std::vector<T> &v) {
     res.erase(std::unique(res.begin(), res.end()), res.end());
     return res;
 }
+
+long long radix_convert(const std::vector<long long> &v, int base = 10) {
+    long long res = 0;
+    for (int i = v.size() - 1; i >= 0; i--) {
+        res <<= base;
+        res += v[i];
+    }
+    return res;
+}
+
+std::vector<long long> radix_convert(long long v, int base = 10) {
+    std::vector<long long> res;
+    while (v > 0) {
+        res.push_back(v % base);
+        v /= base;
+    }
+    std::reverse(res.begin(), res.end());
+    return res;
+}

@@ -51,7 +51,6 @@ constexpr T extgcd(const T &a, const T &b, T &x, T &y) {
 template <typename M, typename N, class F, ENABLE_IF_T(std::is_integral_v<std::common_type_t<M, N>> and std::is_invocable_r_v<bool, F, std::common_type_t<M, N>>)>
 inline constexpr std::common_type_t<M, N> binary_search(const M &ok, const N &ng, F f) {
     std::common_type_t<M, N> _ok = ok, _ng = ng;
-    assert(f(_ok));
     while (std::abs(_ok - _ng) > 1) {
         std::common_type_t<M, N> mid = (_ok + _ng) / 2;
         if (f(mid)) {
@@ -66,7 +65,6 @@ inline constexpr std::common_type_t<M, N> binary_search(const M &ok, const N &ng
 template <typename M, typename N, class F, ENABLE_IF_T(not std::is_integral_v<std::common_type_t<M, N>> and std::is_invocable_r_v<bool, F, std::common_type_t<M, N>>)>
 inline constexpr std::common_type_t<M, N> binary_search(const M &ok, const N &ng, F f) {
     std::common_type_t<M, N> _ok = ok, _ng = ng;
-    assert(f(_ok));
     for (int i = 0; i < 100; i++) {
         std::common_type_t<M, N> mid = (_ok + _ng) / 2;
         if (f(mid)) {
@@ -95,22 +93,4 @@ inline constexpr bool inrange(long long x, long long a, long long b) {
  */
 inline constexpr bool inrect(long long x, long long y, long long a, long long b) {
     return 0 <= x and x < a and 0 <= y and y < b;
-}
-
-long long radix_convert(const std::vector<long long> &v, int base = 10) {
-    long long res = 0;
-    for (int i = v.size() - 1; i >= 0; i--) {
-        res <<= base;
-        res += v[i];
-    }
-    return res;
-}
-std::vector<long long> radix_convert(long long v, int base = 10) {
-    std::vector<long long> res;
-    while (v > 0) {
-        res.push_back(v % base);
-        v /= base;
-    }
-    std::reverse(res.begin(), res.end());
-    return res;
 }
