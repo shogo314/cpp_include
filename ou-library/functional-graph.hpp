@@ -152,4 +152,3 @@ struct FunctionalGraph {
         return depth[x] + (int)cycle_list[connected_id[x]].size();
     }
 };
-

@@ -44,4 +44,3 @@ class MonoidUnionFind : private UnionFind {
         return val[leader(a)];
     }
 };
-

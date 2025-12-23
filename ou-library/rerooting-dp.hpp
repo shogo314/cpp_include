@@ -97,4 +97,3 @@ inline std::vector<V> connected_subgraph_count(const Tree<Cost>& tree) {
         [](V a, Cost c, int) { return a + 1; },
         [](V a, int) { return a; });
 }
-

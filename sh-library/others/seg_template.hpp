@@ -18,3 +18,35 @@ struct RangeComposite {
         return {1, 0};
     }
 };
+
+struct Parenthesis {
+    struct S {
+        long long left;
+        long long right;
+        S(char c = 0) {
+            if (c == '(') {
+                left = 0;
+                right = 1;
+            } else if (c == ')') {
+                left = 1;
+                right = 0;
+            } else {
+                left = right = 0;
+            }
+        }
+        S(long long left_, long long right_) : left(left_), right(right_) {}
+        bool is_valid() const {
+            return left == 0 && right == 0;
+        }
+    };
+    S op(const S& l, const S& r) {
+        if (l.right >= r.left) {
+            return S(l.left, l.right - r.left + r.right);
+        } else {
+            return S(l.left + r.left - l.right, r.right);
+        }
+    }
+    S e() {
+        return S();
+    }
+};
