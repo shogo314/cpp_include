@@ -48,6 +48,23 @@ constexpr T extgcd(const T &a, const T &b, T &x, T &y) {
     return d;
 }
 
+/**
+ * 偏角ソート
+ * 反時計回り
+ */
+template <typename T, ENABLE_IF_T(std::is_integral_v<T>)>
+bool argcmp(std::array<T, 2> a, std::array<T, 2> b) {
+    T a0 = std::array<T, 2>{a[1], a[0]} < std::array<T, 2>{0, 0};
+    T b0 = std::array<T, 2>{b[1], b[0]} < std::array<T, 2>{0, 0};
+    if (a0 < b0) {
+        return true;
+    } else if (b0 < a0) {
+        return false;
+    } else {
+        return b[0] * a[1] < a[0] * b[1];
+    }
+}
+
 template <typename M, typename N, class F, ENABLE_IF_T(std::is_integral_v<std::common_type_t<M, N>> and std::is_invocable_r_v<bool, F, std::common_type_t<M, N>>)>
 inline constexpr std::common_type_t<M, N> binary_search(const M &ok, const N &ng, F f) {
     std::common_type_t<M, N> _ok = ok, _ng = ng;
