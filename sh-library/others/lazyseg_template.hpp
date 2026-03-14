@@ -149,3 +149,63 @@ struct RangeAddRangeMinPair {
         return {};
     };
 };
+
+/**
+ * T が U 個ある
+ * T が最小となるものの U の和
+ */
+template <typename T, typename U, U E = U{}>
+struct RangeAddRangeMinCount {
+    using S = std::pair<T, U>;
+    S op(const S& a, const S& b) const {
+        if (a.first < b.first)
+            return a;
+        else if (b.first < a.first)
+            return b;
+        else
+            return {a.first, a.second + b.second};
+    }
+    S e() const {
+        return {std::numeric_limits<T>::max(), E};
+    }
+    using F = U;
+    S mapping(const F& f, const S& x) const {
+        return {x.first + f, x.second};
+    }
+    F composition(const F& f, const F& g) const {
+        return f + g;
+    }
+    F id() const {
+        return E;
+    };
+};
+
+/**
+ * T が U 個ある
+ * T が最大となるものの U の和
+ */
+template <typename T, typename U, U E = U{}>
+struct RangeAddRangeMaxCount {
+    using S = std::pair<T, U>;
+    S op(const S& a, const S& b) const {
+        if (a.first < b.first)
+            return b;
+        else if (b.first < a.first)
+            return a;
+        else
+            return {a.first, a.second + b.second};
+    }
+    S e() const {
+        return {std::numeric_limits<T>::min(), E};
+    }
+    using F = U;
+    S mapping(const F& f, const S& x) const {
+        return {x.first + f, x.second};
+    }
+    F composition(const F& f, const F& g) const {
+        return f + g;
+    }
+    F id() const {
+        return E;
+    };
+};
