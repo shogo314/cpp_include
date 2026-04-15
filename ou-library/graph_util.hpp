@@ -98,8 +98,8 @@ bool is_tree(const Graph<Cost>& graph) {
  * @param G トポロジカルソートするグラフ
  * @return ソートされたノード番号のvector DAGでなければ長さがG.n未満になる
  */
-template<typename Cost>
-std::vector<int> topological_sort(const Graph<Cost> &G) {
+template <typename Cost>
+std::vector<int> topological_sort(const Graph<Cost>& G) {
     std::vector<int> indeg(G.n), sorted;
     std::queue<int> q;
     for (int i = 0; i < G.n; i++) {
@@ -109,11 +109,49 @@ std::vector<int> topological_sort(const Graph<Cost> &G) {
         if (!indeg[i]) q.push(i);
     }
     while (!q.empty()) {
-        int cur = q.front(); q.pop();
+        int cur = q.front();
+        q.pop();
         for (int dst : G[cur]) {
             if (!--indeg[dst]) q.push(dst);
         }
         sorted.push_back(cur);
     }
     return sorted;
+}
+
+/**
+ * @brief 最小シュタイナー木の辺重みの総和
+ */
+template <typename Cost, typename T>
+Cost minimum_steiner_tree(const Graph<Cost>& G, const std::vector<T>& X, Cost inf = -1) {
+    std::vector<std::vector<Cost>> dp(G.n, std::vector<Cost>(1 << X.size(), inf));
+    for (int p = 0; p < X.size(); p++) dp[X[p]][1 << p] = {};
+    for (int i = 0; i < (1 << X.size()); i++) {
+        for (int j = i; j > 0; j = (j - 1) & i) {
+            for (int k = 0; k < G.n; k++) {
+                if (dp[k][j] != inf && dp[k][i ^ j] != inf) {
+                    if (dp[k][i] == inf || dp[k][i] > dp[k][j] + dp[k][i ^ j]) dp[k][i] = dp[k][j] + dp[k][i ^ j];
+                }
+            }
+        }
+        std::priority_queue<std::pair<Cost, int>, std::vector<std::pair<Cost, int>>, std::greater<std::pair<Cost, int>>> que;
+        for (int k = 0; k < G.n; k++)
+            if (dp[k][i] != inf) que.emplace(dp[k][i], k);
+        while (que.size()) {
+            auto [d, u] = que.top();
+            que.pop();
+            if (d > dp[u][i]) continue;
+            for (auto e : G[u]) {
+                if (dp[e.dst][i] == inf || dp[e.dst][i] > d + e.cost) {
+                    dp[e.dst][i] = d + e.cost;
+                    que.emplace(d + e.cost, e.dst);
+                }
+            }
+        }
+    }
+    Cost res = inf;
+    for (int k = 0; k < G.n; k++) {
+        if (dp[k].back() != inf && (res == inf || res > dp[k].back())) res = dp[k].back();
+    }
+    return res;
 }
