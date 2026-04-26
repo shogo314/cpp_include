@@ -209,3 +209,64 @@ struct RangeAddRangeMaxCount {
         return E;
     };
 };
+
+/**
+ * K乗和　区間加算
+ */
+template <typename T, int K>
+struct RangeAddPowerSum {
+    struct S {
+        std::array<T, K + 1> val;
+        S() : val{} {}
+        S(T x) {
+            for (int i = 0; i <= K; i++) {
+                val[i] = T{1};
+                for (int j = 0; j < i; j++) val[i] *= x;
+            }
+        }
+        const T& operator[](std::size_t i) const {
+            return val[i];
+        }
+    };
+    inline static bool initialized = false;
+    inline static std::array<std::array<T, K + 1>, K + 1> tmp = {};
+    S op(const S& a, const S& b) const {
+        S res{};
+        for (int i = 0; i <= K; i++) res.val[i] = a[i] + b[i];
+        return res;
+    }
+    S e() const {
+        return S();
+    }
+    using F = T;
+    S mapping(const F& f, const S& x) const {
+        if (!initialized) {
+            initialized = true;
+            for (int i = 0; i <= K; i++) {
+                for (int j = 0; j <= i; j++) {
+                    if (j == 0 || j == i) {
+                        tmp[i][j] = T{1};
+                    } else {
+                        tmp[i][j] = tmp[i - 1][j - 1] + tmp[i - 1][j];
+                    }
+                }
+            }
+        }
+        S res{};
+        std::array<T, K + 1> pw{};
+        pw[0] = T{1};
+        for (int i = 1; i <= K; i++) pw[i] = pw[i - 1] * f;
+        for (int i = 0; i <= K; i++) {
+            for (int j = 0; j <= i; j++) {
+                res.val[i] += tmp[i][j] * pw[j] * x[i - j];
+            }
+        }
+        return res;
+    }
+    F composition(const F& f, const F& g) const {
+        return f + g;
+    }
+    F id() const {
+        return F{};
+    };
+};
