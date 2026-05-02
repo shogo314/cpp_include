@@ -120,6 +120,15 @@ std::vector<int> topological_sort(const Graph<Cost>& G) {
 }
 
 /**
+ * @brief 有向グラフについて、サイクルをもつかどうかを判定する。
+ * @return bool サイクルをもつならtrue、非巡回ならfalseを返す。
+ */
+template <typename Cost = int>
+bool has_acyclic(const Graph<Cost>& graph) {
+    return topological_sort(graph).size() < graph.n;
+}
+
+/**
  * @brief 最小シュタイナー木の辺重みの総和
  */
 template <typename Cost, typename T>
