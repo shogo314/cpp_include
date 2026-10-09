@@ -7,7 +7,8 @@
 
 #define all(obj) (obj).begin(), (obj).end()
 
-#define CONCAT_IMPL(x, y) __CONCAT(x, y)
+#define CONCAT_IMPL2(x, y) x##y
+#define CONCAT_IMPL(x, y) CONCAT_IMPL2(x, y)
 #define UNIQUE_ID(base) CONCAT_IMPL(base, __COUNTER__)
 
 #define GET_MACRO(_1, _2, _3, _4, NAME, ...) NAME
