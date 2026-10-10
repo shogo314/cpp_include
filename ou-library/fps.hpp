@@ -99,6 +99,7 @@ template <typename mint> struct FPS : std::vector<mint> {
     // df/dx
     inline friend FPS diff(const FPS& f) {
         int n = (int)f.size();
+        if (n == 0) return FPS();
         FPS res(n-1);
         for (int i = 1; i < n; ++i) res[i-1] = f[i] * i;
         return res;
@@ -114,8 +115,9 @@ template <typename mint> struct FPS : std::vector<mint> {
  
     // inv(f), f[0] must not be 0
     inline friend FPS inv(const FPS& f, int deg) {
-        assert(f[0] != 0);
+        assert(!f.empty() && f[0] != 0);
         if (deg < 0) deg = (int)f.size();
+        if (deg == 0) return FPS();
         FPS res({mint(1) / f[0]});
         for (int i = 1; i < deg; i <<= 1) {
             res = (res + res - res * res * f.pre(i << 1)).pre(i << 1);
@@ -152,7 +154,7 @@ template <typename mint> struct FPS : std::vector<mint> {
  
     // log(f) = \int f'/f dx, f[0] must be 1
     inline friend FPS log(const FPS& f, int deg) {
-        assert(f[0] == 1);
+        assert(!f.empty() && f[0] == 1);
         FPS res = intg(diff(f) * inv(f, deg));
         res.resize(deg);
         return res;
@@ -163,7 +165,7 @@ template <typename mint> struct FPS : std::vector<mint> {
  
     // exp(f), f[0] must be 0
     inline friend FPS exp(const FPS& f, int deg) {
-        assert(f[0] == 0);
+        assert(f.empty() || f[0] == 0);
         FPS res(1, 1);
         for (int i = 1; i < deg; i <<= 1) {
             res = res * (f.pre(i<<1) - log(res, i<<1) + 1).pre(i<<1);
@@ -179,7 +181,7 @@ template <typename mint> struct FPS : std::vector<mint> {
     inline friend FPS pow(const FPS& f, long long e, int deg) {
         if(e == 0) {
             auto ret = FPS(deg, 0);
-            ret[0] = 1;
+            if (deg > 0) ret[0] = 1;
             return ret;
         }
         long long i = 0;

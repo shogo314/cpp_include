@@ -21,10 +21,10 @@ struct Graph {
      * for (int dst : g[v]) とすると、vから出る辺の行き先が列挙される
      */
     struct Edge {
-        int src;   //!< 始点
-        int dst;   //!< 終点
-        Cost cost; //!< コスト
-        int id;    //!< 辺の番号(追加された順、無向辺の場合はidが同じで方向が逆のものが2つ存在する)
+        int src = -1;   //!< 始点
+        int dst = -1;   //!< 終点
+        Cost cost = {}; //!< コスト
+        int id = -1;    //!< 辺の番号(追加された順、無向辺の場合はidが同じで方向が逆のものが2つ存在する)
         Edge() = default;
         Edge(int src, int dst, Cost cost = 1, int id = -1) : src(src), dst(dst), cost(cost), id(id) {}
         operator int() const { return dst; }
@@ -131,10 +131,10 @@ struct Graph {
      * @brief ある頂点から各頂点への最短路
      *
      * @param s 始点
-     * @param inf コストのminの単位元 未到達の頂点への距離はinfになる 省略すると 1LL << 61 負閉路の影響を受ける点は -inf
+     * @param inf コストのminの単位元 未到達の頂点への距離はinfになる 省略すると std::numeric_limits<Cost>::max() / 4 負閉路の影響を受ける点は -inf
      * @return std::pair<std::vector<Cost>, std::vector<Edge>> first:各頂点への最短路長 second:各頂点への最短路上の直前の辺
      */
-    std::pair<std::vector<Cost>, std::vector<Edge>> bellman_ford(int s, Cost inf = (std::numeric_limits<Cost>::max() >> 2)) const {
+    std::pair<std::vector<Cost>, std::vector<Edge>> bellman_ford(int s, Cost inf = std::numeric_limits<Cost>::max() / 4) const {
         std::vector<Cost> dist(n, inf);
         std::vector<Edge> prev(n);
         dist[s] = Cost{};

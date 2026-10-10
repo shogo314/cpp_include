@@ -14,6 +14,7 @@
 template <typename It>
 std::vector<int> z_algorithm(It begin, It end) {
     int n = end - begin;
+    if (n == 0) return {};
     std::vector<int> z(n);
     z[0] = n;
     for(int i = 1, j = 0; i < n;) {

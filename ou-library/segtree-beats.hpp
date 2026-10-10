@@ -176,11 +176,12 @@ public:
      * @param x 作用素
      */
     void apply(int k, const F& f) {
+        assert(0 <= k && k < n);
         k += sz;
         for(int h = height; h > 0; h--) {
             push(k >> h, h);
         }
-        data[k] = mapping(f, data[k]);
+        data[k] = mapping(f, data[k], k - sz, k - sz + 1).second;
         while(k >>= 1) update(k);
     }
     /**
@@ -226,6 +227,7 @@ public:
     template <typename G>
     int max_right(int l, G g) {
         assert(g(e()));
+        assert(0 <= l && l <= n);
         if(l == n) return n;
         l += sz;
         for(int h = height; h > 0; h--) {
@@ -270,36 +272,35 @@ public:
     template <typename G>
     int min_left(int r, G g) {
         assert(g(e()));
+        assert(0 <= r && r <= n);
         if (r == 0) return 0;
         r += sz;
         for(int h = height; h > 0; h--) {
-            push(r >> h, h);
+            push((r - 1) >> h, h);
         }
         int h = 0;
-        while(r % 2 == 0) {
-            r >>= 1;
-            h++;
-        }
         S sum = e();
-        while(g(op(data[r-1], sum))) {
-            sum = op(data[r], sum);
+        do {
             r--;
-            while(r % 2 == 0) {
+            while(r > 1 && r % 2 == 1) {
                 r >>= 1;
                 h++;
             }
-            if(r == 1) return 0;
-        }
-        while(r < sz) {
-            push(r - 1, h);
-            if(!g(op(data[r*2-1], sum))) r *= 2;
-            else {
-                sum = op(data[r*2-1], sum);
-                r = r*2 - 1;
+            if(!g(op(data[r], sum))) {
+                while(r < sz) {
+                    push(r, h);
+                    r = r*2 + 1;
+                    h--;
+                    if(g(op(data[r], sum))) {
+                        sum = op(data[r], sum);
+                        r--;
+                    }
+                }
+                return r + 1 - sz;
             }
-            h--;
-        }
-        return r - sz;
+            sum = op(data[r], sum);
+        } while((r & -r) != r);
+        return 0;
     }
 };
 

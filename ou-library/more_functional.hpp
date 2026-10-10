@@ -5,9 +5,11 @@
  * @brief 関数オブジェクトを定義する
  */
 
+#include <algorithm>
 #include <limits>
 #include <numeric>
 #include <type_traits>
+#include <utility>
 
 namespace more_functional {
 template <typename S>

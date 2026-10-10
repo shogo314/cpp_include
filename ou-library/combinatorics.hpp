@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <vector>
 #include "number-theory.hpp"
 
@@ -9,6 +10,7 @@
 template <typename Modint>
 class Combination {
     static std::vector<Modint> fact, inv_fact;
+    static long long cached_mod; // dynamic_modint で mod が変わったら前計算をやり直す
 
 public:
     /**
@@ -17,6 +19,11 @@ public:
      * @note O(n) 必要になったら呼び出されるが、予め大きなnに対して呼び出しておくことで逆元の直接計算を減らせる
      */
     inline static void extend(int n) {
+        if (cached_mod != (long long)Modint::mod()) {
+            cached_mod = Modint::mod();
+            fact = {1, 1};
+            inv_fact = {1, 1};
+        }
         int m = fact.size();
         if (n < m) return;
         fact.resize(n + 1);
@@ -57,6 +64,7 @@ public:
      * @note extend(n), O(1)
      */
     inline static Modint inverse(int n) {
+        assert(n > 0);
         extend(n);
         return inv_fact[n] * fact[n - 1];
     }
@@ -165,6 +173,8 @@ template <typename Modint>
 std::vector<Modint> Combination<Modint>::fact{1, 1};
 template <typename Modint>
 std::vector<Modint> Combination<Modint>::inv_fact{1, 1};
+template <typename Modint>
+long long Combination<Modint>::cached_mod = 0;
 
 /**
  * @brief mod p^q での二項係数を求める構造

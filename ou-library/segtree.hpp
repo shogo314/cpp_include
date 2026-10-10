@@ -194,22 +194,23 @@ public:
         assert(0 <= r && r <= n);
         if (r == 0) return 0;
         r += sz;
-        while (r % 2 == 0) r >>= 1;
         S sum = e();
-        while(f(op(data[r-1], sum))) {
-            sum = op(data[r-1], sum);
+        do {
             r--;
-            while (r % 2 == 0) r >>= 1;
-            if (r == 1) return 0;
-        }
-        while (r < sz) {
-            if (!f(op(data[r * 2 - 1], sum))) r *= 2;
-            else {
-                sum = op(data[r * 2 - 1], sum);
-                r = r * 2 - 1;
+            while (r > 1 && r % 2 == 1) r >>= 1;
+            if (!f(op(data[r], sum))) {
+                while (r < sz) {
+                    r = r * 2 + 1;
+                    if (f(op(data[r], sum))) {
+                        sum = op(data[r], sum);
+                        r--;
+                    }
+                }
+                return r + 1 - sz;
             }
-        }
-        return r - sz;
+            sum = op(data[r], sum);
+        } while ((r & -r) != r);
+        return 0;
     }
 };
 

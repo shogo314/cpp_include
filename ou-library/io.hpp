@@ -10,6 +10,24 @@
 #include <tuple>
 #include <vector>
 
+// ネストした型 (pair<vector<int>, int> など) を扱えるように先に宣言しておく
+template <typename T1, typename T2, typename CharT, typename Traits>
+std::basic_istream<CharT, Traits>& operator>>(std::basic_istream<CharT, Traits>& is, std::pair<T1, T2>& p);
+template <typename... Types, typename CharT, typename Traits>
+std::basic_istream<CharT, Traits>& operator>>(std::basic_istream<CharT, Traits>& is, std::tuple<Types...>& p);
+template <typename T, size_t N, typename CharT, typename Traits>
+std::basic_istream<CharT, Traits>& operator>>(std::basic_istream<CharT, Traits>& is, std::array<T, N>& a);
+template <typename T, typename CharT, typename Traits>
+std::basic_istream<CharT, Traits>& operator>>(std::basic_istream<CharT, Traits>& is, std::vector<T>& v);
+template <typename T1, typename T2, typename CharT, typename Traits>
+std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os, const std::pair<T1, T2>& p);
+template <typename... Types, typename CharT, typename Traits>
+std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os, const std::tuple<Types...>& p);
+template <typename T, size_t N, typename CharT, typename Traits>
+std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os, const std::array<T, N>& a);
+template <typename T, typename CharT, typename Traits>
+std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os, const std::vector<T>& v);
+
 namespace tuple_io {
     template <typename Tuple, size_t I, typename CharT, typename Traits>
     std::basic_istream<CharT, Traits>& read_tuple(std::basic_istream<CharT, Traits>& is, Tuple& t) {
@@ -79,7 +97,7 @@ std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>&
 /**
  * @brief 空行出力
  */
-void print() { std::cout << '\n'; }
+inline void print() { std::cout << '\n'; }
 /**
  * @brief 出力して改行
  * 

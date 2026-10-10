@@ -26,11 +26,13 @@ struct FunctionalGraph {
     std::vector<std::vector<int>> doubling;        //!< DoublingClimbTree
 
     void build() {
-        is_cycle.resize(n);
-        depth.resize(n);
+        is_cycle.assign(n, false);
+        depth.assign(n, 0);
         root.assign(n, -1);
-        connected_id.resize(n);
-        root_idx.resize(n);
+        connected_id.assign(n, 0);
+        root_idx.assign(n, 0);
+        connected_list.clear();
+        cycle_list.clear();
         std::vector<bool> visited(n);
         for (int i = 0; i < n; i++) {
             if (visited[i]) continue;
@@ -73,7 +75,7 @@ struct FunctionalGraph {
                 }
             }
         }
-        doubling.resize(n);
+        doubling.assign(n, {});
         std::vector<int> tmp;
         for (int i = 0; i < n; i++) {
             if (is_cycle[i]) continue;

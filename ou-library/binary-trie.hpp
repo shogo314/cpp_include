@@ -152,6 +152,9 @@ class BinaryTrie {
      * @return 探索した値が昇順で何番目か (0-indexed)。該当する要素がなければtrie木のサイズが返る
      */
     int lower_bound(T n) const {
+        if constexpr (d < std::numeric_limits<T>::digits) {
+            if ((n >> d) != 0) return size();
+        }
         int ret = 0;
         NodePtr cur_ptr = root_ptr;
         while (!cur_ptr->is_leaf()) {

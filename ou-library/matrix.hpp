@@ -81,8 +81,11 @@ template<class T, class OperatorProperty = matrix::OperatorPropertyDefault<T>> s
         v = A;
         return *this;
     }
-    bool operator == (const Matrix &A) noexcept {
+    bool operator == (const Matrix &A) const noexcept {
         return this->v == A.v;
+    }
+    bool operator != (const Matrix &A) const noexcept {
+        return this->v != A.v;
     }
 
     /**
@@ -154,6 +157,9 @@ template<class T, class OperatorProperty = matrix::OperatorPropertyDefault<T>> s
      */
     [[nodiscard]]
     Matrix shift(int dy, int dx) noexcept {
+        if(n == 0 || m == 0) return *this;
+        dy = (dy % n + n) % n;
+        dx = (dx % m + m) % m;
         std::vector<std::vector<T>> ret = v;
         for(int i = 0, ni = dy; i < n; i ++, ni ++) {
             if(ni >= n) ni = 0;
@@ -272,7 +278,8 @@ template<class T, class OperatorProperty = matrix::OperatorPropertyDefault<T>> s
      * @return @c *this
     */
     Matrix &operator*=(const Matrix &B) {
-        int p = B[0].size();
+        assert(m == B.n);
+        int p = B.m;
         Matrix C(n, p);
         for(int i = 0; i < n; i ++) {
             for(int k = 0; k < m; k ++) {
@@ -318,7 +325,8 @@ template<class T, class OperatorProperty = matrix::OperatorPropertyDefault<T>> s
     */
     [[nodiscard]]
     friend std::vector<T> operator*(const Matrix &A, const std::vector<T> &B) {
-        std::vector<T> ret(A.n, 0);
+        assert(A.m == (int)B.size());
+        std::vector<T> ret(A.n, OperatorProperty::zero());
         for(int i = 0; i < A.n; i ++) {
             for(int j = 0; j < A.m; j ++) {
                 ret[i] = OperatorProperty::add(ret[i], OperatorProperty::mul(A[i][j], B[j]));
@@ -335,7 +343,8 @@ template<class T, class OperatorProperty = matrix::OperatorPropertyDefault<T>> s
     */
     [[nodiscard]]
     friend std::vector<T> operator*(const std::vector<T> &A, const Matrix &B) {
-        std::vector<T> ret(B.m, 0);
+        assert((int)A.size() == B.n);
+        std::vector<T> ret(B.m, OperatorProperty::zero());
         for(int i = 0; i < B.n; i ++) {
             for(int j = 0; j < B.m; j ++) {
                 ret[j] = OperatorProperty::add(ret[j], OperatorProperty::mul(A[i], B[i][j]));
@@ -376,7 +385,8 @@ template<class T, class OperatorProperty = matrix::OperatorPropertyDefault<T>> s
                 for(int j = 0; j < n; j ++) A[i][j] = this->v[i][j];
                 A[i][n+i] = T(1);
             }
-            assert(forward_elimination(A) != T(0));
+            [[maybe_unused]] T d = forward_elimination(A);
+            assert(d != T(0));
             for(int i = n - 1; i >= 0; i --) {
                 for(int j = i - 1; j >= 0; j --) {
                     A[j] -= A[i] * A[j][i];
@@ -391,7 +401,8 @@ template<class T, class OperatorProperty = matrix::OperatorPropertyDefault<T>> s
                 for(int j = 0; j < n; j ++) A[i][j] = this->v[i][j];
                 A[i][n+i] = OperatorProperty::one();
             }
-            assert(forward_elimination(A) != T(0));
+            [[maybe_unused]] T d = forward_elimination(A);
+            assert(d != OperatorProperty::zero());
             for(int i = n - 1; i >= 0; i --) {
                 for(int j = i - 1; j >= 0; j --) {
                     for(int k = n; k < n+n; k ++) {
@@ -429,7 +440,7 @@ private:
                     }
                 } else {
                     while(pivot < n && A[pivot][pivot_col[i]] == T(0)) pivot ++;
-                    if(A[pivot][pivot_col[i]] == T(0)) {
+                    if(pivot == n) {
                         pivot_col[i] ++;
                         continue;
                     }
@@ -465,7 +476,7 @@ private:
             while(pivot_col[i] < m) {
                 int pivot = i;
                 while(pivot < n && A[pivot][pivot_col[i]] == OperatorProperty::zero()) pivot ++;
-                if(A[pivot][pivot_col[i]] == OperatorProperty::zero()) {
+                if(pivot == n) {
                     pivot_col[i] ++;
                     continue;
                 }
@@ -475,13 +486,14 @@ private:
                 }
                 break;
             }
-            if(pivot_col[i] == m) return T(0);
+            if(pivot_col[i] == m) return OperatorProperty::zero();
+            const int w = A[i].size();
             T scale = A[i][pivot_col[i]];
             d = OperatorProperty::mul(d, scale);
-            for(int j = pivot_col[i]; j < m; j ++) A[i][j] = OperatorProperty::mul(A[i][j], OperatorProperty::inv(scale));
+            for(int j = pivot_col[i]; j < w; j ++) A[i][j] = OperatorProperty::mul(A[i][j], OperatorProperty::inv(scale));
             for(int j = i + 1; j < n; j ++) {
                 T scale = A[j][pivot_col[i]];
-                for(int k = pivot_col[i]; k < m; k ++) {
+                for(int k = pivot_col[i]; k < w; k ++) {
                     A[j][k] = OperatorProperty::add(A[j][k], OperatorProperty::neg(OperatorProperty::mul(A[i][k], scale)));
                 }
             }

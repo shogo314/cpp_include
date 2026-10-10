@@ -40,6 +40,23 @@ class RollingHash {
     }
 
 public:
+    /**
+     * @brief 要素を[0, MOD)の値に変換する
+     * @note charは符号に関わらず0~255として扱う 負の整数はMODで正規化する
+     */
+    template <typename T>
+    constexpr static unsigned long long to_value(const T& x) {
+        using U = std::decay_t<T>;
+        if constexpr (std::is_same_v<U, char> || std::is_same_v<U, signed char>) {
+            return static_cast<unsigned char>(x);
+        } else if constexpr (std::is_integral_v<U> && std::is_signed_v<U>) {
+            long long v = static_cast<long long>(x) % static_cast<long long>(MOD);
+            return v < 0 ? v + MOD : v;
+        } else {
+            return static_cast<unsigned long long>(x) % MOD;
+        }
+    }
+
     unsigned int base; //!< ハッシュの基数
     std::vector<unsigned long long> power; //!< baseの累乗
 
@@ -72,7 +89,7 @@ public:
         }
         res.push_back(0);
         for(; first != last; ++first) {
-            res.push_back(add(mul(res.back(), base), *first));
+            res.push_back(add(mul(res.back(), base), to_value(*first)));
         }
         return res;
     }
@@ -136,8 +153,8 @@ struct RHString {
     template <class T, std::enable_if_t<std::is_convertible_v<T, unsigned long long> && !std::is_convertible_v<T, std::string_view>, std::nullptr_t> = nullptr>
     RHString(RollingHash& rh, T&& x) : rh(rh) {
         sz = 1;
-        hash1 = x;
-        hash2 = x;
+        hash1 = RollingHash::to_value(x);
+        hash2 = hash1;
     }
     /**
      * @brief 文字列(string, const char*, string_view)で初期化する
@@ -200,8 +217,8 @@ struct RHString {
     template <class T, std::enable_if_t<std::is_convertible_v<T, unsigned long long> && !std::is_convertible_v<T, std::string_view>, std::nullptr_t> = nullptr>
     void assign(T&& x) {
         sz = 1;
-        hash1 = x;
-        hash2 = x;
+        hash1 = RollingHash::to_value(x);
+        hash2 = hash1;
     }
     /**
      * @brief 文字列(string, const char*, string_view)を再代入する

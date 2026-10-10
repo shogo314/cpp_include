@@ -23,7 +23,7 @@ template <typename S, typename F, typename Mapping, typename Composition, typena
 class Imos {
    private:
     std::vector<S> data;
-    std::vector<S> lazy;
+    std::vector<F> lazy;
     int _n, t;
 
    public:
@@ -79,7 +79,7 @@ class Imos {
  * @tparam S 可換群の型
  */
 template <typename S>
-using StaticRAddQ = Imos<S, S, std::plus<S>, std::plus<S>, more_functional::None<S>, std::negate<F>>;
+using StaticRAddQ = Imos<S, S, std::plus<S>, std::plus<S>, more_functional::None<S>, std::negate<S>>;
 /**
  * @brief 区間積
  * @tparam S 可換群の型

@@ -7,6 +7,7 @@
  * 一次関数で表される直線または線分の集合を管理し、あるxに対する最小値を求める
  */
 
+#include <cassert>
 #include <limits>
 #include <type_traits>
 #include <vector>
@@ -54,6 +55,7 @@ public:
      * @param xs 最小値クエリのx座標や線分追加クエリの両端のx座標を先読みしてソートした配列
      */
     LiChaoTree(const std::vector<T>& xs) : n(xs.size()), xs(xs) {
+        assert(!xs.empty());
         sz = 1, height = 0;
         while(sz < (int)xs.size()) {
             sz <<= 1;

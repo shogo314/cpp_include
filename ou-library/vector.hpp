@@ -501,9 +501,12 @@ template <typename T>
 std::vector<Vector<T, 2>> convex_hull(const std::vector<Vector<T, 2>>& _points, bool include_straight = false) {
     std::vector<Vector<T, 2>> points = _points;
     std::sort(points.begin(), points.end());
+    points.erase(std::unique(points.begin(), points.end()), points.end());
     std::vector<Vector<T, 2>> ret = select_convex(points, include_straight);
     std::reverse(points.begin(), points.end());
     std::vector<Vector<T, 2>> tmp = select_convex(points, include_straight);
+    // 全点が一直線上にある場合、下側と上側が同じ点列になるので片方だけ使う
+    if(ret.size() == points.size() && tmp.size() == points.size()) return ret;
     for(int i = 1; i < (int)tmp.size()-1; i++) ret.push_back(tmp[i]);
     return ret;
 }

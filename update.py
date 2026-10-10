@@ -53,10 +53,23 @@ def download_sh_library():
     subprocess.run(["mv", "./tmp/sh-library-main/src", "./sh-library"])
 
 
+def download_shogo_library():
+    reset_dir("./tmp")
+    url = "https://github.com/shogo314/shogo-library/archive/refs/heads/main.zip"
+    zipfilename = "tmp/main.zip"
+    urlData = requests.get(url).content
+    with open(zipfilename, mode="wb") as f:  # wb でバイト型を書き込める
+        f.write(urlData)
+    subprocess.run(["unzip", "-d", "./tmp/", zipfilename])
+    delete("./shogo-library")
+    subprocess.run(["mv", "./tmp/shogo-library-main/src", "./shogo-library"])
+
+
 def main():
     # download_atcoder()
     download_ou_library()
     download_sh_library()
+    download_shogo_library()
     delete("./tmp")
 
 
