@@ -325,3 +325,60 @@ template <typename A>
 LazySegTree(int, A) -> LazySegTree<A>;
 template <typename A>
 LazySegTree(std::vector<typename A::S>, A) -> LazySegTree<A>;
+
+/**
+ * @brief 区間最小値更新、区間最小値
+ *
+ * @tparam S 型
+ */
+template <typename S>
+using RChminMinQ = LazySegTree<acted_monoid::ChminMin<S>>;
+/**
+ * @brief 区間最大値更新、区間最大値
+ *
+ * @tparam S 型
+ */
+template <typename S>
+using RChmaxMaxQ = LazySegTree<acted_monoid::ChmaxMax<S>>;
+/**
+ * @brief 区間加算、区間最小値
+ *
+ * @tparam S 型
+ */
+template <typename S>
+using RAddMinQ = LazySegTree<acted_monoid::AddMin<S>>;
+/**
+ * @brief 区間加算、区間最大値
+ *
+ * @tparam S 型
+ */
+template <typename S>
+using RAddMaxQ = LazySegTree<acted_monoid::AddMax<S>>;
+/**
+ * @brief 区間加算、区間和
+ *
+ * @tparam S 型
+ */
+template <typename S>
+using RAddSumQ = LazySegTree<acted_monoid::AddSum<S>>;
+/**
+ * @brief 区間変更、区間最小値
+ *
+ * @tparam S 型
+ */
+template <typename S>
+using RUpdateMinQ = LazySegTree<acted_monoid::UpdateMin<S>>;
+/**
+ * @brief 区間変更、区間最大値
+ *
+ * @tparam S 型
+ */
+template <typename S>
+using RUpdateMaxQ = LazySegTree<acted_monoid::UpdateMax<S>>;
+/**
+ * @brief 区間変更、区間和
+ *
+ * @tparam S 型
+ */
+template <typename S>
+using RUpdateSumQ = LazySegTree<acted_monoid::UpdateSum<S>>;

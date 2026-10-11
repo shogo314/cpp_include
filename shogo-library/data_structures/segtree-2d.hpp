@@ -233,3 +233,25 @@ public:
 
 template <typename M>
 SegTree2D(int, int, std::vector<std::tuple<int, int>>, std::vector<std::tuple<int, int, int, int>>, M) -> SegTree2D<M>;
+
+/**
+ * @brief RangeMaxQuery
+ *
+ * @tparam S 型
+ */
+template <typename S>
+using RMaxQ2D = SegTree2D<monoid::Max<S>>;
+/**
+ * @brief RangeMinQuery
+ *
+ * @tparam S 型
+ */
+template <typename S>
+using RMinQ2D = SegTree2D<monoid::Min<S>>;
+/**
+ * @brief RangeSumQuery
+ *
+ * @tparam S 型
+ */
+template <typename S>
+using RSumQ2D = SegTree2D<monoid::Sum<S>>;

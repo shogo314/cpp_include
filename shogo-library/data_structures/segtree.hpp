@@ -244,3 +244,46 @@ template <typename M>
 SegTree(int, M) -> SegTree<M>;
 template <typename M>
 SegTree(std::vector<typename M::S>, M) -> SegTree<M>;
+
+/**
+ * @brief RangeMaxQuery
+ *
+ * @tparam S 型
+ */
+template <typename S>
+using RMaxQ = SegTree<monoid::Max<S>>;
+/**
+ * @brief RangeMinQuery
+ *
+ * @tparam S 型
+ */
+template <typename S>
+using RMinQ = SegTree<monoid::Min<S>>;
+/**
+ * @brief RangeSumQuery
+ *
+ * @tparam S 型
+ */
+template <typename S>
+using RSumQ = SegTree<monoid::Sum<S>>;
+/**
+ * @brief RangeProdQuery
+ *
+ * @tparam S 型
+ */
+template <typename S>
+using RProdQ = SegTree<monoid::Prod<S>>;
+/**
+ * @brief RangeXorQuery
+ *
+ * @tparam S 型
+ */
+template <typename S>
+using RXorQ = SegTree<monoid::Xor<S>>;
+/**
+ * @brief RangeGcdQuery
+ *
+ * @tparam S 型
+ */
+template <typename S>
+using RGcdQ = SegTree<monoid::Gcd<S>>;
