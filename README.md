@@ -4,10 +4,10 @@ shogo314が競技プログラミングで使っているヘッダファイル置
 | ディレクトリ | 取得元 | 備考 |
 | --- | --- | --- |
 | `atcoder/` | [atcoder/ac-library](https://github.com/atcoder/ac-library) | 自動更新は無効化中(`update.py`でコメントアウト) |
-| `ou-library/` | [shogo314/ou-library](https://github.com/shogo314/ou-library) の `cpp/` | |
-| `sh-library/` | [shogo314/sh-library](https://github.com/shogo314/sh-library) の `src/` | |
 | `shogo-library/` | [shogo314/shogo-library](https://github.com/shogo314/shogo-library) の `src/` | |
 | `boost/` | [Boost](https://www.boost.org/) のヘッダ | git 管理外。各自で配置(下記) |
+
+以前は`ou-library`と`sh-library`も置いていましたが、内容は`shogo-library`に統合されたため廃止しました。
 
 # セットアップ
 このフォルダをホームディレクトリに置いて、`.bash_profile`に
@@ -26,7 +26,7 @@ export CPLUS_INCLUDE_PATH="$HOME/cpp_include"
 ```
 
 # 更新
-- `python3 update.py`:`ou-library`・`sh-library`・`shogo-library`を各リポジトリの最新版で置き換えます。
+- `python3 update.py`:`shogo-library`をリポジトリの最新版で置き換えます。
   - `requests`(Python パッケージ)と`unzip`コマンドが必要です。
   - 作業用に`./tmp`を作り直し、最後に削除するので、`./tmp`に置いたものは消えます。
   - `atcoder`も更新したい場合は`main()`の`download_atcoder()`のコメントアウトを外してください。
