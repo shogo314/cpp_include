@@ -1,5 +1,11 @@
 #pragma once
 
+/**
+ * @file string.hpp
+ * @brief Z-algorithm
+ */
+
+#include <iterator>
 #include <vector>
 
 /**
@@ -9,7 +15,7 @@
  * @tparam It 配列のイテレータ
  * @param begin 配列の開始イテレータ
  * @param end 配列の終了イテレータ
- * @return std::vector<typename std::iterator_traits<It>::value_type> z
+ * @return std::vector<int> z
  */
 template <typename It>
 std::vector<int> z_algorithm(It begin, It end) {
@@ -37,7 +43,7 @@ std::vector<int> z_algorithm(It begin, It end) {
  *
  * @tparam R 配列の型
  * @param s 配列
- * @return std::vector<typename R::value_type> z
+ * @return std::vector<int> z
  */
 template <typename R>
 std::vector<int> z_algorithm(const R& s) {

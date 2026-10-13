@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @file binary-trie.hpp
+ * @brief Binary Trie
+ */
+
 #include <assert.h>
 #include <limits>
 #include <memory>
@@ -83,7 +88,7 @@ class BinaryTrie {
      * @brief 集合からnを削除 (O(d))
      * @note 存在しない要素を指定したとき、何も起こらない
      */
-    void erase(T n) const {
+    void erase(T n) {
         unsigned int cnt = count(n);
         if (cnt == 0)
             return;
@@ -104,7 +109,7 @@ class BinaryTrie {
      * @brief 集合からnを一つだけ削除 (O(d))
      * @note 存在しない要素を指定したとき、何も起こらない
      */
-    void erase_one_element(T n) const {
+    void erase_one_element(T n) {
         if (count(n) == 0)
             return;
         NodePtr cur_ptr = root_ptr;

@@ -1,13 +1,22 @@
 #pragma once
+
+/**
+ * @file counter-segtree.hpp
+ * @brief 区間内の値の個数を数えるセグメント木
+ */
+
 #include <cassert>
 #include <map>
+#include <utility>
 #include <vector>
 
 template <typename T>
 class CounterSegTree {
+   public:
     using key_type = T;
     using mapped_type = int;
 
+   private:
     int n, sz, height;
     std::vector<std::map<key_type, mapped_type>> data;
 

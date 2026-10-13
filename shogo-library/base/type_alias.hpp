@@ -1,4 +1,10 @@
 #pragma once
+
+/**
+ * @file type_alias.hpp
+ * @brief 型の別名
+ */
+
 #include <bits/stdc++.h>
 
 using ll = long long;

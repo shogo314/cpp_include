@@ -1,15 +1,17 @@
 #pragma once
 
 /**
- * @file convex-hull-tric.hpp
+ * @file convex-hull-trick.hpp
  * @brief Convex Hull Trick
  *
  * 一次関数で表される直線または線分の集合を管理し、あるxに対する最小値を求める
  */
 
 #include <cassert>
+#include <cstddef>
 #include <limits>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 /**
@@ -97,7 +99,7 @@ public:
     /**
      * @brief x=xs[i]における最小値を求める
      *
-     * @param x x座標(xsのインデックス)
+     * @param i x座標(xsのインデックス)
      * @return T 最小値
      */
     T get_min(int i) const {

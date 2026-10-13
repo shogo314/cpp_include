@@ -37,20 +37,25 @@ class MonoidUnionFind : private UnionFind {
      * @param m 可換モノイド
      */
     explicit MonoidUnionFind(std::vector<S> v, M m = M()) : UnionFind(v.size()), m(std::move(m)), val(std::move(v)) {}
+    using MergeResult = UnionFind::MergeResult;
     using UnionFind::groups;
     using UnionFind::leader;
     using UnionFind::same;
     using UnionFind::size;
-    int merge(int a, int b) {
+    /**
+     * @brief a と b の連結成分を統合し、値の積を取る
+     * @return 統合後の代表元と、新しく統合したか
+     */
+    MergeResult merge(int a, int b) {
         assert(0 <= a && a < _n);
         assert(0 <= b && b < _n);
         int x = leader(a), y = leader(b);
-        if (x == y) return x;
+        if (x == y) return {x, false};
         if (-parent_or_size[x] < -parent_or_size[y]) std::swap(x, y);
         parent_or_size[x] += parent_or_size[y];
         parent_or_size[y] = x;
         val[x] = m.op(val[x], val[y]);
-        return x;
+        return {x, true};
     }
     /**
      * @brief 要素aの属する連結成分の値の総積

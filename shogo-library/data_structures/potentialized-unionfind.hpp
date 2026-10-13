@@ -10,6 +10,7 @@
 #include <stack>
 #include <utility>
 #include <vector>
+#include "unionfind.hpp"
 #include "../algebra/group.hpp"
 
 /**
@@ -20,6 +21,7 @@ template <typename G>
 class PotentializedUnionFind {
    public:
     using S = typename G::S;
+    using MergeResult = UnionFind::MergeResult;
 
    private:
     G g;
@@ -65,15 +67,17 @@ class PotentializedUnionFind {
     /**
      * @brief a のグループと b のグループを統合する
      * @param w (b のポテンシャル) - (a のポテンシャル)
-     * @return 連結したものの代表元
+     * @return 統合後の代表元と、新しく統合したか
+     * @note すでに同じ連結成分なら何もしない (w が矛盾していても検出しない)。
+     *       矛盾を調べるには、merged が false のときに diff(a, b) == w かを確かめる
      */
-    int merge(int a, int b, S w) {
+    MergeResult merge(int a, int b, S w) {
         assert(0 <= a && a < _n);
         assert(0 <= b && b < _n);
         w = op(weight(a), w);
         w = op(w, inv(weight(b)));
         int x = leader(a), y = leader(b);
-        if (x == y) return x;
+        if (x == y) return {x, false};
         if (-parent_or_size[x] < -parent_or_size[y]) {
             std::swap(x, y);
             w = inv(w);
@@ -81,7 +85,7 @@ class PotentializedUnionFind {
         parent_or_size[x] += parent_or_size[y];
         parent_or_size[y] = x;
         diff_weight[y] = w;
-        return x;
+        return {x, true};
     }
 
     /**

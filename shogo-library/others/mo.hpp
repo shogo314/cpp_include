@@ -1,4 +1,10 @@
 #pragma once
+
+/**
+ * @file mo.hpp
+ * @brief Mo's algorithm
+ */
+
 #include <vector>
 #include <array>
 #include <type_traits>
@@ -27,7 +33,7 @@ struct Mo {
        const ADD_LEFT& add_left,
        const DELETE_LEFT& delete_left,
        const ADD_RIGHT& add_right,
-       const DELETE_RIGHT delete_right) : _n(n), lri(), _e(e), _add_left(add_left), _delete_left(delete_left), _add_right(add_right), _delete_right(delete_right) {}
+       const DELETE_RIGHT& delete_right) : _n(n), lri(), _e(e), _add_left(add_left), _delete_left(delete_left), _add_right(add_right), _delete_right(delete_right) {}
     Mo(int n,
        const U& e,
        const ADD_LEFT& add_left,

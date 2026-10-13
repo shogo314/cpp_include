@@ -1,6 +1,11 @@
 #pragma once
 
 /**
+ * @file sqrt.hpp
+ * @brief 整数の平方根
+ */
+
+/**
  * @brief floor(sqrt(n))
  * @param n 平方根を求めたい整数 long long 型で 0 <= n < 2^63 を満たす
  * @return long long

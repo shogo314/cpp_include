@@ -1,4 +1,10 @@
 #pragma once
+
+/**
+ * @file priority_counter.hpp
+ * @brief 上位 K 個の値とその個数
+ */
+
 #include <array>
 #include <cstddef>
 #include <functional>
@@ -13,13 +19,10 @@ struct PriorityCounter {
     using value_type = std::pair<key_type, mapped_type>;
     inline constexpr static size_t k = K;
 
-    std::array<value_type, K> data;
+    // C++17 の constexpr コンストラクタではすべてのメンバの初期化が必要なので、値初期化しておく
+    std::array<value_type, K> data{};
 
-    constexpr PriorityCounter() {
-        for (size_t i = 0; i < k; i++) {
-            data[i].second = 0;
-        }
-    }
+    constexpr PriorityCounter() {}
     constexpr PriorityCounter(const key_type& x) : PriorityCounter() {
         data[0].first = x;
         data[0].second = 1;
@@ -36,12 +39,17 @@ struct PriorityCounter {
 
     constexpr void inc(const key_type& x, const mapped_type& c = 1) {
         bool f = false;
-        key_type pre_key;
-        mapped_type pre_mapped;
+        key_type pre_key{};
+        mapped_type pre_mapped{};
         for (size_t i = 0; i < k; i++) {
             if (f) {
-                std::swap(pre_key, data[i].first);
-                std::swap(pre_mapped, data[i].second);
+                // std::swap は C++17 では constexpr でないので手で入れ替える
+                key_type tmp_key = data[i].first;
+                data[i].first = pre_key;
+                pre_key = tmp_key;
+                mapped_type tmp_mapped = data[i].second;
+                data[i].second = pre_mapped;
+                pre_mapped = tmp_mapped;
                 continue;
             }
             if (data[i].second == 0) {

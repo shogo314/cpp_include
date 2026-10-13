@@ -111,7 +111,7 @@ public:
     }
 
     /// @brief 保持している値をインクリメントして、剰余を取ります。
-    /// @return @c *this
+    /// @return インクリメントする前の値
     constexpr Modint operator++(int) noexcept {
         auto x = static_cast<const Modint&>(*this);
         ++*this;
@@ -129,7 +129,7 @@ public:
     }
 
     /// @brief 保持している値をデクリメントして、剰余を取ります。
-    /// @return @c *this
+    /// @return デクリメントする前の値
     constexpr Modint operator--(int) noexcept {
         auto x = static_cast<const Modint&>(*this);
         --*this;

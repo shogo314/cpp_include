@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @file traits.hpp
+ * @brief 型特性
+ */
+
 #include <cstddef>
 #include <iterator>
 #include <set>

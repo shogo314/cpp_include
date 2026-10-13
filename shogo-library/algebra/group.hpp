@@ -39,6 +39,24 @@ struct Xor : monoid::Xor<T> {
     static constexpr S inv(const S& a) { return a; }
 };
 
+/**
+ * @brief {0, 1, ..., N-1} の置換 (全単射) の合成
+ *
+ * monoid::Mapping<N> に逆置換を加えたもの。要素は置換であること
+ * op(f, g) = g∘f (左から順に適用する)
+ *
+ * @tparam N 置換する要素の個数
+ */
+template <std::size_t N>
+struct Permutation : monoid::Mapping<N> {
+    using S = std::array<int, N>;
+    static constexpr S inv(const S& f) {
+        S h{};
+        for (std::size_t x = 0; x < N; x++) h[f[x]] = static_cast<int>(x);
+        return h;
+    }
+};
+
 } // namespace group
 
 /**

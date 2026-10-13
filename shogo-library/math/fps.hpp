@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @file fps.hpp
+ * @brief 形式的冪級数
+ */
+
 #include <algorithm>
 #include "number-theory.hpp"
 

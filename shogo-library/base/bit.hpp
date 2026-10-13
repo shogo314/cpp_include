@@ -1,4 +1,10 @@
 #pragma once
+
+/**
+ * @file bit.hpp
+ * @brief ビット演算
+ */
+
 #include <cassert>
 #include <string>
 #include <vector>

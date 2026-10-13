@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <cassert>
 #include <stack>
-#include <tuple>
 
 #include "graph.hpp"
 
@@ -38,6 +37,7 @@ struct Tree : private Graph<Cost> {
     using Graph<Cost>::operator[];
     using Graph<Cost>::edges;
     using Graph<Cost>::shortest_path;
+    using ShortestPath = typename Graph<Cost>::ShortestPath;
 
     /**
      * @brief コンストラクタ
@@ -62,18 +62,11 @@ struct Tree : private Graph<Cost> {
      * @return std::vector<Edge> 直径を構成する辺のリスト
      */
     std::vector<Edge> diameter(bool weighted = true) const {
-        std::vector<Cost> dist = shortest_path(0, weighted).first;
+        std::vector<Cost> dist = shortest_path(0, weighted).dist;
         int u = std::max_element(dist.begin(), dist.end()) - dist.begin();
-        std::vector<Edge> prev;
-        std::tie(dist, prev) = shortest_path(u, weighted);
-        int v = std::max_element(dist.begin(), dist.end()) - dist.begin();
-        std::vector<Edge> path;
-        while(v != u) {
-            path.push_back(prev[v]);
-            v = prev[v].src;
-        }
-        reverse(path.begin(), path.end());
-        return path;
+        auto sp = shortest_path(u, weighted);
+        int v = std::max_element(sp.dist.begin(), sp.dist.end()) - sp.dist.begin();
+        return sp.path(v);
     }
 
     /**
@@ -135,6 +128,7 @@ struct RootedTree : private Tree<Cost> {
     using Tree<Cost>::operator[];
     using Tree<Cost>::edges;
     using Tree<Cost>::shortest_path;
+    using ShortestPath = typename Tree<Cost>::ShortestPath;
 
     int root; //!< 根
     std::vector<Edge> par; //!< 親へ向かう辺
@@ -263,11 +257,14 @@ struct DoublingClimbTree : private RootedTree<Cost> {
     using RootedTree<Cost>::operator[];
     using RootedTree<Cost>::edges;
     using RootedTree<Cost>::shortest_path;
+    using ShortestPath = typename RootedTree<Cost>::ShortestPath;
     using RootedTree<Cost>::root;
     using RootedTree<Cost>::par;
     using RootedTree<Cost>::child;
     using RootedTree<Cost>::depth;
     using RootedTree<Cost>::height;
+    using RootedTree<Cost>::unweighted_depth;
+    using RootedTree<Cost>::unweighted_height;
     using RootedTree<Cost>::sz;
     using RootedTree<Cost>::preorder;
     using RootedTree<Cost>::postorder;
@@ -365,11 +362,11 @@ struct DoublingClimbTree : private RootedTree<Cost> {
     }
     
     /**
-     * @brief 頂点間距離(重みなし)
+     * @brief 頂点間距離(重み付き)
      * 
      * @param u 頂点1
      * @param v 頂点2
-     * @return int uとv間の最短経路の辺の本数
+     * @return Cost uとv間の最短経路の辺の重みの和
      */
     Cost dist(int u, int v) const {
         return this->depth[u] + this->depth[v] - this->depth[lca(u, v)] * 2;

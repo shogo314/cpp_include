@@ -160,14 +160,14 @@ struct ChmaxMax : monoid::Max<T> {
 };
 
 /**
- * @brief 区間アフィン変換 x <- first * x + second、区間和
+ * @brief 区間アフィン変換 x <- a * x + b (Affine)、区間和
  */
 template <typename T>
 struct AffineSum : monoid::Sum<T> {
     using S = T;
-    using F = std::pair<T, T>;
-    static constexpr S mapping(const F& f, const S& x, int sz) { return f.first * x + f.second * S(sz); }
-    static constexpr F composition(const F& f, const F& g) { return {f.first * g.first, f.first * g.second + f.second}; }
+    using F = Affine<T>;
+    static constexpr S mapping(const F& f, const S& x, int sz) { return f.a * x + f.b * S(sz); }
+    static constexpr F composition(const F& f, const F& g) { return {f.a * g.a, f.a * g.b + f.b}; }
     static constexpr F id() { return {T(1), T(0)}; }
 };
 
@@ -176,7 +176,7 @@ struct AffineSum : monoid::Sum<T> {
  */
 template <typename T>
 struct UpdateComposite : monoid::Composite<T> {
-    using S = std::pair<T, T>;
+    using S = Affine<T>;
     using F = std::optional<S>;
     static constexpr S mapping(const F& f, const S& x, int sz) {
         if(!f) return x;

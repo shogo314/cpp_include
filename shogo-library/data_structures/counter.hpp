@@ -1,8 +1,18 @@
 #pragma once
+
+/**
+ * @file counter.hpp
+ * @brief 値の個数を数える多重集合 (Counter)
+ */
+
 #include <algorithm>
 #include <cassert>
+#include <cstddef>
 #include <initializer_list>
+#include <iterator>
 #include <map>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 template <typename T>
@@ -20,8 +30,14 @@ struct Counter {
             data.erase(itr);
         }
     }
+    Counter() = default;
     explicit Counter(const key_type& x) : data{{x, 1}} {}
-    template <class C>
+    /**
+     * @brief 範囲の要素を数える
+     * Counter 自身と key_type (std::string など範囲でもあるもの) はこちらで受け取らない
+     */
+    template <class C, std::enable_if_t<!std::is_same_v<std::decay_t<C>, Counter> && !std::is_convertible_v<C, key_type>, std::nullptr_t> = nullptr,
+              class = decltype(std::begin(std::declval<C&>()), std::end(std::declval<C&>()))>
     explicit Counter(C&& v) {
         for (const key_type& a : v) {
             data[a]++;
@@ -33,7 +49,7 @@ struct Counter {
         }
     }
     Counter& operator+=(const Counter& o) {
-        for (const auto [i, c] : o) {
+        for (const auto& [i, c] : o.data) {
             data[i] += c;
         }
         return *this;
@@ -43,7 +59,12 @@ struct Counter {
         return res += b;
     }
     Counter& operator-=(const Counter& o) {
-        for (const auto [i, c] : o) {
+        // 自分自身を引くと、走査中の o.data の要素を inc が消してしまう
+        if (this == &o) {
+            data.clear();
+            return *this;
+        }
+        for (const auto& [i, c] : o.data) {
             inc(i, -c);
         }
         return *this;
@@ -52,8 +73,22 @@ struct Counter {
         Counter res(a);
         return res -= b;
     }
+    auto begin() const { return data.begin(); }
+    auto end() const { return data.end(); }
+    /**
+     * @brief 異なる値の個数 (重複は数えない)
+     */
     std::size_t size() const {
         return data.size();
+    }
+    /**
+     * @brief 重複を含めた要素数 (個数の総和)
+     * @note Python の collections.Counter.total() と同じ。O(異なる値の個数)
+     */
+    mapped_type total() const {
+        mapped_type ret = 0;
+        for (const auto& [key, cnt] : data) ret += cnt;
+        return ret;
     }
     mapped_type get(const key_type& key) const {
         auto itr = data.find(key);

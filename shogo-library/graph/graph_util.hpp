@@ -5,7 +5,12 @@
  * @brief グラフに関する関数
  */
 
+#include <algorithm>
+#include <functional>
+#include <queue>
 #include <stack>
+#include <utility>
+#include <vector>
 
 #include "graph.hpp"
 
@@ -133,6 +138,58 @@ bool has_cycle(const Graph<Cost>& graph) {
 template <typename Cost = int>
 [[deprecated("use has_cycle")]] bool has_acyclic(const Graph<Cost>& graph) {
     return has_cycle(graph);
+}
+
+/**
+ * @brief 有向グラフを強連結成分分解する
+ *
+ * Tarjan のアルゴリズムを再帰を使わずに行う。O(n + m)
+ *
+ * @return std::vector<std::vector<int>> 強連結成分ごとの頂点のリスト。
+ * 成分はトポロジカル順に並ぶ (成分 A から成分 B へ辺があれば A が B より前)
+ */
+template <typename Cost = int>
+std::vector<std::vector<int>> strongly_connected_components(const Graph<Cost>& graph) {
+    const int n = graph.n;
+    std::vector<int> ord(n, -1), low(n), comp(n, -1), iter(n, 0);
+    std::vector<int> visiting;  // 成分がまだ決まっていない訪問済みの頂点
+    std::vector<int> call;      // DFS の呼び出しスタック
+    int now = 0, k = 0;
+    for (int s = 0; s < n; s++) {
+        if (ord[s] != -1) continue;
+        ord[s] = low[s] = now++;
+        visiting.push_back(s);
+        call.push_back(s);
+        while (!call.empty()) {
+            int v = call.back();
+            if (iter[v] < (int)graph[v].size()) {
+                int to = graph[v][iter[v]++].dst;
+                if (ord[to] == -1) {
+                    ord[to] = low[to] = now++;
+                    visiting.push_back(to);
+                    call.push_back(to);
+                } else if (comp[to] == -1) {
+                    low[v] = std::min(low[v], ord[to]);
+                }
+                continue;
+            }
+            call.pop_back();
+            if (!call.empty()) low[call.back()] = std::min(low[call.back()], low[v]);
+            if (low[v] == ord[v]) {
+                while (true) {
+                    int u = visiting.back();
+                    visiting.pop_back();
+                    comp[u] = k;
+                    if (u == v) break;
+                }
+                k++;
+            }
+        }
+    }
+    // Tarjan のアルゴリズムは成分をトポロジカル順の逆に見つけるので、逆順に並べる
+    std::vector<std::vector<int>> groups(k);
+    for (int v = 0; v < n; v++) groups[k - 1 - comp[v]].push_back(v);
+    return groups;
 }
 
 /**

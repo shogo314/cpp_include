@@ -1,4 +1,11 @@
 #pragma once
+
+/**
+ * @file macro.hpp
+ * @brief マクロ (rep など)
+ */
+
+#include "io.hpp"
 #include "type_alias.hpp"
 
 #pragma GCC target("avx2")

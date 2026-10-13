@@ -1,10 +1,17 @@
 #pragma once
+
+/**
+ * @file container_func.hpp
+ * @brief コンテナに対する関数 (sorted, max, sum など)
+ */
+
 #include <algorithm>
 #include <cassert>
 #include <functional>
 #include <initializer_list>
 #include <iterator>
 #include <numeric>
+#include <vector>
 #include "traits.hpp"
 
 #define METHOD_EXPAND(func)                                        \
@@ -83,12 +90,12 @@ inline constexpr T max(const std::initializer_list<T> &v) {
 }
 
 METHOD_EXPAND(min)
-template <class C, ENABLE_IF_T(not has_max_v<C> and is_sorted_container_v<C>)>
+template <class C, ENABLE_IF_T(not has_min_v<C> and is_sorted_container_v<C>)>
 inline constexpr mem_value_type<C> min(const C &v) {
     assert(v.begin() != v.end());
     return *v.begin();
 }
-template <class C, ENABLE_IF_T(not has_max_v<C> and not is_sorted_container_v<C>)>
+template <class C, ENABLE_IF_T(not has_min_v<C> and not is_sorted_container_v<C>)>
 inline constexpr mem_value_type<C> min(const C &v) {
     assert(v.begin() != v.end());
     return *std::min_element(v.begin(), v.end());
@@ -201,11 +208,11 @@ template <class C, ENABLE_IF_T(std::is_integral_v<mem_value_type<C>>)>
 inline constexpr mem_value_type<C> mex(const C &v) {
     std::vector<bool> b(v.size() + 1);
     for (const auto &a : v) {
-        if (0 <= a and a < b.size()) {
+        if (0 <= a and static_cast<size_t>(a) < b.size()) {
             b[a] = true;
         }
     }
-    mem_value_type<C> ret;
+    mem_value_type<C> ret = 0;  // b の要素数は v より 1 多いので、下のループで必ず見つかる
     for (size_t i = 0; i < b.size(); i++) {
         if (not b[i]) {
             ret = i;

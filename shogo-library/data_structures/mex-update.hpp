@@ -1,4 +1,10 @@
 #pragma once
+
+/**
+ * @file mex-update.hpp
+ * @brief 1点更新・全体の mex 取得
+ */
+
 #include <cassert>
 #include <limits>
 #include <map>

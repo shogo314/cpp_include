@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @file rolling-hash.hpp
+ * @brief ローリングハッシュ
+ */
+
 #include <string>
 #include <vector>
 #include <random>
@@ -14,7 +19,7 @@ struct RHString;
 /**
  * @brief ローリングハッシュ
  *
- * ビット演算に寄る高速化のためハッシュはMOD = 2^61-1で計算される
+ * ビット演算による高速化のためハッシュはMOD = 2^61-1で計算される
  *
  * 10^8個くらいなら99%の確率で衝突する組が存在しない
  */

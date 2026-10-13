@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @file vector.hpp
+ * @brief 幾何ベクトル
+ */
+
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -7,9 +12,9 @@
 #include <initializer_list>
 #include <istream>
 #include <numeric>
+#include <optional>
 #include <ostream>
 #include <stack>
-#include <tuple>
 #include <type_traits>
 #include <vector>
 
@@ -258,6 +263,11 @@ struct Vector {
     struct ArgSortComp {
         constexpr bool operator()(const Vector& lhs, const Vector& rhs) const noexcept {
             static_assert(Dim == 2, "ArgSortComp: Dim must be 2");
+            // 零ベクトルは外積で比べられないので、偏角 0 (x 軸正方向) として先に判定する
+            const bool l_zero = lhs[0] == 0 && lhs[1] == 0;
+            const bool r_zero = rhs[0] == 0 && rhs[1] == 0;
+            if(r_zero) return false;  // 偏角 0 より小さいものはない
+            if(l_zero) return !(rhs[1] == 0 && rhs[0] > 0);  // rhs の偏角が 0 より大きいか
             int l_half = lhs[1] < 0 || (lhs[1] == 0 && lhs[0] < 0);
             int r_half = rhs[1] < 0 || (rhs[1] == 0 && rhs[0] < 0);
             if(l_half != r_half) return l_half < r_half;
@@ -395,21 +405,21 @@ constexpr bool segments_intersect(const Vector<T, 2>& p1, const Vector<T, 2>& p2
  * @param q1 2本目の線分の端点1
  * @param q2 2本目の線分の端点2
  * @tparam T 座標の型
- * @return std::pair<bool, Vector<T, 2>> firstは共有点の有無、secondは共有点の1例
+ * @return std::optional<Vector<T, 2>> 共有点の1例 (共有点がなければ std::nullopt)
  */
 template <typename T>
-constexpr std::pair<bool, Vector<T, 2>> segment_intersect(const Vector<T, 2>& p1, const Vector<T, 2>& p2, const Vector<T, 2>& q1, const Vector<T, 2>& q2) {
+constexpr std::optional<Vector<T, 2>> segment_intersect(const Vector<T, 2>& p1, const Vector<T, 2>& p2, const Vector<T, 2>& q1, const Vector<T, 2>& q2) {
     static_assert(std::is_floating_point_v<T>, "segment_intersect: T must be a floating point type (use segments_intersect for integers)");
-    if(!segments_intersect(p1, p2, q1, q2)) return std::make_pair(false, Vector<T, 2>());
+    if(!segments_intersect(p1, p2, q1, q2)) return std::nullopt;
     if(cross(p2 - p1, q1 - p1) == 0 && cross(p2 - p1, q2 - p1) == 0) {
         // 4点が同一直線上にある場合
-        if(dot(q1-p1, q2-p1) <= 0) return std::make_pair(true, p1);
-        if(dot(q1-p2, q2-p2) <= 0) return std::make_pair(true, p2);
-        return std::make_pair(true, q1);
+        if(dot(q1-p1, q2-p1) <= 0) return p1;
+        if(dot(q1-p2, q2-p2) <= 0) return p2;
+        return q1;
     }
     T area = cross(p2 - p1, q2 - q1); // 4点を頂点とする四角形の符号付き面積
     T partial_area = cross(q2 - q1, p1 - q1); // 三角形q1q2p1の符号付き面積
-    return std::make_pair(true, p1 + (p2 - p1) * partial_area / area);
+    return p1 + (p2 - p1) * partial_area / area;
 }
 
 /**
@@ -529,14 +539,30 @@ std::vector<Vector<T, 2>> convex_hull(const std::vector<Vector<T, 2>>& _points, 
 }
 
 /**
+ * @brief closest_point_pair_squared の戻り値
+ */
+template <typename T>
+struct ClosestPairSquared {
+    T squared_dist;  //!< 最近点対の距離の2乗
+    int i, j;        //!< 最近点対の添字
+};
+/**
+ * @brief closest_point_pair の戻り値
+ */
+struct ClosestPair {
+    double dist;  //!< 最近点対の距離
+    int i, j;     //!< 最近点対の添字
+};
+
+/**
  * @brief 最近点対
  * 
  * @tparam T 座標の型
  * @param points 頂点リスト
- * @return std::tuple<T, int, int> 最近点対の距離の2乗、最近点対のインデックス
+ * @return ClosestPairSquared<T> 最近点対の距離の2乗と添字
  */
 template <typename T>
-std::tuple<T, int, int> closest_point_pair_squred(const std::vector<Vector<T, 2>>& points) {
+ClosestPairSquared<T> closest_point_pair_squared(const std::vector<Vector<T, 2>>& points) {
     std::vector<int> sorted_idx(points.size());
     std::iota(sorted_idx.begin(), sorted_idx.end(), 0);
     std::sort(sorted_idx.begin(), sorted_idx.end(), [&](int i, int j) {
@@ -614,10 +640,17 @@ std::tuple<T, int, int> closest_point_pair_squred(const std::vector<Vector<T, 2>
  * 
  * @tparam T 座標の型
  * @param points 頂点リスト
- * @return std::tuple<double, int, int> 最近点対の距離、最近点対のインデックス
+ * @return ClosestPair 最近点対の距離と添字
  */
 template <typename T>
-std::tuple<double, int, int> closest_point_pair(const std::vector<Vector<T, 2>>& points) {
-    auto [d2, i, j] = closest_point_pair_squred(points);
-    return {std::sqrt(d2), i, j};
+ClosestPair closest_point_pair(const std::vector<Vector<T, 2>>& points) {
+    auto [d2, i, j] = closest_point_pair_squared(points);
+    return {std::sqrt(static_cast<double>(d2)), i, j};
+}
+/**
+ * @deprecated closest_point_pair_squared を使うこと(綴りの誤りを直して改名した)
+ */
+template <typename T>
+[[deprecated("use closest_point_pair_squared")]] ClosestPairSquared<T> closest_point_pair_squred(const std::vector<Vector<T, 2>>& points) {
+    return closest_point_pair_squared(points);
 }

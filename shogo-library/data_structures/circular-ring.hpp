@@ -1,4 +1,10 @@
 #pragma once
+
+/**
+ * @file circular-ring.hpp
+ * @brief 円環
+ */
+
 #include <cassert>
 #include <vector>
 

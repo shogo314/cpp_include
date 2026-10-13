@@ -5,6 +5,7 @@
  * @brief 遅延伝搬セグメント木
  */
 
+#include <algorithm>
 #include <cassert>
 #include <functional>
 #include <ostream>
@@ -40,8 +41,9 @@ private:
 
     void update(int k) { data[k] = op(data[2 * k], data[2 * k + 1]); }
     void apply_node(int k, int h, const F& f) {
-        int l = (k << h) & (sz - 1);
-        int r = l + (1 << h);
+        // 末尾の要素数を 2 べきにそろえるための余りの部分は区間に含めない
+        int l = std::min((k << h) & (sz - 1), n);
+        int r = std::min(((k << h) & (sz - 1)) + (1 << h), n);
         data[k] = mapping(f, data[k], l, r);
         if(k < sz) lazy[k] = composition(f, lazy[k]);
     }

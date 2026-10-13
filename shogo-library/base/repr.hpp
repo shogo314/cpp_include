@@ -1,4 +1,10 @@
 #pragma once
+
+/**
+ * @file repr.hpp
+ * @brief 出力をそのままコンストラクタに使える文字列化 (repr)
+ */
+
 #include <array>
 #include <iostream>
 #include <map>
@@ -141,6 +147,8 @@ inline std::string type_str(const char&) {
     return "char";
 }
 inline std::string initializer_str(const char& t) {
+    // char が符号付きでも添字が負にならないように unsigned char で扱う (UTF-8 のバイトなど)
+    const unsigned char u = static_cast<unsigned char>(t);
     std::vector<std::string> v(128, "");
     v['\0'] = "\\0";
     v['\a'] = "\\a";
@@ -151,11 +159,11 @@ inline std::string initializer_str(const char& t) {
     v['\v'] = "\\v";
     v['\''] = "\\'";
     v['\\'] = "\\\\";
-    if (!v[t].empty())
-        return "'" + v[t] + "'";
-    if (32 <= t and t <= 126)
+    if (u < 128 and !v[u].empty())
+        return "'" + v[u] + "'";
+    if (32 <= u and u <= 126)
         return "'" + std::string{t} + "'";
-    return "'\\" + std::to_string(t / 64) + std::to_string(t / 8 % 8) + std::to_string(t % 8) + "'";
+    return "'\\" + std::to_string(u / 64) + std::to_string(u / 8 % 8) + std::to_string(u % 8) + "'";
 }
 inline std::string repr(const char& t) {
     return detail::initializer_str(t);
@@ -228,7 +236,7 @@ inline std::string initializer_str(const std::string& t) {
     return "\"" + t + "\"";
 }
 inline std::string repr(const std::string& t) {
-    return detail::type_str(t) + detail::initializer_str(t);
+    return detail::type_str(t) + "{" + detail::initializer_str(t) + "}";
 }
 
 inline std::string type_str(const float&) {
@@ -311,7 +319,7 @@ inline std::string type_str(const std::pair<T1, T2>&) {
 }
 template <typename T1, typename T2>
 inline std::string initializer_str(const std::pair<T1, T2>& t) {
-    return "{" + detail::repr(t.first) + ", " + detail::repr(t.second) + "}";
+    return "{" + detail::initializer_str(t.first) + ", " + detail::initializer_str(t.second) + "}";
 }
 template <typename T1, typename T2>
 inline std::string repr(const std::pair<T1, T2>& t) {

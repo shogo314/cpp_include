@@ -5,6 +5,7 @@
  * @brief Segment Tree Beats
  */
 
+#include <algorithm>
 #include <cassert>
 #include <functional>
 #include <limits>
@@ -47,8 +48,9 @@ private:
         fail[k] = false;
     }
     void apply_node(int k, int h, const F& f) {
-        int l = (k << h) & (sz - 1);
-        int r = l + (1 << h);
+        // 末尾の要素数を 2 べきにそろえるための余りの部分は区間に含めない
+        int l = std::min((k << h) & (sz - 1), n);
+        int r = std::min(((k << h) & (sz - 1)) + (1 << h), n);
         std::tie(fail[k], data[k]) = mapping(f, data[k], l, r);
         if(k < sz) {
             lazy[k] = composition(f, lazy[k]);
@@ -120,6 +122,7 @@ public:
      * @return S 値
      */
     S get(int k) {
+        assert(0 <= k && k < n);
         k += sz;
         for(int h = height; h > 0; h--) {
             push(k >> h, h);
@@ -159,6 +162,7 @@ public:
      * @param x 新しい値
      */
     void set(int k, const S& x) {
+        assert(0 <= k && k < n);
         k += sz;
         for(int h = height; h > 0; h--) {
             push(k >> h, h);
@@ -175,6 +179,7 @@ public:
      * @return S 総積
      */
     S prod(int l, int r) {
+        assert(0 <= l && l <= r && r <= n);
         l += sz; r += sz;
         for(int h = height; h > 0; h--) {
             if(((l >> h) << h) != l) push(l >> h, h);
@@ -218,6 +223,7 @@ public:
      * @param f 作用素
      */
     void apply(int l, int r, const F& f) {
+        assert(0 <= l && l <= r && r <= n);
         if(l == r) return;
         l += sz; r += sz;
         for(int h = height; h > 0; h--) {

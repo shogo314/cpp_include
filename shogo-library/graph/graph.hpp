@@ -1,5 +1,12 @@
 #pragma once
 
+/**
+ * @file graph.hpp
+ * @brief グラフ
+ */
+
+#include <algorithm>
+#include <cassert>
 #include <iostream>
 #include <limits>
 #include <queue>
@@ -28,6 +35,30 @@ struct Graph {
         Edge() = default;
         Edge(int src, int dst, Cost cost = 1, int id = -1) : src(src), dst(dst), cost(cost), id(id) {}
         operator int() const { return dst; }
+    };
+
+    /**
+     * @brief 最短路の結果
+     *
+     * auto [dist, prev] = g.shortest_path(s); のように受け取れる
+     */
+    struct ShortestPath {
+        std::vector<Cost> dist;  //!< 各頂点への最短路長
+        std::vector<Edge> prev;  //!< 各頂点への最短路上の直前の辺 (始点と未到達の頂点では src == -1)
+        /**
+         * @brief 始点から t への最短路を構成する辺のリスト (始点側から順に)
+         * @note t が始点か未到達の頂点なら空。負閉路の影響を受ける頂点では最短路が定まらない (assert で落ちる)
+         */
+        std::vector<Edge> path(int t) const {
+            std::vector<Edge> res;
+            while (prev[t].src != -1) {
+                res.push_back(prev[t]);
+                assert(res.size() < prev.size() && "path: negative cycle");
+                t = prev[t].src;
+            }
+            std::reverse(res.begin(), res.end());
+            return res;
+        }
     };
 
     int n;                            //!< 頂点数
@@ -120,10 +151,10 @@ struct Graph {
      * @param s 始点
      * @param weighted 1以外のコストの辺が存在するか 省略するとtrue
      * @param inf コストのminの単位元 未到達の頂点への距離はinfになる 省略すると
-     * @return std::pair<std::vector<Cost>, std::vector<Edge>> first:各頂点への最短路長 second:各頂点への最短路上の直前の辺
+     * @return ShortestPath 各頂点への最短路長 (dist) と、各頂点への最短路上の直前の辺 (prev)
      */
-    std::pair<std::vector<Cost>, std::vector<Edge>> shortest_path(int s, bool weignted = true, Cost inf = -1) const {
-        if (weignted)
+    ShortestPath shortest_path(int s, bool weighted = true, Cost inf = -1) const {
+        if (weighted)
             return shortest_path_dijkstra(s, inf);
         return shortest_path_bfs(s, inf);
     }
@@ -132,9 +163,9 @@ struct Graph {
      *
      * @param s 始点
      * @param inf コストのminの単位元 未到達の頂点への距離はinfになる 省略すると std::numeric_limits<Cost>::max() / 4 負閉路の影響を受ける点は -inf
-     * @return std::pair<std::vector<Cost>, std::vector<Edge>> first:各頂点への最短路長 second:各頂点への最短路上の直前の辺
+     * @return ShortestPath 各頂点への最短路長 (dist) と、各頂点への最短路上の直前の辺 (prev)
      */
-    std::pair<std::vector<Cost>, std::vector<Edge>> bellman_ford(int s, Cost inf = std::numeric_limits<Cost>::max() / 4) const {
+    ShortestPath bellman_ford(int s, Cost inf = std::numeric_limits<Cost>::max() / 4) const {
         std::vector<Cost> dist(n, inf);
         std::vector<Edge> prev(n);
         dist[s] = Cost{};
@@ -175,7 +206,7 @@ struct Graph {
     }
 
   private:
-    std::pair<std::vector<Cost>, std::vector<Edge>> shortest_path_bfs(int s, Cost inf) const {
+    ShortestPath shortest_path_bfs(int s, Cost inf) const {
         std::vector<Cost> dist(n, inf);
         std::vector<Edge> prev(n);
         std::queue<int> que;
@@ -194,7 +225,7 @@ struct Graph {
         }
         return {dist, prev};
     }
-    std::pair<std::vector<Cost>, std::vector<Edge>> shortest_path_dijkstra(int s, Cost inf) const {
+    ShortestPath shortest_path_dijkstra(int s, Cost inf) const {
         std::vector<Cost> dist(n, inf);
         std::vector<Edge> prev(n);
         using Node = std::pair<Cost, int>;

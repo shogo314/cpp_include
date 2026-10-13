@@ -1,4 +1,10 @@
 #pragma once
+
+/**
+ * @file tadpole-array.hpp
+ * @brief おたまじゃくし配列
+ */
+
 #include <cassert>
 #include <vector>
 /**

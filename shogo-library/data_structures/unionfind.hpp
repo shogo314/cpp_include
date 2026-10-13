@@ -19,22 +19,34 @@ struct UnionFind {
     std::vector<int> parent_or_size;
 
    public:
+    /**
+     * @brief merge の戻り値
+     *
+     * if (uf.merge(a, b)) で新しく統合したかを判定でき、
+     * auto [r, merged] = uf.merge(a, b); で代表元も受け取れる
+     */
+    struct MergeResult {
+        int leader;   //!< 統合後の代表元
+        bool merged;  //!< 新しく統合したか (もともと同じ連結成分なら false)
+        explicit operator bool() const { return merged; }
+    };
+
     UnionFind() : _n(0) {}
     explicit UnionFind(int n) : _n(n), parent_or_size(n, -1) {}
 
     /**
      * @brief 辺(a,b)を足す
-     * @return 連結したものの代表元
+     * @return 統合後の代表元と、新しく統合したか
      */
-    int merge(int a, int b) {
+    MergeResult merge(int a, int b) {
         assert(0 <= a && a < _n);
         assert(0 <= b && b < _n);
         int x = leader(a), y = leader(b);
-        if (x == y) return x;
+        if (x == y) return {x, false};
         if (-parent_or_size[x] < -parent_or_size[y]) std::swap(x, y);
         parent_or_size[x] += parent_or_size[y];
         parent_or_size[y] = x;
-        return x;
+        return {x, true};
     }
     /**
      * @brief 頂点a,bが連結かどうか

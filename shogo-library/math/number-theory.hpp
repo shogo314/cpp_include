@@ -1,6 +1,12 @@
 #pragma once
 
+/**
+ * @file number-theory.hpp
+ * @brief 数論 (逆元、中国剰余定理、畳み込みなど)
+ */
+
 #include <numeric>
+#include <optional>
 #include <vector>
 #include "modint.hpp"
 
@@ -73,27 +79,37 @@ inline void coprimize_simulaneous_congruence_equation(long long& r1, long long& 
 }
 
 /**
+ * @brief crt の戻り値
+ *
+ * 解は x + lcm * k (k は整数) と表せる
+ */
+struct CRTResult {
+    long long x;    //!< 最小の非負整数解
+    long long lcm;  //!< m の最小公倍数
+};
+
+/**
  * @brief 連立合同式を解く
  * @param r vector<long long> 余りの配列
  * @param m vector<long long> modの配列
- * @return std::pair<long long, long long> (解, LCM) 解なしのときは{-1, -1}
+ * @return std::optional<CRTResult> (解, LCM) 解なしのときは std::nullopt
  */
-inline std::pair<long long, long long> crt(const std::vector<long long>& r, const std::vector<long long>& m) {
+inline std::optional<CRTResult> crt(const std::vector<long long>& r, const std::vector<long long>& m) {
     assert(r.size() == m.size());
-    if(r.size() == 0) return {0, 1};
+    if(r.size() == 0) return CRTResult{0, 1};
     int n = (int)r.size();
     long long m_lcm = m[0];
     long long ans = (r[0] % m[0] + m[0]) % m[0];
     for (int i = 1; i < n; i++) {
         long long rr = (r[i] % m[i] + m[i]) % m[i], mm = m[i];
         coprimize_simulaneous_congruence_equation(ans, m_lcm, rr, mm);
-        if(m_lcm == -1) return {-1, -1};
+        if(m_lcm == -1) return std::nullopt;
         long long t = ((rr - ans) * modinv(m_lcm, mm)) % mm;
         if(t < 0) t += mm;
         ans += t * m_lcm;
         m_lcm *= mm;
     }
-    return {ans, m_lcm};
+    return CRTResult{ans, m_lcm};
 }
 
 /**
@@ -101,18 +117,18 @@ inline std::pair<long long, long long> crt(const std::vector<long long>& r, cons
  * @param r vector<long long> 余りの配列
  * @param m vector<long long> modの配列
  * @param MOD long long
- * @return std::pair<long long, long long> (最小解 % MOD, LCM % MOD) 解なしのときは{-1, -1}
+ * @return std::optional<CRTResult> (最小解 % MOD, LCM % MOD) 解なしのときは std::nullopt
  */
-inline std::pair<long long, long long> crt(const std::vector<long long>& r, const std::vector<long long>& m, long long MOD) {
+inline std::optional<CRTResult> crt(const std::vector<long long>& r, const std::vector<long long>& m, long long MOD) {
     assert(r.size() == m.size());
-    if(r.size() == 0) return {0, 1};
+    if(r.size() == 0) return CRTResult{0, 1};
     int n = (int)r.size();
     std::vector<long long> r2 = r, m2 = m;
     // mを互いに素にする
     for(int i = 1; i < n; i++) {
         for(int j = 0; j < i; j++) {
             coprimize_simulaneous_congruence_equation(r2[i], m2[i], r2[j], m2[j]);
-            if(m2[i] == -1) return {-1, -1};
+            if(m2[i] == -1) return std::nullopt;
         }
     }
 
@@ -127,7 +143,7 @@ inline std::pair<long long, long long> crt(const std::vector<long long>& r, cons
             (prod[j] *= m2[i]) %= m2[j];
         }
     }
-    return {x[n], prod[n]};
+    return CRTResult{x[n], prod[n]};
 }
 
 /**

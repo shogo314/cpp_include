@@ -1,5 +1,12 @@
 #pragma once
+
+/**
+ * @file functions.hpp
+ * @brief 汎用関数 (chmin, chmax, 二分探索など)
+ */
+
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <numeric>
 #include "traits.hpp"
@@ -51,9 +58,15 @@ constexpr T extgcd(const T &a, const T &b, T &x, T &y) {
 /**
  * 偏角ソート
  * 反時計回り
+ * x 軸正方向を始点とし、零ベクトルは x 軸正方向と同じ偏角として扱う
  */
 template <typename T, ENABLE_IF_T(std::is_integral_v<T>)>
 bool argcmp(std::array<T, 2> a, std::array<T, 2> b) {
+    // 零ベクトルは外積で比べられないので、偏角 0 (x 軸正方向) として先に判定する
+    const bool a_zero = a[0] == 0 && a[1] == 0;
+    const bool b_zero = b[0] == 0 && b[1] == 0;
+    if (b_zero) return false;  // 偏角 0 より小さいものはない
+    if (a_zero) return !(b[1] == 0 && b[0] > 0);  // b の偏角が 0 より大きいか
     T a0 = std::array<T, 2>{a[1], a[0]} < std::array<T, 2>{0, 0};
     T b0 = std::array<T, 2>{b[1], b[0]} < std::array<T, 2>{0, 0};
     if (a0 < b0) {
