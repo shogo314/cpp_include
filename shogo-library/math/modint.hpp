@@ -13,7 +13,7 @@
 #include <utility>
 
 #include "../utility/traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/main/src/math/modint.hpp
+// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/math/modint.hpp
 
 namespace internal_modint {
 // clang-format off

@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/main/src/utility/container_func.hpp
+// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/utility/container_func.hpp
 
 #define METHOD_EXPAND(func)                                        \
     template <typename T, ENABLE_IF_T(has_##func##_v<T>)>          \

@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "../algebra/acted-monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/main/src/data_structures/lazy-segtree.hpp
+// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/data_structures/lazy-segtree.hpp
 
 /**
  * @brief 遅延伝搬セグメント木

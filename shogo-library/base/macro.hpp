@@ -7,7 +7,7 @@
 
 #include "io.hpp"
 #include "type_alias.hpp"
-// https://github.com/shogo314/shogo-library/blob/main/src/base/macro.hpp
+// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/base/macro.hpp
 
 #pragma GCC target("avx2")
 #pragma GCC optimize("O3")

@@ -13,7 +13,7 @@
 #include <utility>
 
 #include "monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/main/src/algebra/group.hpp
+// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/algebra/group.hpp
 
 namespace group {
 

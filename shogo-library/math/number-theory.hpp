@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "modular-arithmetic.hpp"
-// https://github.com/shogo314/shogo-library/blob/main/src/math/number-theory.hpp
+// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/math/number-theory.hpp
 
 /**
  * @brief 2式の連立合同式を、mが互いに素になるように変形する

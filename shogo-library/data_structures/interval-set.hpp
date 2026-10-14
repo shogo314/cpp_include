@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "../utility/traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/main/src/data_structures/interval-set.hpp
+// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/data_structures/interval-set.hpp
 /**
  * @brief 半開区間を管理する
  * @tparam T スカラー

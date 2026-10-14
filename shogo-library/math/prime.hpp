@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "modular-arithmetic.hpp"
-// https://github.com/shogo314/shogo-library/blob/main/src/math/prime.hpp
+// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/math/prime.hpp
 
 namespace internal_prime {
 

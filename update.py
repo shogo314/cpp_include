@@ -40,6 +40,14 @@ def insert_github_link(root: str, url_prefix: str):
                 f.writelines(lines)
 
 
+def commit_hash(zipfilename: str) -> str:
+    """GitHub のアーカイブ zip のコメントに入っているコミットハッシュを返す"""
+    with zipfile.ZipFile(zipfilename) as z:
+        sha = z.comment.decode().strip()
+    assert re.fullmatch(r"[0-9a-f]{40}", sha), f"コミットハッシュが取得できません: {sha!r}"
+    return sha
+
+
 def download_atcoder():
     reset_dir("./tmp")
     url = "https://github.com/atcoder/ac-library/archive/refs/heads/master.zip"
@@ -47,11 +55,12 @@ def download_atcoder():
     urlData = requests.get(url).content
     with open(zipfilename, mode="wb") as f:  # wb でバイト型を書き込める
         f.write(urlData)
+    sha = commit_hash(zipfilename)
     subprocess.run(["unzip", "-d", "./tmp/", zipfilename])
     delete("./atcoder")
     subprocess.run(["mv", "./tmp/ac-library-master/atcoder", "./atcoder"])
     insert_github_link(
-        "./atcoder", "https://github.com/atcoder/ac-library/blob/master/atcoder")
+        "./atcoder", f"https://github.com/atcoder/ac-library/blob/{sha}/atcoder")
 
 
 def download_shogo_library():
@@ -61,11 +70,12 @@ def download_shogo_library():
     urlData = requests.get(url).content
     with open(zipfilename, mode="wb") as f:  # wb でバイト型を書き込める
         f.write(urlData)
+    sha = commit_hash(zipfilename)
     subprocess.run(["unzip", "-d", "./tmp/", zipfilename])
     delete("./shogo-library")
     subprocess.run(["mv", "./tmp/shogo-library-main/src", "./shogo-library"])
     insert_github_link(
-        "./shogo-library", "https://github.com/shogo314/shogo-library/blob/main/src")
+        "./shogo-library", f"https://github.com/shogo314/shogo-library/blob/{sha}/src")
 
 
 def main():

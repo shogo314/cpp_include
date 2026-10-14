@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "graph.hpp"
-// https://github.com/shogo314/shogo-library/blob/main/src/graph/lowlink.hpp
+// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/graph/lowlink.hpp
 
 /**
  * @brief 無向グラフの lowlink を求め、関節点・橋・二重辺連結成分を求める

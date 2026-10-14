@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/main/src/dp/longest-increasing-subsequence.hpp
+// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/dp/longest-increasing-subsequence.hpp
 
 /**
  * @file longest-increasing-subsequence.hpp

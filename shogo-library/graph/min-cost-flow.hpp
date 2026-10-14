@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/main/src/graph/min-cost-flow.hpp
+// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/graph/min-cost-flow.hpp
 
 /**
  * @file min-cost-flow.hpp
