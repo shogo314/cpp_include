@@ -1,4 +1,5 @@
 #pragma once
+// https://github.com/shogo314/shogo-library/blob/main/src/data_structures/unionfind.hpp
 
 /**
  * @file unionfind.hpp
@@ -7,12 +8,37 @@
 
 #include <algorithm>
 #include <cassert>
+#include <utility>
 #include <vector>
+
+namespace internal_unionfind {
+/**
+ * @brief 各要素の代表元から、連結成分ごとの要素のリストを作る
+ * @param leader 要素 a の代表元を返す関数
+ */
+template <typename F>
+std::vector<std::vector<int>> groups(int n, F leader) {
+    std::vector<int> leader_buf(n), group_size(n);
+    for (int i = 0; i < n; i++) {
+        leader_buf[i] = leader(i);
+        group_size[leader_buf[i]]++;
+    }
+    std::vector<std::vector<int>> result(n);
+    for (int i = 0; i < n; i++) {
+        result[i].reserve(group_size[i]);
+    }
+    for (int i = 0; i < n; i++) {
+        result[leader_buf[i]].push_back(i);
+    }
+    result.erase(std::remove_if(result.begin(), result.end(), [&](const std::vector<int>& v) { return v.empty(); }), result.end());
+    return result;
+}
+}  // namespace internal_unionfind
 
 /**
  * @brief 無向グラフに対して「辺の追加」、「2頂点が連結かの判定」をする
  */
-struct UnionFind {
+class UnionFind {
    protected:
     int _n;
     // 負ならサイズ、非負なら親
@@ -85,22 +111,6 @@ struct UnionFind {
      * @return 「一つの連結成分の頂点番号のリスト」のリスト
      */
     std::vector<std::vector<int>> groups() {
-        std::vector<int> leader_buf(_n), group_size(_n);
-        for (int i = 0; i < _n; i++) {
-            leader_buf[i] = leader(i);
-            group_size[leader_buf[i]]++;
-        }
-        std::vector<std::vector<int>> result(_n);
-        for (int i = 0; i < _n; i++) {
-            result[i].reserve(group_size[i]);
-        }
-        for (int i = 0; i < _n; i++) {
-            result[leader_buf[i]].push_back(i);
-        }
-        result.erase(
-            std::remove_if(result.begin(), result.end(),
-                           [&](const std::vector<int>& v) { return v.empty(); }),
-            result.end());
-        return result;
+        return internal_unionfind::groups(_n, [&](int a) { return leader(a); });
     }
 };

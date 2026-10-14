@@ -1,4 +1,5 @@
 #pragma once
+// https://github.com/shogo314/shogo-library/blob/main/src/data_structures/mex-update.hpp
 
 /**
  * @file mex-update.hpp
@@ -6,13 +7,15 @@
  */
 
 #include <cassert>
+#include <cstddef>
 #include <limits>
 #include <map>
 #include <set>
 #include <vector>
 
 template <typename T>
-struct MexUpdate {
+class MexUpdate {
+   public:
     using value_type = T;
 
    private:
@@ -21,11 +24,11 @@ struct MexUpdate {
     int n;
     std::vector<value_type> v;
     std::set<int> s;
-    std::map<int, size_t> m;
+    std::map<int, std::size_t> m;
 
    public:
     MexUpdate() = default;
-    MexUpdate(int n) : n(n), v(n, e) {
+    explicit MexUpdate(int n) : n(n), v(n, e) {
         assert(n > 0);
         assert(n + 1 < e);
         std::set<int>::iterator hint = s.end();
@@ -33,7 +36,7 @@ struct MexUpdate {
             hint = s.emplace_hint(hint, i);
         }
     }
-    MexUpdate(const std::vector<value_type>& init) : n(init.size()), v(init) {
+    explicit MexUpdate(const std::vector<value_type>& init) : n(init.size()), v(init) {
         assert(n > 0);
         assert(n + 1 < e);
         std::set<int>::iterator hint = s.end();
@@ -41,15 +44,15 @@ struct MexUpdate {
             hint = s.emplace_hint(hint, i);
         }
         for (const auto& i : init) {
-            if (0 <= i and i <= n) {
+            if (0 <= i && i <= n) {
                 m[i]++;
                 s.erase(i);
             }
         }
     }
     void set(int k, const value_type& x) {
-        assert(0 <= k and k < n);
-        if (0 <= v[k] and v[k] <= n) {
+        assert(0 <= k && k < n);
+        if (0 <= v[k] && v[k] <= n) {
             int v_k = v[k];
             auto itr = m.find(v_k);
             if (itr->second > 1) {
@@ -59,7 +62,7 @@ struct MexUpdate {
                 s.insert(v_k);
             }
         }
-        if (0 <= x and x <= n) {
+        if (0 <= x && x <= n) {
             int xx = x;
             auto itr = m.find(xx);
             if (itr == m.end()) {
@@ -71,7 +74,7 @@ struct MexUpdate {
         }
         v[k] = x;
     }
-    value_type prod() const {
+    value_type mex() const {
         return *s.begin();
     }
 };

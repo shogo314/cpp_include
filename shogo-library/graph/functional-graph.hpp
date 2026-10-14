@@ -1,38 +1,40 @@
 #pragma once
+// https://github.com/shogo314/shogo-library/blob/main/src/graph/functional-graph.hpp
 
 /**
  * @file functional-graph.hpp
  * @brief ファンクショナルグラフ
  */
 #include <algorithm>
+#include <cassert>
 #include <iostream>
-#include <numeric>
-#include <set>
 #include <vector>
 
 /**
  * @brief N頂点N辺の有向グラフで、すべての頂点の出次数が1
  */
 struct FunctionalGraph {
-    int n;                                         //!< 頂点数
-    std::vector<int> g;                            //!< グラフ
-    std::vector<bool> is_cycle;                    //!< サイクル上の頂点か
-    std::vector<int> depth;                        //!< サイクル上の頂点までの距離
-    std::vector<int> root;                         //!< 最も近いサイクル上の頂点
-    std::vector<std::vector<int>> connected_list;  //!< 各連結成分のリスト
-    std::vector<std::vector<int>> cycle_list;      //!< 各連結成分のサイクル
-    std::vector<int> connected_id;                 //!< その頂点が属する連結成分のindex
-    std::vector<int> root_idx;                     //!< rootのcycle_list上のindex
-    std::vector<std::vector<int>> doubling;        //!< DoublingClimbTree
+    int n;                                   //!< 頂点数
+    std::vector<int> g;                      //!< グラフ
+    std::vector<bool> is_cycle;              //!< サイクル上の頂点か
+    std::vector<int> depth;                  //!< サイクル上の頂点までの距離
+    std::vector<int> root;                   //!< 最も近いサイクル上の頂点
+    std::vector<std::vector<int>> groups;    //!< 各連結成分のリスト
+    std::vector<std::vector<int>> cycles;    //!< 各連結成分のサイクル
+    std::vector<int> group_id;               //!< その頂点が属する連結成分のindex
+    std::vector<int> root_index;             //!< rootのcycles上のindex
+    std::vector<std::vector<int>> doubling;  //!< DoublingClimbTree
 
     void build() {
+        assert((int)g.size() == n);
+        for (int i = 0; i < n; i++) assert(0 <= g[i] && g[i] < n);
         is_cycle.assign(n, false);
         depth.assign(n, 0);
         root.assign(n, -1);
-        connected_id.assign(n, 0);
-        root_idx.assign(n, 0);
-        connected_list.clear();
-        cycle_list.clear();
+        group_id.assign(n, 0);
+        root_index.assign(n, 0);
+        groups.clear();
+        cycles.clear();
         std::vector<bool> visited(n);
         for (int i = 0; i < n; i++) {
             if (visited[i]) continue;
@@ -45,33 +47,33 @@ struct FunctionalGraph {
             }
             if (root[u] == -1) {
                 int k = std::find(v.begin(), v.end(), u) - v.begin();
-                cycle_list.push_back({});
-                connected_list.push_back({});
+                cycles.push_back({});
+                groups.push_back({});
                 for (int j = 0; j < k; j++) {
                     is_cycle[v[j]] = false;
                     root[v[j]] = u;
-                    root_idx[v[j]] = 0;
-                    connected_id[v[j]] = cycle_list.size() - 1;
+                    root_index[v[j]] = 0;
+                    group_id[v[j]] = cycles.size() - 1;
                     depth[v[j]] = k - j;
-                    connected_list.back().push_back(v[j]);
+                    groups.back().push_back(v[j]);
                 }
                 for (int j = k; j < (int)v.size(); j++) {
                     is_cycle[v[j]] = true;
                     root[v[j]] = v[j];
-                    cycle_list.back().push_back(v[j]);
-                    root_idx[v[j]] = cycle_list.back().size() - 1;
-                    connected_id[v[j]] = cycle_list.size() - 1;
+                    cycles.back().push_back(v[j]);
+                    root_index[v[j]] = cycles.back().size() - 1;
+                    group_id[v[j]] = cycles.size() - 1;
                     depth[v[j]] = 0;
-                    connected_list.back().push_back(v[j]);
+                    groups.back().push_back(v[j]);
                 }
             } else {
                 for (int j = 0; j < (int)v.size(); j++) {
                     is_cycle[v[j]] = false;
                     root[v[j]] = root[u];
-                    root_idx[v[j]] = root_idx[u];
-                    connected_id[v[j]] = connected_id[u];
+                    root_index[v[j]] = root_index[u];
+                    group_id[v[j]] = group_id[u];
                     depth[v[j]] = depth[u] + v.size() - j;
-                    connected_list[connected_id[u]].push_back(v[j]);
+                    groups[group_id[u]].push_back(v[j]);
                 }
             }
         }
@@ -111,6 +113,10 @@ struct FunctionalGraph {
         build();
     }
     /**
+     * @brief 頂点数
+     */
+    int size() const { return n; }
+    /**
      * @brief 辺の情報を標準入力から受け取って追加する
      * @param padding 頂点番号を入力からいくつずらすか 省略したら-1
      */
@@ -129,15 +135,16 @@ struct FunctionalGraph {
      * @return int 頂点番号
      */
     int hop(int x, long long k) const {
+        assert(0 <= x && x < n && k >= 0);
         if (k >= depth[x]) {
             k -= depth[x];
             x = root[x];
-            k %= cycle_list[connected_id[x]].size();
-            int y = root_idx[x] + k;
-            if ((int)cycle_list[connected_id[x]].size() <= y) {
-                y -= cycle_list[connected_id[x]].size();
+            k %= cycles[group_id[x]].size();
+            int y = root_index[x] + k;
+            if ((int)cycles[group_id[x]].size() <= y) {
+                y -= cycles[group_id[x]].size();
             }
-            return cycle_list[connected_id[x]][y];
+            return cycles[group_id[x]][y];
         }
         for (int i = 0; k; i++) {
             if (k & 1) {
@@ -151,6 +158,7 @@ struct FunctionalGraph {
      * @brief 頂点xから0回以上の移動でたどり着ける頂点の個数
      */
     int hopable(int x) const {
-        return depth[x] + (int)cycle_list[connected_id[x]].size();
+        assert(0 <= x && x < n);
+        return depth[x] + (int)cycles[group_id[x]].size();
     }
 };

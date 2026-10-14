@@ -1,11 +1,12 @@
 #pragma once
+// https://github.com/shogo314/shogo-library/blob/main/src/data_structures/binary-trie.hpp
 
 /**
  * @file binary-trie.hpp
  * @brief Binary Trie
  */
 
-#include <assert.h>
+#include <cassert>
 #include <limits>
 #include <memory>
 #include <utility>
@@ -24,7 +25,7 @@ class BinaryTrie {
         unsigned int level, subcnt = 0;
         T xval = 0;
 
-        BinaryTrieNode(int lvl) : level(lvl) {}
+        explicit BinaryTrieNode(int lvl) : level(lvl) {}
         bool get_bit(T v) const { return ((v >> (level - 1)) & 1) > 0; }
         bool is_leaf() const { return level == 0; }
         // 子の状態がvalidかどうか
@@ -47,7 +48,7 @@ class BinaryTrie {
     using NodePtr = std::shared_ptr<BinaryTrieNode>;
     NodePtr root_ptr = std::make_shared<BinaryTrieNode>(d);
 
-  public:
+   public:
     /**
      * @brief 集合にnを追加 (O(d))
      */
@@ -56,7 +57,7 @@ class BinaryTrie {
         while (!cur_ptr->is_leaf()) {
             cur_ptr->affect_xor();
             cur_ptr->subcnt += 1;
-            NodePtr &nxt_ptr = cur_ptr->children[cur_ptr->get_bit(n)];
+            NodePtr& nxt_ptr = cur_ptr->children[cur_ptr->get_bit(n)];
             if (!nxt_ptr) {
                 nxt_ptr = std::make_shared<BinaryTrieNode>(cur_ptr->level - 1);
             }
@@ -75,7 +76,7 @@ class BinaryTrie {
         NodePtr cur_ptr = root_ptr;
         while (!cur_ptr->is_leaf()) {
             cur_ptr->affect_xor();
-            NodePtr &nxt_ptr = cur_ptr->children[cur_ptr->get_bit(n)];
+            NodePtr& nxt_ptr = cur_ptr->children[cur_ptr->get_bit(n)];
             if (!nxt_ptr) {
                 return 0;
             }
@@ -96,7 +97,7 @@ class BinaryTrie {
         while (true) {
             cur_ptr->affect_xor();
             cur_ptr->subcnt -= cnt;
-            NodePtr &nxt_ptr = cur_ptr->children[cur_ptr->get_bit(n)];
+            NodePtr& nxt_ptr = cur_ptr->children[cur_ptr->get_bit(n)];
             if (nxt_ptr->subcnt == cnt) {
                 nxt_ptr = nullptr;
                 return;
@@ -116,7 +117,7 @@ class BinaryTrie {
         while (!cur_ptr->is_leaf()) {
             cur_ptr->affect_xor();
             cur_ptr->subcnt -= 1;
-            NodePtr &nxt_ptr = cur_ptr->children[cur_ptr->get_bit(n)];
+            NodePtr& nxt_ptr = cur_ptr->children[cur_ptr->get_bit(n)];
             if (nxt_ptr->subcnt == 1) {
                 nxt_ptr = nullptr;
                 return;
@@ -138,8 +139,8 @@ class BinaryTrie {
             cur_ptr->affect_xor();
             ret <<= 1;
             int state = cur_ptr->state_children();
-            NodePtr &z_ptr = cur_ptr->children[0];
-            NodePtr &o_ptr = cur_ptr->children[1];
+            NodePtr& z_ptr = cur_ptr->children[0];
+            NodePtr& o_ptr = cur_ptr->children[1];
             assert(state > 0);
             if (state == 1 || (state == 3 && n < (int)z_ptr->subcnt)) {
                 cur_ptr = z_ptr;
@@ -156,7 +157,7 @@ class BinaryTrie {
      * @brief n以上の要素を探索 (O(d))
      * @return 探索した値が昇順で何番目か (0-indexed)。該当する要素がなければtrie木のサイズが返る
      */
-    int lower_bound(T n) const {
+    int bisect_left(T n) const {
         if constexpr (d < std::numeric_limits<T>::digits) {
             if ((n >> d) != 0) return size();
         }
@@ -165,8 +166,8 @@ class BinaryTrie {
         while (!cur_ptr->is_leaf()) {
             cur_ptr->affect_xor();
             bool b = cur_ptr->get_bit(n);
-            NodePtr &nxt_ptr = cur_ptr->children[b];
-            NodePtr &z_ptr = cur_ptr->children[0];
+            NodePtr& nxt_ptr = cur_ptr->children[b];
+            NodePtr& z_ptr = cur_ptr->children[0];
             if (b && z_ptr) {
                 ret += z_ptr->subcnt;
             }
@@ -182,8 +183,8 @@ class BinaryTrie {
      * @brief nより大きな要素を探索 (O(d))
      * @return 探索した値が昇順で何番目か (0-indexed)。該当する要素がなければtrie木のサイズが返る
      */
-    int upper_bound(T n) const {
-        return (n < std::numeric_limits<T>::max() ? lower_bound(n + 1) : size());
+    int bisect_right(T n) const {
+        return (n < std::numeric_limits<T>::max() ? bisect_left(n + 1) : size());
     }
 
     /**

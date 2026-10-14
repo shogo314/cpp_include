@@ -1,4 +1,5 @@
 #pragma once
+// https://github.com/shogo314/shogo-library/blob/main/src/algebra/monoid.hpp
 
 /**
  * @file monoid.hpp
@@ -152,8 +153,10 @@ struct Lcm {
  * @brief {0, 1, ..., N-1} から自分自身への写像の合成 (変換モノイド)
  *
  * 要素 f は f[x] が x の行き先を表す std::array<int, N>。全単射でなくてよい
- * op(f, g) = g∘f (左から順に適用する)。区間 [l, r) の積は f_{r-1}(...f_l(x)) を表す
+ * op(f, g) = f∘g (g を先に適用する)。区間 [l, r) の積は f_l(...f_{r-1}(x)) を表す
+ * 左から順に適用したい場合は monoid::Reverse<monoid::Mapping<N>> を使う
  * 例: SegTree<monoid::Mapping<3>> seg(n); seg.set(i, {0, 2, 1});
+ * swap(i, j) で i と j を入れ替える写像を作れる
  *
  * @tparam N 写像の定義域・値域の大きさ
  */
@@ -162,7 +165,7 @@ struct Mapping {
     using S = std::array<int, N>;
     static constexpr S op(const S& f, const S& g) {
         S h{};
-        for (std::size_t x = 0; x < N; x++) h[x] = g[f[x]];
+        for (std::size_t x = 0; x < N; x++) h[x] = f[g[x]];
         return h;
     }
     static constexpr S e() {
@@ -170,17 +173,25 @@ struct Mapping {
         for (std::size_t x = 0; x < N; x++) h[x] = static_cast<int>(x);
         return h;
     }
+    // i と j を入れ替え、ほかは動かさない写像 (互換)
+    static constexpr S swap(int i, int j) {
+        S h = e();
+        h[i] = j;
+        h[j] = i;
+        return h;
+    }
 };
 
 /**
  * @brief 1次関数 (Affine) の合成
- * op(f, g) = g∘f (左から順に適用する)
- * 区間 [l, r) の積は f_{r-1}(...f_l(x)) を表す
+ * op(f, g) = f∘g (g を先に適用する)
+ * 区間 [l, r) の積は f_l(...f_{r-1}(x)) を表す
+ * 左から順に適用したい (f_{r-1}(...f_l(x)) を求めたい) 場合は monoid::Reverse<monoid::Composite<T>> を使う
  */
 template <typename T>
 struct Composite {
     using S = Affine<T>;
-    static constexpr S op(const S& f, const S& g) { return {g.a * f.a, g.a * f.b + g.b}; }
+    static constexpr S op(const S& f, const S& g) { return {f.a * g.a, f.a * g.b + f.b}; }
     static constexpr S e() { return {T(1), T(0)}; }
 };
 
@@ -189,8 +200,8 @@ struct Composite {
  */
 struct Parenthesis {
     struct S {
-        long long close; // 対応の取れていない ')' の個数
-        long long open;  // 対応の取れていない '(' の個数
+        long long close;  // 対応の取れていない ')' の個数
+        long long open;   // 対応の取れていない '(' の個数
         constexpr S(char c = 0) : close(c == ')'), open(c == '(') {}
         constexpr S(long long close, long long open) : close(close), open(open) {}
         /**
@@ -199,7 +210,7 @@ struct Parenthesis {
         constexpr bool is_valid() const { return close == 0 && open == 0; }
     };
     static constexpr S op(const S& a, const S& b) {
-        if(a.open >= b.close) return S(a.close, a.open - b.close + b.open);
+        if (a.open >= b.close) return S(a.close, a.open - b.close + b.open);
         return S(a.close + b.close - a.open, b.open);
     }
     static constexpr S e() { return S(); }
@@ -241,8 +252,8 @@ template <typename T, typename U = long long>
 struct MinCount {
     using S = std::pair<T, U>;
     static constexpr S op(const S& a, const S& b) {
-        if(a.first < b.first) return a;
-        if(b.first < a.first) return b;
+        if (a.first < b.first) return a;
+        if (b.first < a.first) return b;
         return {a.first, a.second + b.second};
     }
     static constexpr S e() { return {std::numeric_limits<T>::max(), U(0)}; }
@@ -258,14 +269,31 @@ template <typename T, typename U = long long>
 struct MaxCount {
     using S = std::pair<T, U>;
     static constexpr S op(const S& a, const S& b) {
-        if(a.first < b.first) return b;
-        if(b.first < a.first) return a;
+        if (a.first < b.first) return b;
+        if (b.first < a.first) return a;
         return {a.first, a.second + b.second};
     }
     static constexpr S e() { return {std::numeric_limits<T>::lowest(), U(0)}; }
 };
 
-} // namespace monoid
+/**
+ * @brief 積の順序を逆にしたモノイド op(a, b) = M::op(b, a)
+ *
+ * 例: SegTree<monoid::Reverse<monoid::Composite<mint>>> seg(v); の区間 [l, r) の積は f_{r-1}(...f_l(x))
+ *
+ * @tparam M もとのモノイド
+ */
+template <typename M>
+struct Reverse {
+    using S = typename M::S;
+    M m;
+    constexpr Reverse() : m() {}
+    constexpr explicit Reverse(M m) : m(std::move(m)) {}
+    constexpr S op(const S& a, const S& b) const { return m.op(b, a); }
+    constexpr S e() const { return m.e(); }
+};
+
+}  // namespace monoid
 
 /**
  * @brief 関数オブジェクトと単位元から実行時に作るモノイド

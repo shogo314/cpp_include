@@ -5,10 +5,13 @@
  * @brief 可換モノイドを乗せるUnionFind
  */
 
+#include <cassert>
 #include <utility>
 #include <vector>
-#include "unionfind.hpp"
+
 #include "../algebra/monoid.hpp"
+#include "unionfind.hpp"
+// https://github.com/shogo314/shogo-library/blob/main/src/data_structures/monoid-unionfind.hpp
 
 /**
  * @brief 可換モノイドを乗せるUnionFind

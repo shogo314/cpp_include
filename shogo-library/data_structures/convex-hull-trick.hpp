@@ -9,63 +9,72 @@
 
 #include <cassert>
 #include <cstddef>
-#include <limits>
+#include <optional>
 #include <type_traits>
 #include <utility>
 #include <vector>
+
+#include "../utility/traits.hpp"
+// https://github.com/shogo314/shogo-library/blob/main/src/data_structures/convex-hull-trick.hpp
 
 /**
  * @brief 追加される傾きが単調とは限らない場合のConvex Hull Trick
  *
  * @tparam T 値の型
  */
-template <typename T, std::enable_if_t<std::is_scalar_v<T>, std::nullptr_t> = nullptr>
+template <typename T, ENABLE_IF_T(std::is_scalar_v<T>)>
 class LiChaoTree {
     int n, sz, height;
     std::vector<T> xs, as, bs;
+    std::vector<bool> exist;  // ノードが直線を持つか
 
     void update(T a, T b, int k, int h) {
         int l = (k << h) & (sz - 1);
         int r = l + (1 << h);
-        
-        while(1) {
+
+        while (1) {
+            if (!exist[k]) {
+                as[k] = a, bs[k] = b, exist[k] = true;
+                return;
+            }
             int m = (l + r) >> 1;
             T xl = xs[l], xm = xs[m];
-            bool l_update = a*xl + b < as[k]*xl + bs[k];
-            bool m_update = a*xm + b < as[k]*xm + bs[k];
+            bool l_update = a * xl + b < as[k] * xl + bs[k];
+            bool m_update = a * xm + b < as[k] * xm + bs[k];
 
-            if(m_update) {
+            if (m_update) {
                 std::swap(as[k], a);
                 std::swap(bs[k], b);
             }
-            if(h == 0) break;
-            if(l_update != m_update) {
-                k = k*2;
+            if (h == 0) break;
+            if (l_update != m_update) {
+                k = k * 2;
                 r = m;
             } else {
-                k = k*2+1;
+                k = k * 2 + 1;
                 l = m;
             }
             h--;
         }
     }
 
-public:
+   public:
     /**
      * @brief コンストラクタ
      *
      * @param xs 最小値クエリのx座標や線分追加クエリの両端のx座標を先読みしてソートした配列
      */
-    LiChaoTree(const std::vector<T>& xs) : n(xs.size()), xs(xs) {
+    explicit LiChaoTree(const std::vector<T>& xs) : n(xs.size()), xs(xs) {
         assert(!xs.empty());
         sz = 1, height = 0;
-        while(sz < (int)xs.size()) {
+        while (sz < (int)xs.size()) {
             sz <<= 1;
             height++;
         }
         this->xs.resize(sz, xs.back());
-        as.assign(sz*2, 0);
-        bs.assign(sz*2, std::numeric_limits<T>::max());
+        as.assign(sz * 2, 0);
+        bs.assign(sz * 2, 0);
+        exist.assign(sz * 2, false);
     }
 
     /**
@@ -86,12 +95,13 @@ public:
      * @param r xの上限(xsのインデックス)
      */
     void add_segment(T a, T b, int l, int r) {
-        if(l == r) return;
+        assert(0 <= l && l <= r && r <= n);
+        if (l == r) return;
         l += sz, r += sz;
         int h = 0;
-        while(l < r) {
-            if(l & 1) update(a, b, l++, h);
-            if(r & 1) update(a, b, --r, h);
+        while (l < r) {
+            if (l & 1) update(a, b, l++, h);
+            if (r & 1) update(a, b, --r, h);
             l >>= 1, r >>= 1, h++;
         }
     }
@@ -100,16 +110,16 @@ public:
      * @brief x=xs[i]における最小値を求める
      *
      * @param i x座標(xsのインデックス)
-     * @return T 最小値
+     * @return std::optional<T> 最小値。直線がなければ std::nullopt
      */
-    T get_min(int i) const {
+    std::optional<T> get_min(int i) const {
+        assert(0 <= i && i < n);
         T x = xs[i];
-        int k = i + sz;
-        T res = as[k]*x + bs[k];
-        while(k > 1) {
-            k >>= 1;
-            T tmp = as[k]*x + bs[k];
-            if(tmp < res) res = tmp;
+        std::optional<T> res;
+        for (int k = i + sz; k >= 1; k >>= 1) {
+            if (!exist[k]) continue;
+            T tmp = as[k] * x + bs[k];
+            if (!res || tmp < *res) res = tmp;
         }
         return res;
     }

@@ -1,4 +1,5 @@
 #pragma once
+// https://github.com/shogo314/shogo-library/blob/main/src/utility/traits.hpp
 
 /**
  * @file traits.hpp
@@ -11,22 +12,22 @@
 #include <type_traits>
 #include <utility>
 
-namespace detail {
+namespace internal_traits {
 using std::begin, std::end;
 
 template <class T, class = void>
 struct is_range_impl : std::false_type {};
 template <class T>
 struct is_range_impl<T, std::void_t<decltype(begin(std::declval<T&>()), end(std::declval<T&>()))>> : std::true_type {};
-}  // namespace detail
+}  // namespace internal_traits
 
 template <class T>
-struct is_range : detail::is_range_impl<T>::type {};
+struct is_range : internal_traits::is_range_impl<T>::type {};
 template <class T>
 inline constexpr bool is_range_v = is_range<T>::value;
 
 #define HAS_METHOD(func_name)                                                              \
-    namespace detail {                                                                     \
+    namespace internal_traits {                                                            \
     template <class T, class = void>                                                       \
     struct has_##func_name##_impl : std::false_type {};                                    \
     template <class T>                                                                     \
@@ -34,12 +35,12 @@ inline constexpr bool is_range_v = is_range<T>::value;
         : std::true_type {};                                                               \
     }                                                                                      \
     template <class T>                                                                     \
-    struct has_##func_name : detail::has_##func_name##_impl<T>::type {};                   \
+    struct has_##func_name : internal_traits::has_##func_name##_impl<T>::type {};          \
     template <class T>                                                                     \
     inline constexpr bool has_##func_name##_v = has_##func_name<T>::value;
 
 #define HAS_METHOD_ARG(func_name)                                                                              \
-    namespace detail {                                                                                         \
+    namespace internal_traits {                                                                                \
     template <class T, typename U, class = void>                                                               \
     struct has_##func_name##_impl : std::false_type {};                                                        \
     template <class T, typename U>                                                                             \
@@ -47,7 +48,7 @@ inline constexpr bool is_range_v = is_range<T>::value;
         : std::true_type {};                                                                                   \
     }                                                                                                          \
     template <class T, typename U>                                                                             \
-    struct has_##func_name : detail::has_##func_name##_impl<T, U>::type {};                                    \
+    struct has_##func_name : internal_traits::has_##func_name##_impl<T, U>::type {};                           \
     template <class T, typename U>                                                                             \
     inline constexpr bool has_##func_name##_v = has_##func_name<T, U>::value;
 
@@ -74,15 +75,15 @@ using mem_value_type = typename C::value_type;
 template <class C>
 using mem_difference_type = typename C::difference_type;
 
-namespace detail {
+namespace internal_traits {
 template <class T, class = void>
 struct is_sorted_container_impl : std::false_type {};
 template <class T>
 struct is_sorted_container_impl<std::set<T>> : std::true_type {};
 template <class T>
 struct is_sorted_container_impl<std::multiset<T>> : std::true_type {};
-}  // namespace detail
+}  // namespace internal_traits
 template <class T>
-struct is_sorted_container : detail::is_sorted_container_impl<T>::type {};
+struct is_sorted_container : internal_traits::is_sorted_container_impl<T>::type {};
 template <class T>
 inline constexpr bool is_sorted_container_v = is_sorted_container<T>::value;

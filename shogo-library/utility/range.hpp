@@ -1,4 +1,5 @@
 #pragma once
+// https://github.com/shogo314/shogo-library/blob/main/src/utility/range.hpp
 
 /**
  * @file range.hpp
@@ -58,7 +59,7 @@ struct Range {
     }
     constexpr Range(value_type _start, value_type _stop)
         : start(_start), stop(_stop), step(1), norm_stop(normalize(_start, _stop, 1)) {}
-    constexpr Range(value_type _stop)
+    explicit constexpr Range(value_type _stop)
         : start(0), stop(_stop), step(1), norm_stop(normalize(0, _stop, 1)) {}
     constexpr Range()
         : start(0), stop(0), step(1), norm_stop(0) {
@@ -79,7 +80,7 @@ struct Range {
         value_type value;
 
         constexpr bool same_range(const const_iterator& o) const noexcept {
-            return range.start == o.range.start and range.stop == o.range.stop and range.step == o.range.step;
+            return range.start == o.range.start && range.stop == o.range.stop && range.step == o.range.step;
         }
 
        public:
@@ -140,7 +141,7 @@ struct Range {
             return value;
         }
         constexpr friend bool operator!=(const const_iterator& a, const const_iterator& b) noexcept {
-            return !a.same_range(b) or a.value != b.value;
+            return !a.same_range(b) || a.value != b.value;
         }
         constexpr friend bool operator==(const const_iterator& a, const const_iterator& b) noexcept {
             return !(a != b);
@@ -166,13 +167,13 @@ struct Range {
      */
     constexpr difference_type count(value_type x) const noexcept {
         if (step > 0) {
-            if (start <= x and x < stop) {
+            if (start <= x && x < stop) {
                 if ((x - start) % step == 0) {
                     return 1;
                 }
             }
         } else {
-            if (stop < x and x <= start) {
+            if (stop < x && x <= start) {
                 if ((start - x) % (-step) == 0) {
                     return 1;
                 }
@@ -261,7 +262,7 @@ struct Range {
      * 空だとエラー
      */
     constexpr value_type min() const {
-        assert(not empty());
+        assert(!empty());
         if (step > 0) {
             return start;
         } else {
@@ -273,7 +274,7 @@ struct Range {
      * 空だとエラー
      */
     constexpr value_type max() const {
-        assert(not empty());
+        assert(!empty());
         if (step > 0) {
             return norm_stop - step;
         } else {
@@ -331,10 +332,11 @@ struct Range {
         }
     }
     /**
-     * @brief 要素が [l,r] である範囲を返す
+     * @brief 要素が [l, r) である範囲を返す
      */
     constexpr Range clipped(value_type l, value_type r) const {
-        if (l > r) return {};
+        if (l >= r) return {};
+        r--;  // 以下では r を含む [l, r] として扱う
         if (step > 0) {
             value_type _start = [&] {
                 if (norm_stop <= l) {
@@ -384,7 +386,7 @@ struct Range {
         if (r.empty()) return {};
         if (r.max() < 0) return {};
         if (r.min() >= static_cast<Range::value_type>(size())) return {};
-        Range trimmed_range(r.clipped(0, static_cast<Range::value_type>(size()) - 1));
+        Range trimmed_range(r.clipped(0, static_cast<Range::value_type>(size())));
         if (trimmed_range.empty()) return {};
         value_type _step = step * trimmed_range.step;
         value_type _start = at(trimmed_range.start);
@@ -417,7 +419,7 @@ struct Range {
         return ret;
     }
     constexpr friend bool operator==(const Range& a, const Range& b) noexcept {
-        if (a.empty() and b.empty()) return true;
+        if (a.empty() && b.empty()) return true;
         if (a.size() != b.size()) return false;
         if (a.start != b.start) return false;
         if (a.size() == 1) return true;

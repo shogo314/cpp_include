@@ -1,4 +1,5 @@
 #pragma once
+// https://github.com/shogo314/shogo-library/blob/main/src/graph/graph.hpp
 
 /**
  * @file graph.hpp
@@ -7,9 +8,12 @@
 
 #include <algorithm>
 #include <cassert>
+#include <deque>
+#include <functional>
 #include <iostream>
 #include <limits>
 #include <queue>
+#include <utility>
 #include <vector>
 
 /**
@@ -18,7 +22,8 @@
  * @tparam Cost 辺のコストの型
  */
 template <typename Cost = int>
-struct Graph {
+class Graph {
+   public:
     /**
      * @brief 有向辺の構造体
      *
@@ -28,10 +33,10 @@ struct Graph {
      * for (int dst : g[v]) とすると、vから出る辺の行き先が列挙される
      */
     struct Edge {
-        int src = -1;   //!< 始点
-        int dst = -1;   //!< 終点
-        Cost cost = {}; //!< コスト
-        int id = -1;    //!< 辺の番号(追加された順、無向辺の場合はidが同じで方向が逆のものが2つ存在する)
+        int src = -1;    //!< 始点
+        int dst = -1;    //!< 終点
+        Cost cost = {};  //!< コスト
+        int id = -1;     //!< 辺の番号(追加された順、無向辺の場合はidが同じで方向が逆のものが2つ存在する)
         Edge() = default;
         Edge(int src, int dst, Cost cost = 1, int id = -1) : src(src), dst(dst), cost(cost), id(id) {}
         operator int() const { return dst; }
@@ -61,9 +66,9 @@ struct Graph {
         }
     };
 
-    int n;                            //!< 頂点数
-    int m;                            //!< 辺数
-    std::vector<std::vector<Edge>> g; //!< グラフの隣接リスト表現
+    int n;                             //!< 頂点数
+    int m;                             //!< 辺数
+    std::vector<std::vector<Edge>> g;  //!< グラフの隣接リスト表現
 
     /**
      * @brief デフォルトコンストラクタ
@@ -75,12 +80,17 @@ struct Graph {
      */
     explicit Graph(int n) : n(n), m(0), g(n) {}
     /**
+     * @brief 頂点数
+     */
+    int size() const { return n; }
+    /**
      * @brief 無向辺を追加する
      * @param u 始点
      * @param v 終点
      * @param w コスト 省略したら1
      */
     void add_edge(int u, int v, Cost w = 1) {
+        assert(0 <= u && u < n && 0 <= v && v < n);
         g[u].push_back({u, v, w, m});
         g[v].push_back({v, u, w, m++});
     }
@@ -91,6 +101,7 @@ struct Graph {
      * @param w コスト 省略したら1
      */
     void add_directed_edge(int u, int v, Cost w = 1) {
+        assert(0 <= u && u < n && 0 <= v && v < n);
         g[u].push_back({u, v, w, m++});
     }
     /**
@@ -119,7 +130,7 @@ struct Graph {
      * @param v 頂点番号
      * @return std::vector<Edge>& vから出る辺のリスト
      */
-    std::vector<Edge> &operator[](int v) {
+    std::vector<Edge>& operator[](int v) {
         return g[v];
     }
     /**
@@ -127,7 +138,7 @@ struct Graph {
      * @param v 頂点番号
      * @return const std::vector<Edge>& vから出る辺のリスト
      */
-    const std::vector<Edge> &operator[](int v) const {
+    const std::vector<Edge>& operator[](int v) const {
         return g[v];
     }
     /**
@@ -139,7 +150,7 @@ struct Graph {
     std::vector<Edge> edges() const {
         std::vector<Edge> res(m);
         for (int i = 0; i < n; i++) {
-            for (auto &e : g[i]) {
+            for (auto& e : g[i]) {
                 res[e.id] = e;
             }
         }
@@ -150,10 +161,11 @@ struct Graph {
      *
      * @param s 始点
      * @param weighted 1以外のコストの辺が存在するか 省略するとtrue
-     * @param inf コストのminの単位元 未到達の頂点への距離はinfになる 省略すると
+     * @param inf コストのminの単位元 未到達の頂点への距離はinfになる 省略すると std::numeric_limits<Cost>::max() / 4
      * @return ShortestPath 各頂点への最短路長 (dist) と、各頂点への最短路上の直前の辺 (prev)
      */
-    ShortestPath shortest_path(int s, bool weighted = true, Cost inf = -1) const {
+    ShortestPath shortest_path(int s, bool weighted = true, Cost inf = std::numeric_limits<Cost>::max() / 4) const {
+        assert(0 <= s && s < n);
         if (weighted)
             return shortest_path_dijkstra(s, inf);
         return shortest_path_bfs(s, inf);
@@ -166,6 +178,7 @@ struct Graph {
      * @return ShortestPath 各頂点への最短路長 (dist) と、各頂点への最短路上の直前の辺 (prev)
      */
     ShortestPath bellman_ford(int s, Cost inf = std::numeric_limits<Cost>::max() / 4) const {
+        assert(0 <= s && s < n);
         std::vector<Cost> dist(n, inf);
         std::vector<Edge> prev(n);
         dist[s] = Cost{};
@@ -173,7 +186,7 @@ struct Graph {
         for (int i = 1; i < n; i++) {
             bool changed = false;
             for (int j = 0; j < n; j++)
-                for (const auto &e : g[j]) {
+                for (const auto& e : g[j]) {
                     if (dist[e.src] == inf)
                         continue;
                     if (dist[e.dst] > dist[e.src] + e.cost) {
@@ -190,7 +203,7 @@ struct Graph {
         for (int i = 0; i < n; i++) {
             bool changed = false;
             for (int j = 0; j < n; j++)
-                for (const auto &e : g[j]) {
+                for (const auto& e : g[j]) {
                     if (dist[e.src] == inf)
                         continue;
                     if (dist[e.dst] > dist[e.src] + e.cost) {
@@ -204,8 +217,63 @@ struct Graph {
         }
         return {dist, prev};
     }
+    /**
+     * @brief 辺のコストが 0 か 1 だけのグラフで、ある頂点から各頂点への最短路 (01-BFS) O(n + m)
+     *
+     * @param s 始点
+     * @param inf 未到達の頂点への距離 省略すると std::numeric_limits<Cost>::max() / 4
+     * @return ShortestPath 各頂点への最短路長 (dist) と、各頂点への最短路上の直前の辺 (prev)
+     */
+    ShortestPath shortest_path_01bfs(int s, Cost inf = std::numeric_limits<Cost>::max() / 4) const {
+        assert(0 <= s && s < n);
+        std::vector<Cost> dist(n, inf);
+        std::vector<Edge> prev(n);
+        std::deque<int> que;
+        dist[s] = 0;
+        que.push_back(s);
+        while (!que.empty()) {
+            int u = que.front();
+            que.pop_front();
+            for (auto& e : g[u]) {
+                assert(e.cost == 0 || e.cost == 1);
+                if (dist[e.dst] == inf || dist[e.dst] > dist[u] + e.cost) {
+                    dist[e.dst] = dist[u] + e.cost;
+                    prev[e.dst] = e;
+                    if (e.cost == 0)
+                        que.push_front(e.dst);
+                    else
+                        que.push_back(e.dst);
+                }
+            }
+        }
+        return {dist, prev};
+    }
+    /**
+     * @brief 全点対間の最短路長 (Floyd-Warshall) O(n^3)
+     *
+     * @param inf 未到達を表す値 省略すると std::numeric_limits<Cost>::max() / 4
+     * @return std::vector<std::vector<Cost>> dist[i][j] が i から j への最短路長 (到達できなければ inf)
+     * @note 負の辺があってもよい。dist[i][i] < 0 となる i があれば負閉路がある
+     */
+    std::vector<std::vector<Cost>> floyd_warshall(Cost inf = std::numeric_limits<Cost>::max() / 4) const {
+        std::vector<std::vector<Cost>> dist(n, std::vector<Cost>(n, inf));
+        for (int i = 0; i < n; i++) dist[i][i] = Cost{};
+        for (int i = 0; i < n; i++) {
+            for (auto& e : g[i]) dist[i][e.dst] = std::min(dist[i][e.dst], e.cost);
+        }
+        for (int k = 0; k < n; k++) {
+            for (int i = 0; i < n; i++) {
+                if (dist[i][k] == inf) continue;
+                for (int j = 0; j < n; j++) {
+                    if (dist[k][j] == inf) continue;
+                    dist[i][j] = std::min(dist[i][j], dist[i][k] + dist[k][j]);
+                }
+            }
+        }
+        return dist;
+    }
 
-  private:
+   private:
     ShortestPath shortest_path_bfs(int s, Cost inf) const {
         std::vector<Cost> dist(n, inf);
         std::vector<Edge> prev(n);
@@ -215,7 +283,7 @@ struct Graph {
         while (!que.empty()) {
             int u = que.front();
             que.pop();
-            for (auto &e : g[u]) {
+            for (auto& e : g[u]) {
                 if (dist[e.dst] == inf) {
                     dist[e.dst] = dist[e.src] + 1;
                     prev[e.dst] = e;
@@ -237,7 +305,7 @@ struct Graph {
             que.pop();
             if (d > dist[u])
                 continue;
-            for (auto &e : g[u]) {
+            for (auto& e : g[u]) {
                 if (dist[e.dst] == inf || dist[e.dst] > dist[e.src] + e.cost) {
                     dist[e.dst] = dist[e.src] + e.cost;
                     prev[e.dst] = e;

@@ -8,27 +8,28 @@
 #include <cassert>
 #include <cstddef>
 #include <functional>
-#include <iostream>
 #include <iterator>
-#include <limits>
 #include <optional>
 #include <set>
 #include <type_traits>
 #include <utility>
 #include <vector>
+
+#include "../utility/traits.hpp"
+// https://github.com/shogo314/shogo-library/blob/main/src/data_structures/interval-set.hpp
 /**
  * @brief 半開区間を管理する
  * @tparam T スカラー
  */
-template <typename T = long long, class Compare = std::less<T>, std::enable_if_t<std::is_scalar_v<T>>* = nullptr>
-struct IntervalSet {
+template <typename T = long long, class Compare = std::less<T>, ENABLE_IF_T(std::is_scalar_v<T>)>
+class IntervalSet {
    public:
     using key_type = T;
     using value_type = std::pair<key_type, key_type>;
     inline constexpr static auto key_comp = Compare();
     struct value_compare {
         bool operator()(const value_type& a, const value_type& b) const {
-            return key_comp(a.first, b.first) or (not key_comp(b.first, a.first) and key_comp(b.second, a.second));
+            return key_comp(a.first, b.first) || (!key_comp(b.first, a.first) && key_comp(b.second, a.second));
         }
     };
     inline constexpr static auto value_comp = value_compare();
@@ -40,11 +41,11 @@ struct IntervalSet {
         auto itr_l = data.upper_bound({l, l});
         if (itr_l == data.begin()) {
         } else {
-            if (not key_comp(std::prev(itr_l)->second, l)) {
+            if (!key_comp(std::prev(itr_l)->second, l)) {
                 --itr_l;
             }
         }
-        if (itr_l == data.end() or key_comp(r, itr_l->first)) {
+        if (itr_l == data.end() || key_comp(r, itr_l->first)) {
             return {};
         }
         auto itr_r = data.upper_bound({r, r});
@@ -70,7 +71,7 @@ struct IntervalSet {
      */
     std::optional<value_type> covered_by(key_type l, key_type r) const {
         auto opt = find(l, r);
-        if (not opt.has_value()) {
+        if (!opt.has_value()) {
             return {};
         }
         std::pair<iterator, iterator> p = opt.value();
@@ -84,7 +85,7 @@ struct IntervalSet {
     void insert(key_type l, key_type r) {
         assert(key_comp(l, r));
         auto opt = find(l, r);
-        if (not opt.has_value()) {
+        if (!opt.has_value()) {
             data.emplace(l, r);
             return;
         }
@@ -97,7 +98,7 @@ struct IntervalSet {
     void erase(key_type l, key_type r) {
         assert(key_comp(l, r));
         auto opt = find(l, r);
-        if (not opt.has_value()) {
+        if (!opt.has_value()) {
             return;
         }
         auto [itr_l, itr_r] = opt.value();
@@ -105,13 +106,13 @@ struct IntervalSet {
         if (key_comp(itr_l->first, l)) tmp.push_back({itr_l->first, l});
         if (key_comp(r, std::prev(itr_r)->second)) tmp.push_back({r, std::prev(itr_r)->second});
         data.erase(itr_l, itr_r);
-        while (not tmp.empty()) {
+        while (!tmp.empty()) {
             data.insert(tmp.back());
             tmp.pop_back();
         }
     }
-    std::size_t size() const {
-        return data.size();
+    int size() const {
+        return static_cast<int>(data.size());
     }
     std::vector<value_type> to_vector() const {
         return std::vector<value_type>(data.begin(), data.end());

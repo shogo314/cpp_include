@@ -1,11 +1,21 @@
 #pragma once
+// https://github.com/shogo314/shogo-library/blob/main/src/base/type_alias.hpp
 
 /**
  * @file type_alias.hpp
  * @brief 型の別名
  */
 
-#include <bits/stdc++.h>
+#include <array>
+#include <deque>
+#include <functional>
+#include <list>
+#include <map>
+#include <queue>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
 
 using ll = long long;
 using ull = unsigned long long;
@@ -53,7 +63,7 @@ using aal = ary<ary<ll, N2>, N1>;
 template <int N>
 using val = vec<al<N>>;
 template <int N>
-using avl = ary<vl,N>;
+using avl = ary<vl, N>;
 
 template <typename T>
 using ml = std::map<ll, T>;
@@ -63,7 +73,7 @@ using spl = set<pl>;
 template <int N>
 using sal = set<al<N>>;
 template <int N>
-using asl = ary<sl,N>;
+using asl = ary<sl, N>;
 
 template <typename T>
 using heap_max = std::priority_queue<T, std::vector<T>, std::less<T>>;

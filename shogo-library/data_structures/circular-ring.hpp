@@ -1,4 +1,5 @@
 #pragma once
+// https://github.com/shogo314/shogo-library/blob/main/src/data_structures/circular-ring.hpp
 
 /**
  * @file circular-ring.hpp
@@ -6,19 +7,20 @@
  */
 
 #include <cassert>
+#include <cstddef>
 #include <vector>
 
 /**
  * @brief 円環
- * @tparam T 
+ * @tparam T
  */
 template <typename T>
 struct CircularRing {
     std::vector<T> data;
-    CircularRing(const std::vector<T>& v) : data(v) {}
+    explicit CircularRing(const std::vector<T>& v) : data(v) {}
     CircularRing(const CircularRing&) = default;
     CircularRing() = default;
-    CircularRing(size_t s) : data(s) {}
+    explicit CircularRing(int s) : data(s) {}
     T at(long long i) const {
         assert(!data.empty());
         i %= static_cast<long long>(data.size());

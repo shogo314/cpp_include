@@ -15,6 +15,9 @@
 #include <utility>
 #include <vector>
 
+#include "../utility/traits.hpp"
+// https://github.com/shogo314/shogo-library/blob/main/src/data_structures/counter.hpp
+
 template <typename T>
 struct Counter {
     using key_type = T;
@@ -36,7 +39,7 @@ struct Counter {
      * @brief 範囲の要素を数える
      * Counter 自身と key_type (std::string など範囲でもあるもの) はこちらで受け取らない
      */
-    template <class C, std::enable_if_t<!std::is_same_v<std::decay_t<C>, Counter> && !std::is_convertible_v<C, key_type>, std::nullptr_t> = nullptr,
+    template <class C, ENABLE_IF_T(!std::is_same_v<std::decay_t<C>, Counter> && !std::is_convertible_v<C, key_type>),
               class = decltype(std::begin(std::declval<C&>()), std::end(std::declval<C&>()))>
     explicit Counter(C&& v) {
         for (const key_type& a : v) {
@@ -78,8 +81,8 @@ struct Counter {
     /**
      * @brief 異なる値の個数 (重複は数えない)
      */
-    std::size_t size() const {
-        return data.size();
+    int size() const {
+        return static_cast<int>(data.size());
     }
     /**
      * @brief 重複を含めた要素数 (個数の総和)
@@ -112,7 +115,7 @@ struct Counter {
         for (const auto& [i, c] : data) {
             ret.push_back({i, c});
         }
-        std::sort(ret.begin(), ret.end(), [](const value_type& a, const value_type& b) { return a.second > b.second or (a.second == b.second and a.first < b.first); });
+        std::sort(ret.begin(), ret.end(), [](const value_type& a, const value_type& b) { return a.second > b.second || (a.second == b.second && a.first < b.first); });
         return ret;
     }
     class CounterReference {

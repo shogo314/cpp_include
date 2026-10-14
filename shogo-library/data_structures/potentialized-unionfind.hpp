@@ -4,14 +4,14 @@
  * @file potentialized-unionfind.hpp
  * @brief ポテンシャル付きUnionFind
  */
-#include <algorithm>
 #include <cassert>
-#include <functional>
 #include <stack>
 #include <utility>
 #include <vector>
-#include "unionfind.hpp"
+
 #include "../algebra/group.hpp"
+#include "unionfind.hpp"
+// https://github.com/shogo314/shogo-library/blob/main/src/data_structures/potentialized-unionfind.hpp
 
 /**
  * @brief ポテンシャル付きUnionFind
@@ -118,20 +118,7 @@ class PotentializedUnionFind {
      * @return 「一つの連結成分の頂点番号のリスト」のリスト
      */
     std::vector<std::vector<int>> groups() {
-        std::vector<int> leader_buf(_n), group_size(_n);
-        for (int i = 0; i < _n; i++) {
-            leader_buf[i] = leader(i);
-            group_size[leader_buf[i]]++;
-        }
-        std::vector<std::vector<int>> result(_n);
-        for (int i = 0; i < _n; i++) {
-            result[i].reserve(group_size[i]);
-        }
-        for (int i = 0; i < _n; i++) {
-            result[leader_buf[i]].push_back(i);
-        }
-        result.erase(std::remove_if(result.begin(), result.end(), [&](const std::vector<int>& v) { return v.empty(); }), result.end());
-        return result;
+        return internal_unionfind::groups(_n, [&](int a) { return leader(a); });
     }
 
    private:

@@ -1,18 +1,18 @@
 #pragma once
+// https://github.com/shogo314/shogo-library/blob/main/src/base/functions.hpp
 
 /**
  * @file functions.hpp
- * @brief 汎用関数 (chmin, chmax, 二分探索など)
+ * @brief 汎用関数 (chmin, chmax など)
  */
 
 #include <algorithm>
-#include <array>
 #include <cmath>
+#include <iterator>
 #include <numeric>
-#include "traits.hpp"
 
 template <typename T1, typename T2>
-inline constexpr bool chmin(T1 &a, T2 b) {
+inline constexpr bool chmin(T1& a, T2 b) {
     if (a > b) {
         a = b;
         return true;
@@ -21,7 +21,7 @@ inline constexpr bool chmin(T1 &a, T2 b) {
 }
 
 template <typename T1, typename T2>
-inline constexpr bool chmax(T1 &a, T2 b) {
+inline constexpr bool chmax(T1& a, T2 b) {
     if (a < b) {
         a = b;
         return true;
@@ -29,11 +29,11 @@ inline constexpr bool chmax(T1 &a, T2 b) {
     return false;
 }
 
-inline constexpr long long max(const long long &t1, const long long &t2) {
+inline constexpr long long max(const long long& t1, const long long& t2) {
     return std::max<long long>(t1, t2);
 }
 
-inline constexpr long long min(const long long &t1, const long long &t2) {
+inline constexpr long long min(const long long& t1, const long long& t2) {
     return std::min<long long>(t1, t2);
 }
 
@@ -43,7 +43,7 @@ using std::lcm;
 using std::size;
 
 template <typename T>
-constexpr T extgcd(const T &a, const T &b, T &x, T &y) {
+constexpr T extgcd(const T& a, const T& b, T& x, T& y) {
     T d = a;
     if (b != 0) {
         d = extgcd(b, a % b, y, x);
@@ -56,71 +56,20 @@ constexpr T extgcd(const T &a, const T &b, T &x, T &y) {
 }
 
 /**
- * 偏角ソート
- * 反時計回り
- * x 軸正方向を始点とし、零ベクトルは x 軸正方向と同じ偏角として扱う
- */
-template <typename T, ENABLE_IF_T(std::is_integral_v<T>)>
-bool argcmp(std::array<T, 2> a, std::array<T, 2> b) {
-    // 零ベクトルは外積で比べられないので、偏角 0 (x 軸正方向) として先に判定する
-    const bool a_zero = a[0] == 0 && a[1] == 0;
-    const bool b_zero = b[0] == 0 && b[1] == 0;
-    if (b_zero) return false;  // 偏角 0 より小さいものはない
-    if (a_zero) return !(b[1] == 0 && b[0] > 0);  // b の偏角が 0 より大きいか
-    T a0 = std::array<T, 2>{a[1], a[0]} < std::array<T, 2>{0, 0};
-    T b0 = std::array<T, 2>{b[1], b[0]} < std::array<T, 2>{0, 0};
-    if (a0 < b0) {
-        return true;
-    } else if (b0 < a0) {
-        return false;
-    } else {
-        return b[0] * a[1] < a[0] * b[1];
-    }
-}
-
-template <typename M, typename N, class F, ENABLE_IF_T(std::is_integral_v<std::common_type_t<M, N>> and std::is_invocable_r_v<bool, F, std::common_type_t<M, N>>)>
-inline constexpr std::common_type_t<M, N> binary_search(const M &ok, const N &ng, F f) {
-    std::common_type_t<M, N> _ok = ok, _ng = ng;
-    while (std::abs(_ok - _ng) > 1) {
-        std::common_type_t<M, N> mid = (_ok + _ng) / 2;
-        if (f(mid)) {
-            _ok = mid;
-        } else {
-            _ng = mid;
-        }
-    }
-    return _ok;
-}
-
-template <typename M, typename N, class F, ENABLE_IF_T(not std::is_integral_v<std::common_type_t<M, N>> and std::is_invocable_r_v<bool, F, std::common_type_t<M, N>>)>
-inline constexpr std::common_type_t<M, N> binary_search(const M &ok, const N &ng, F f) {
-    std::common_type_t<M, N> _ok = ok, _ng = ng;
-    for (int i = 0; i < 100; i++) {
-        std::common_type_t<M, N> mid = (_ok + _ng) / 2;
-        if (f(mid)) {
-            _ok = mid;
-        } else {
-            _ng = mid;
-        }
-    }
-    return _ok;
-}
-
-/**
  * 0 <= x < a
  */
 inline constexpr bool inrange(long long x, long long a) {
-    return 0 <= x and x < a;
+    return 0 <= x && x < a;
 }
 /**
  * a <= x < b
  */
 inline constexpr bool inrange(long long x, long long a, long long b) {
-    return a <= x and x < b;
+    return a <= x && x < b;
 }
 /**
  * 0 <= x < a and 0 <= y < b
  */
 inline constexpr bool inrect(long long x, long long y, long long a, long long b) {
-    return 0 <= x and x < a and 0 <= y and y < b;
+    return 0 <= x && x < a && 0 <= y && y < b;
 }

@@ -1,10 +1,8 @@
 #pragma once
 #include <bits/stdc++.h>
-#include "container_func.hpp"
+
 #include "functions.hpp"
 #include "io.hpp"
 #include "macro.hpp"
-#include "traits.hpp"
 #include "type_alias.hpp"
-#include "vector_func.hpp"
-#include "bit.hpp"
+// https://github.com/shogo314/shogo-library/blob/main/src/base/all

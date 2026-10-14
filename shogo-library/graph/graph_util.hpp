@@ -6,13 +6,17 @@
  */
 
 #include <algorithm>
+#include <cassert>
 #include <functional>
+#include <limits>
 #include <queue>
 #include <stack>
 #include <utility>
 #include <vector>
 
+#include "../data_structures/unionfind.hpp"
 #include "graph.hpp"
+// https://github.com/shogo314/shogo-library/blob/main/src/graph/graph_util.hpp
 
 /**
  * @brief 無向グラフについて、二部グラフなら0と1に彩色した結果をひとつ返し、二部グラフでないなら空のvectorを返す。
@@ -100,27 +104,27 @@ bool is_tree(const Graph<Cost>& graph) {
 
 /**
  * @brief 有向グラフをトポロジカルソートする
- * @param G トポロジカルソートするグラフ
- * @return ソートされたノード番号のvector DAGでなければ長さがG.n未満になる
+ * @return std::vector<int> トポロジカル順に並べた頂点のリスト。DAG でなければ空
  */
-template <typename Cost>
-std::vector<int> topological_sort(const Graph<Cost>& G) {
-    std::vector<int> indeg(G.n), sorted;
+template <typename Cost = int>
+std::vector<int> topological_sort(const Graph<Cost>& graph) {
+    std::vector<int> indeg(graph.n), sorted;
     std::queue<int> q;
-    for (int i = 0; i < G.n; i++) {
-        for (int dst : G[i]) indeg[dst]++;
+    for (int i = 0; i < graph.n; i++) {
+        for (int dst : graph[i]) indeg[dst]++;
     }
-    for (int i = 0; i < G.n; i++) {
+    for (int i = 0; i < graph.n; i++) {
         if (!indeg[i]) q.push(i);
     }
     while (!q.empty()) {
         int cur = q.front();
         q.pop();
-        for (int dst : G[cur]) {
+        for (int dst : graph[cur]) {
             if (!--indeg[dst]) q.push(dst);
         }
         sorted.push_back(cur);
     }
+    if ((int)sorted.size() < graph.n) return {};
     return sorted;
 }
 
@@ -130,7 +134,7 @@ std::vector<int> topological_sort(const Graph<Cost>& G) {
  */
 template <typename Cost = int>
 bool has_cycle(const Graph<Cost>& graph) {
-    return (int)topological_sort(graph).size() < graph.n;
+    return graph.n > 0 && topological_sort(graph).empty();
 }
 /**
  * @deprecated has_cycle を使うこと(名前と意味が逆に読めるため改名した)
@@ -138,6 +142,92 @@ bool has_cycle(const Graph<Cost>& graph) {
 template <typename Cost = int>
 [[deprecated("use has_cycle")]] bool has_acyclic(const Graph<Cost>& graph) {
     return has_cycle(graph);
+}
+
+/**
+ * @brief 有向グラフの閉路を 1 つ求める
+ *
+ * DFS を再帰を使わずに行う。O(n + m)
+ * @return std::vector<Edge> 閉路の辺を、たどる順に並べたもの (e[k].dst == e[k + 1].src、末尾の dst は先頭の src)。閉路がなければ空
+ * 自己ループは長さ 1 の閉路になる。頂点の列は各辺の src で得られる
+ */
+template <typename Cost = int>
+std::vector<typename Graph<Cost>::Edge> find_cycle_directed(const Graph<Cost>& graph) {
+    using Edge = typename Graph<Cost>::Edge;
+    // state: 0 は未訪問、1 は DFS のスタック上、2 は探索済み
+    std::vector<int> state(graph.n, 0), iter(graph.n, 0);
+    std::vector<Edge> in(graph.n);  // DFS 木で v に入る辺
+    for (int root = 0; root < graph.n; root++) {
+        if (state[root]) continue;
+        std::vector<int> st = {root};
+        state[root] = 1;
+        while (!st.empty()) {
+            int v = st.back();
+            if (iter[v] == (int)graph[v].size()) {
+                state[v] = 2;
+                st.pop_back();
+                continue;
+            }
+            const Edge& e = graph[v][iter[v]++];
+            int u = e.dst;
+            if (state[u] == 0) {
+                state[u] = 1;
+                in[u] = e;
+                st.push_back(u);
+            } else if (state[u] == 1) {
+                // u はスタック上にあるので、u から v への木の辺と e で閉路になる
+                std::vector<Edge> res = {e};
+                for (int w = v; w != u; w = in[w].src) res.push_back(in[w]);
+                std::reverse(res.begin(), res.end());
+                return res;
+            }
+        }
+    }
+    return {};
+}
+
+/**
+ * @brief 無向グラフの閉路を 1 つ求める
+ *
+ * DFS を再帰を使わずに行う。O(n + m)
+ * @return std::vector<Edge> 閉路の辺を、たどる順に並べたもの (e[k].dst == e[k + 1].src、末尾の dst は先頭の src)。閉路がなければ空
+ * 自己ループは長さ 1、多重辺は長さ 2 の閉路になる (同じ辺を戻ることはない)。頂点の列は各辺の src で得られる
+ */
+template <typename Cost = int>
+std::vector<typename Graph<Cost>::Edge> find_cycle_undirected(const Graph<Cost>& graph) {
+    using Edge = typename Graph<Cost>::Edge;
+    std::vector<int> state(graph.n, 0), iter(graph.n, 0);
+    std::vector<Edge> in(graph.n);
+    for (int root = 0; root < graph.n; root++) {
+        if (state[root]) continue;
+        std::vector<int> st = {root};
+        state[root] = 1;
+        while (!st.empty()) {
+            int v = st.back();
+            if (iter[v] == (int)graph[v].size()) {
+                state[v] = 2;
+                st.pop_back();
+                continue;
+            }
+            const Edge& e = graph[v][iter[v]++];
+            // 親へ戻る辺は、頂点ではなく辺の番号で区別する (多重辺を閉路として見つけるため)
+            if (e.id == in[v].id) continue;  // 根では in[v].id == -1
+            int u = e.dst;
+            if (state[u] == 0) {
+                state[u] = 1;
+                in[u] = e;
+                st.push_back(u);
+            } else if (state[u] == 1) {
+                // u は v の祖先 (か v 自身) なので、u から v への木の辺と e で閉路になる
+                std::vector<Edge> res = {e};
+                for (int w = v; w != u; w = in[w].src) res.push_back(in[w]);
+                std::reverse(res.begin(), res.end());
+                return res;
+            }
+            // state[u] == 2 にはならない (なるなら、u の側でこの辺により閉路が見つかっている)
+        }
+    }
+    return {};
 }
 
 /**
@@ -193,29 +283,61 @@ std::vector<std::vector<int>> strongly_connected_components(const Graph<Cost>& g
 }
 
 /**
+ * @brief 最小全域木の結果
+ */
+template <typename Cost>
+struct MinimumSpanningTree {
+    Cost cost;                                      //!< 使った辺のコストの総和
+    std::vector<typename Graph<Cost>::Edge> edges;  //!< 使った辺 (コストの昇順、同じコストなら辺の番号順)
+};
+
+/**
+ * @brief 無向グラフの最小全域木 (Kruskal 法) O(m log m)
+ *
+ * 連結でなければ、各連結成分の最小全域木を合わせたもの (最小全域森) を返す
+ * 連結かどうかは edges.size() == n - 1 で判定できる
+ */
+template <typename Cost = int>
+MinimumSpanningTree<Cost> minimum_spanning_tree(const Graph<Cost>& graph) {
+    auto es = graph.edges();
+    std::stable_sort(es.begin(), es.end(), [](const auto& a, const auto& b) { return a.cost < b.cost; });
+    UnionFind uf(graph.n);
+    MinimumSpanningTree<Cost> res{Cost{}, {}};
+    for (const auto& e : es) {
+        if (uf.merge(e.src, e.dst)) {
+            res.cost += e.cost;
+            res.edges.push_back(e);
+        }
+    }
+    return res;
+}
+
+/**
  * @brief 最小シュタイナー木の辺重みの総和
+ * @note X を連結にできなければ inf を返す
  */
 template <typename Cost, typename T>
-Cost minimum_steiner_tree(const Graph<Cost>& G, const std::vector<T>& X, Cost inf = -1) {
+Cost minimum_steiner_tree(const Graph<Cost>& graph, const std::vector<T>& X, Cost inf = std::numeric_limits<Cost>::max() / 4) {
     if (X.empty()) return Cost{};
-    std::vector<std::vector<Cost>> dp(G.n, std::vector<Cost>(1 << X.size(), inf));
+    for (const auto& x : X) assert(0 <= x && x < graph.n);
+    std::vector<std::vector<Cost>> dp(graph.n, std::vector<Cost>(1 << X.size(), inf));
     for (int p = 0; p < (int)X.size(); p++) dp[X[p]][1 << p] = {};
     for (int i = 0; i < (1 << X.size()); i++) {
         for (int j = i; j > 0; j = (j - 1) & i) {
-            for (int k = 0; k < G.n; k++) {
+            for (int k = 0; k < graph.n; k++) {
                 if (dp[k][j] != inf && dp[k][i ^ j] != inf) {
                     if (dp[k][i] == inf || dp[k][i] > dp[k][j] + dp[k][i ^ j]) dp[k][i] = dp[k][j] + dp[k][i ^ j];
                 }
             }
         }
         std::priority_queue<std::pair<Cost, int>, std::vector<std::pair<Cost, int>>, std::greater<std::pair<Cost, int>>> que;
-        for (int k = 0; k < G.n; k++)
+        for (int k = 0; k < graph.n; k++)
             if (dp[k][i] != inf) que.emplace(dp[k][i], k);
         while (que.size()) {
             auto [d, u] = que.top();
             que.pop();
             if (d > dp[u][i]) continue;
-            for (auto e : G[u]) {
+            for (auto e : graph[u]) {
                 if (dp[e.dst][i] == inf || dp[e.dst][i] > d + e.cost) {
                     dp[e.dst][i] = d + e.cost;
                     que.emplace(d + e.cost, e.dst);
@@ -224,7 +346,7 @@ Cost minimum_steiner_tree(const Graph<Cost>& G, const std::vector<T>& X, Cost in
         }
     }
     Cost res = inf;
-    for (int k = 0; k < G.n; k++) {
+    for (int k = 0; k < graph.n; k++) {
         if (dp[k].back() != inf && (res == inf || res > dp[k].back())) res = dp[k].back();
     }
     return res;

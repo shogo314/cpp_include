@@ -1,4 +1,5 @@
 #pragma once
+// https://github.com/shogo314/shogo-library/blob/main/src/data_structures/counter-segtree.hpp
 
 /**
  * @file counter-segtree.hpp
@@ -7,6 +8,7 @@
 
 #include <cassert>
 #include <map>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -41,11 +43,11 @@ class CounterSegTree {
         }
     }
     key_type get(int k) const {
-        assert(0 <= k and k < n);
+        assert(0 <= k && k < n);
         return data[k + sz].begin()->first;
     }
     void set(int k, const key_type& x) {
-        assert(0 <= k and k < n);
+        assert(0 <= k && k < n);
         k += sz;
         key_type y = data[k].begin()->first;
         while (k > 0) {
@@ -59,7 +61,11 @@ class CounterSegTree {
             k >>= 1;
         }
     }
-    std::pair<key_type, mapped_type> lower_bound(int l, int r, key_type x) const {
+    /**
+     * @brief 区間 [l, r) で x 以上の最小の値とその個数。なければ std::nullopt
+     */
+    std::optional<std::pair<key_type, mapped_type>> lower_bound(int l, int r, key_type x) const {
+        assert(0 <= l && l <= r && r <= n);
         std::pair<key_type, mapped_type> ret = {{}, 0};
         l += sz;
         r += sz;
@@ -93,9 +99,14 @@ class CounterSegTree {
             l >>= 1;
             r >>= 1;
         }
+        if (ret.second == 0) return std::nullopt;
         return ret;
     }
+    /**
+     * @brief {x, 区間 [l, r) の x の個数}
+     */
     std::pair<key_type, mapped_type> find(int l, int r, key_type x) const {
+        assert(0 <= l && l <= r && r <= n);
         std::pair<key_type, mapped_type> ret = {x, 0};
         l += sz;
         r += sz;

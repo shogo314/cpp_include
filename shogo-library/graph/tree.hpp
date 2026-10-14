@@ -3,32 +3,36 @@
 /**
  * @file tree.hpp
  * @brief 木の汎用テンプレート
-*/
+ */
 
 #include <algorithm>
 #include <cassert>
 #include <stack>
+#include <utility>
+#include <vector>
 
 #include "graph.hpp"
+// https://github.com/shogo314/shogo-library/blob/main/src/graph/tree.hpp
 
 template <typename>
-struct RootedTree;
+class RootedTree;
 template <typename>
-struct DoublingClimbTree;
+class DoublingClimbTree;
 
 /**
  * @brief 根なし木
- * 
+ *
  * @tparam Cost = int 辺の重み
- * 
+ *
  * Graph<Cost>を継承し、すべて無向辺で表す
-*/
+ */
 template <typename Cost = int>
 struct Tree : private Graph<Cost> {
     // Graph<Cost>* g = new Tree<Cost>(); ができてしまうと、delete時にメモリリークが発生
     // 回避するためprivate継承にして、メンバをすべてusing宣言
     using Edge = typename Graph<Cost>::Edge;
     using Graph<Cost>::n;
+    using Graph<Cost>::size;
     using Graph<Cost>::m;
     using Graph<Cost>::g;
     using Graph<Cost>::Graph;
@@ -41,10 +45,10 @@ struct Tree : private Graph<Cost> {
 
     /**
      * @brief コンストラクタ
-     * 
+     *
      * @param n ノード数
      */
-    Tree(int n = 0) : Graph<Cost>(n) {}
+    explicit Tree(int n = 0) : Graph<Cost>(n) {}
 
     /**
      * @brief 辺の情報を標準入力から受け取って追加する
@@ -54,10 +58,10 @@ struct Tree : private Graph<Cost> {
     void read(int padding = -1, bool weighted = false) {
         Graph<Cost>::read(this->n - 1, padding, weighted, false);
     }
-    
+
     /**
      * @brief 木の直径
-     * 
+     *
      * @param weighted = true 重み付きか
      * @return std::vector<Edge> 直径を構成する辺のリスト
      */
@@ -71,7 +75,7 @@ struct Tree : private Graph<Cost> {
 
     /**
      * @brief 根付き木にする
-     * 
+     *
      * @param root 根
      * @return RootedTree<Cost> 根付き木のオブジェクト
      */
@@ -81,7 +85,7 @@ struct Tree : private Graph<Cost> {
     }
     /**
      * @brief 根付き木にして返す
-     * 
+     *
      * @param root 根
      * @return RootedTree<Cost> 根付き木のオブジェクト
      */
@@ -92,7 +96,7 @@ struct Tree : private Graph<Cost> {
 
     /**
      * @brief ダブリングLCAが使える根付き木を返す
-     * 
+     *
      * @param root 根
      * @return DoublingClimbTree<Cost> ダブリング済み根付き木のオブジェクト
      */
@@ -103,26 +107,28 @@ struct Tree : private Graph<Cost> {
     }
     /**
      * @brief ダブリングLCAが使える根付き木を返す
-     * 
+     *
      * @param root 根
      * @return DoublingClimbTree<Cost> ダブリング済み根付き木のオブジェクト
      */
     [[nodiscard]]
     DoublingClimbTree<Cost> build_lca(int root) && {
-        RootedTree rooted_tree(std::move(*this), root);        
+        RootedTree rooted_tree(std::move(*this), root);
         return DoublingClimbTree<Cost>(std::move(rooted_tree));
     }
 };
 
 /**
  * @brief 根付き木
- * 
+ *
  * @tparam Cost = int 辺のコスト
  */
 template <typename Cost = int>
-struct RootedTree : private Tree<Cost> {
+class RootedTree : private Tree<Cost> {
+   public:
     using Edge = typename Tree<Cost>::Edge;
     using Tree<Cost>::n;
+    using Tree<Cost>::size;
     using Tree<Cost>::m;
     using Tree<Cost>::g;
     using Tree<Cost>::operator[];
@@ -130,28 +136,28 @@ struct RootedTree : private Tree<Cost> {
     using Tree<Cost>::shortest_path;
     using ShortestPath = typename Tree<Cost>::ShortestPath;
 
-    int root; //!< 根
-    std::vector<Edge> par; //!< 親へ向かう辺
-    std::vector<std::vector<Edge>> child; //!< 子へ向かう辺のリスト
-    std::vector<Cost> depth; //!< 深さのリスト
-    std::vector<Cost> height; //!< 部分木の高さのリスト
-    std::vector<int> unweighted_depth; //!< 重みなしの深さのリスト
-    std::vector<int> unweighted_height; //!< 重みなしの部分木の高さのリスト
-    std::vector<int> sz; //!< 部分期の頂点数のリスト
-    std::vector<int> preorder; //!< 先行順巡回
-    std::vector<int> postorder; //!< 後行順巡回
-    std::vector<std::pair<int, int>> euler_tour; //!< オイラーツアー DFS中にとおった頂点の(頂点番号,その頂点を通った回数)のリスト
+    int root;                                     //!< 根
+    std::vector<Edge> par;                        //!< 親へ向かう辺
+    std::vector<std::vector<Edge>> child;         //!< 子へ向かう辺のリスト
+    std::vector<Cost> depth;                      //!< 深さのリスト
+    std::vector<Cost> height;                     //!< 部分木の高さのリスト
+    std::vector<int> unweighted_depth;            //!< 重みなしの深さのリスト
+    std::vector<int> unweighted_height;           //!< 重みなしの部分木の高さのリスト
+    std::vector<int> sz;                          //!< 部分木の頂点数のリスト
+    std::vector<int> preorder;                    //!< 先行順巡回
+    std::vector<int> postorder;                   //!< 後行順巡回
+    std::vector<std::pair<int, int>> euler_tour;  //!< オイラーツアー DFS中にとおった頂点の(頂点番号,その頂点を通った回数)のリスト
 
     RootedTree() = delete;
-    
+
     /**
      * @brief 親の頂点のリストから根が0の根付き木を構築するコンストラクタ
-     * 
+     *
      * @param par_ 頂点0以外の親の頂点のリスト
      * @param padding = -1 parの頂点番号をいくつずらすか
      */
-    RootedTree(const std::vector<int>& par_, int padding = -1) : Tree<Cost>(par_.size() + 1), root(0) {
-        for(int i = 0; i < (int)par_.size(); i++) {
+    explicit RootedTree(const std::vector<int>& par_, int padding = -1) : Tree<Cost>(par_.size() + 1), root(0) {
+        for (int i = 0; i < (int)par_.size(); i++) {
             this->add_edge(i + 1, par_[i] + padding);
         }
         build();
@@ -174,10 +180,10 @@ struct RootedTree : private Tree<Cost> {
     RootedTree(Tree<Cost>&& tree, int root) : Tree<Cost>(std::move(tree)), root(root) {
         build();
     }
-    
+
     /**
      * @brief ダブリングLCAが使える根付き木を得る
-     * 
+     *
      * @return DoublingClimbTree<Cost> ダブリング済み根付き木のオブジェクト
      */
     [[nodiscard]]
@@ -187,7 +193,7 @@ struct RootedTree : private Tree<Cost> {
 
     /**
      * @brief ダブリングLCAが使える根付き木を得る
-     * 
+     *
      * @return DoublingClimbTree<Cost> ダブリング済み根付き木のオブジェクト
      */
     [[nodiscard]]
@@ -195,7 +201,7 @@ struct RootedTree : private Tree<Cost> {
         return DoublingClimbTree<Cost>(std::move(*this));
     }
 
-private:
+   private:
     void build() {
         int n = this->n;
         assert(n > 0);
@@ -211,22 +217,23 @@ private:
         std::vector<int> iter(n);
         std::stack<std::pair<int, int>> stk;
         stk.emplace(root, 0);
-        while(!stk.empty()) {
-            auto [u, cnt] = stk.top(); stk.pop();
+        while (!stk.empty()) {
+            auto [u, cnt] = stk.top();
+            stk.pop();
             euler_tour.emplace_back(u, cnt);
-            if(iter[u] == 0) preorder.push_back(u);
-            while(iter[u] < (int)this->g[u].size() && this->g[u][iter[u]].dst == par[u]) iter[u]++;
-            if(iter[u] == (int)this->g[u].size()) {
+            if (iter[u] == 0) preorder.push_back(u);
+            while (iter[u] < (int)this->g[u].size() && this->g[u][iter[u]].dst == par[u]) iter[u]++;
+            if (iter[u] == (int)this->g[u].size()) {
                 postorder.push_back(u);
                 sz[u] = 1;
                 height[u] = 0;
                 unweighted_height[u] = 0;
-                for(auto& e : child[u]) {
+                for (auto& e : child[u]) {
                     sz[u] += sz[e.dst];
-                    if(height[u] < height[e.dst] + e.cost) {
+                    if (height[u] < height[e.dst] + e.cost) {
                         height[u] = height[e.dst] + e.cost;
                     }
-                    if(unweighted_height[u] < unweighted_height[e.dst] + 1) {
+                    if (unweighted_height[u] < unweighted_height[e.dst] + 1) {
                         unweighted_height[u] = unweighted_height[e.dst] + 1;
                     }
                 }
@@ -245,13 +252,15 @@ private:
 
 /**
  * @brief 親頂点ダブリング済み根付き木
- * 
- * @tparam Cost = int 辺の重み(注: climbでは根の重みは考えない)
+ *
+ * @tparam Cost = int 辺の重み(注: hopでは根の重みは考えない)
  */
 template <typename Cost = int>
-struct DoublingClimbTree : private RootedTree<Cost> {
+class DoublingClimbTree : private RootedTree<Cost> {
+   public:
     using Edge = typename RootedTree<Cost>::Edge;
     using RootedTree<Cost>::n;
+    using RootedTree<Cost>::size;
     using RootedTree<Cost>::m;
     using RootedTree<Cost>::g;
     using RootedTree<Cost>::operator[];
@@ -270,17 +279,17 @@ struct DoublingClimbTree : private RootedTree<Cost> {
     using RootedTree<Cost>::postorder;
     using RootedTree<Cost>::euler_tour;
 
-    int h; //!< ダブリングの回数
-    std::vector<std::vector<int>> doubling_par; //!< jから(1<<i)頂点登った頂点(存在しない場合は-1)
+    int h;                                       //!< ダブリングの回数
+    std::vector<std::vector<int>> doubling_par;  //!< jから(1<<i)頂点登った頂点(存在しない場合は-1)
 
     DoublingClimbTree() = delete;
-    
+
     /**
      * @brief RootedTreeからダブリング済み根付き木を構築するコンストラクタ(コピー)
      *
      * @param tree RootedTree
      */
-    DoublingClimbTree(const RootedTree<Cost>& tree) : RootedTree<Cost>(tree) {
+    explicit DoublingClimbTree(const RootedTree<Cost>& tree) : RootedTree<Cost>(tree) {
         build();
     }
 
@@ -292,14 +301,14 @@ struct DoublingClimbTree : private RootedTree<Cost> {
     DoublingClimbTree(RootedTree<Cost>&& tree) : RootedTree<Cost>(std::move(tree)) {
         build();
     }
-    
+
     /**
      * @brief 親の頂点のリストから根が0のダブリング済み根付き木を構築するコンストラクタ
-     * 
+     *
      * @param par_ 頂点0以外の親の頂点のリスト
      * @param padding = -1 parの頂点番号をいくつずらすか
      */
-    DoublingClimbTree(const std::vector<int>& par_, int padding = -1) : RootedTree<Cost>(par_, padding) {
+    explicit DoublingClimbTree(const std::vector<int>& par_, int padding = -1) : RootedTree<Cost>(par_, padding) {
         build();
     }
     /**
@@ -320,50 +329,51 @@ struct DoublingClimbTree : private RootedTree<Cost> {
     DoublingClimbTree(Tree<Cost>&& tree, int root) : RootedTree<Cost>(std::move(tree), root) {
         build();
     }
-    
+
     /**
      * @brief 頂点uからk回を根の方向に遡った頂点
-     * 
+     *
      * @param u 元の頂点
      * @param k 登る段数
      * @return int k回登った頂点
      */
-    int climb(int u, int k) const {
-        assert(k >= 0);
-        if(k > this->unweighted_depth[u]) return -1;
-        for(int i = 0; i < h; i++) {
-            if(k >> i & 1) u = doubling_par[i][u];
-            if(u == -1) return -1;
+    int hop(int u, int k) const {
+        assert(0 <= u && u < this->n && k >= 0);
+        if (k > this->unweighted_depth[u]) return -1;
+        for (int i = 0; i < h; i++) {
+            if (k >> i & 1) u = doubling_par[i][u];
+            if (u == -1) return -1;
         }
         return u;
     }
-    
+
     /**
      * @brief 最小共通祖先
-     * 
+     *
      * @param u 頂点1
      * @param v 頂点2
      * @return int LCAの頂点番号
      */
     int lca(int u, int v) const {
-        if(this->unweighted_depth[u] > this->unweighted_depth[v]) std::swap(u, v);
-        v = climb(v, this->unweighted_depth[v] - this->unweighted_depth[u]);
-        if(u == v) return u;
-        for(int i = h - 1; i >= 0; i--) {
+        assert(0 <= u && u < this->n && 0 <= v && v < this->n);
+        if (this->unweighted_depth[u] > this->unweighted_depth[v]) std::swap(u, v);
+        v = hop(v, this->unweighted_depth[v] - this->unweighted_depth[u]);
+        if (u == v) return u;
+        for (int i = h - 1; i >= 0; i--) {
             int nu = doubling_par[i][u];
             int nv = doubling_par[i][v];
-            if(nu == -1) continue;
-            if(nu != nv) {
+            if (nu == -1) continue;
+            if (nu != nv) {
                 u = nu;
                 v = nv;
             }
         }
         return this->par[u];
     }
-    
+
     /**
      * @brief 頂点間距離(重み付き)
-     * 
+     *
      * @param u 頂点1
      * @param v 頂点2
      * @return Cost uとv間の最短経路の辺の重みの和
@@ -371,18 +381,18 @@ struct DoublingClimbTree : private RootedTree<Cost> {
     Cost dist(int u, int v) const {
         return this->depth[u] + this->depth[v] - this->depth[lca(u, v)] * 2;
     }
-    
-private:
+
+   private:
     void build() {
         int n = this->n;
         h = 1;
-        while((1 << h) < n) h++;
+        while ((1 << h) < n) h++;
         doubling_par.assign(h, std::vector<int>(n, -1));
-        for(int i = 0; i < n; i++) doubling_par[0][i] = this->par[i];
-        for(int i = 0; i < h - 1; i++) {
-            for(int j = 0; j < n; j++) {
-                if(doubling_par[i][j] != -1) {
-                    doubling_par[i+1][j] = doubling_par[i][doubling_par[i][j]];
+        for (int i = 0; i < n; i++) doubling_par[0][i] = this->par[i];
+        for (int i = 0; i < h - 1; i++) {
+            for (int j = 0; j < n; j++) {
+                if (doubling_par[i][j] != -1) {
+                    doubling_par[i + 1][j] = doubling_par[i][doubling_par[i][j]];
                 }
             }
         }

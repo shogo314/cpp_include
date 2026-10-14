@@ -8,7 +8,12 @@
  * - S inv(const S& a): 逆元
  */
 
+#include <array>
+#include <cstddef>
+#include <utility>
+
 #include "monoid.hpp"
+// https://github.com/shogo314/shogo-library/blob/main/src/algebra/group.hpp
 
 namespace group {
 
@@ -43,7 +48,7 @@ struct Xor : monoid::Xor<T> {
  * @brief {0, 1, ..., N-1} の置換 (全単射) の合成
  *
  * monoid::Mapping<N> に逆置換を加えたもの。要素は置換であること
- * op(f, g) = g∘f (左から順に適用する)
+ * op(f, g) = f∘g (g を先に適用する)
  *
  * @tparam N 置換する要素の個数
  */
@@ -57,7 +62,7 @@ struct Permutation : monoid::Mapping<N> {
     }
 };
 
-} // namespace group
+}  // namespace group
 
 /**
  * @brief 関数オブジェクトと単位元から実行時に作る群

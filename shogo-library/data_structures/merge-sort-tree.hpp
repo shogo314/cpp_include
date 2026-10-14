@@ -6,11 +6,14 @@
  */
 #include <algorithm>
 #include <cassert>
+#include <cstddef>
 #include <functional>
 #include <optional>
 #include <utility>
 #include <vector>
+
 #include "../algebra/group.hpp"
+// https://github.com/shogo314/shogo-library/blob/main/src/data_structures/merge-sort-tree.hpp
 
 /**
  * @brief 区間の閾値以内の値の積
@@ -115,7 +118,7 @@ class MergeSortTree {
         std::vector<value_type> value;
         key.reserve(value_key.size());
         value.reserve(value_key.size());
-        for (size_t i = 0; i < value_key.size(); i++) {
+        for (std::size_t i = 0; i < value_key.size(); i++) {
             value.push_back(value_key[i].first);
             key.push_back(value_key[i].second);
         }
@@ -160,3 +163,8 @@ class MergeSortTree {
         return ret;
     }
 };
+
+template <typename G, typename K>
+MergeSortTree(std::vector<std::pair<typename G::S, K>>, G) -> MergeSortTree<G, K>;
+template <typename G, typename K>
+MergeSortTree(std::vector<typename G::S>, std::vector<K>, G) -> MergeSortTree<G, K>;

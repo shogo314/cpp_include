@@ -5,14 +5,16 @@
  * @brief ローリングハッシュ
  */
 
-#include <string>
-#include <vector>
-#include <random>
 #include <cassert>
+#include <iterator>
+#include <random>
+#include <string>
 #include <string_view>
 #include <type_traits>
+#include <vector>
 
-#include "../base/traits.hpp"
+#include "../utility/traits.hpp"
+// https://github.com/shogo314/shogo-library/blob/main/src/string/rolling-hash.hpp
 
 struct RHString;
 
@@ -30,7 +32,7 @@ class RollingHash {
 
     // a < MOD, b < MOD必須
     constexpr static unsigned long long add(unsigned long long a, unsigned long long b) {
-        if((a += b) >= MOD) a -= MOD;
+        if ((a += b) >= MOD) a -= MOD;
         return a;
     }
 
@@ -41,10 +43,10 @@ class RollingHash {
     }
 
     void expand(int n) {
-        while(static_cast<int>(power.size()) <= n) power.push_back(mul(power.back(), base));
+        while (static_cast<int>(power.size()) <= n) power.push_back(mul(power.back(), base));
     }
 
-public:
+   public:
     /**
      * @brief 要素を[0, MOD)の値に変換する
      * @note charは符号に関わらず0~255として扱う 負の整数はMODで正規化する
@@ -62,16 +64,16 @@ public:
         }
     }
 
-    unsigned int base; //!< ハッシュの基数
-    std::vector<unsigned long long> power; //!< baseの累乗
+    unsigned int base;                      //!< ハッシュの基数
+    std::vector<unsigned long long> power;  //!< baseの累乗
 
     /**
      * @brief コンストラクタ
      *
      * @param base ハッシュの基数 省略するとランダム
      */
-    RollingHash(unsigned int base = 0) : base(base) {
-        if(base == 0) {
+    explicit RollingHash(unsigned int base = 0) : base(base) {
+        if (base == 0) {
             std::mt19937 mt(std::random_device{}());
             this->base = std::uniform_int_distribution<unsigned int>(129, ~0U)(mt);
         }
@@ -93,7 +95,7 @@ public:
             res.reserve(last - first + 1);
         }
         res.push_back(0);
-        for(; first != last; ++first) {
+        for (; first != last; ++first) {
             res.push_back(add(mul(res.back(), base), to_value(*first)));
         }
         return res;
@@ -120,8 +122,9 @@ public:
      * @return unsigned long long [l,r)のハッシュ
      */
     unsigned long long query(const std::vector<unsigned long long>& hash, int l, int r) {
+        assert(0 <= l && l <= r && r < static_cast<int>(hash.size()));
         expand(r - l);
-        return add(hash[r], MOD - mul(hash[l], power[r-l]));
+        return add(hash[r], MOD - mul(hash[l], power[r - l]));
     }
 
     friend RHString;
@@ -132,30 +135,30 @@ public:
  */
 struct RHString {
     RollingHash& rh;
-    size_t sz;
+    int sz;
     unsigned long long hash1;  //!< 正順
     unsigned long long hash2;  //!< 逆順
     /**
      * @brief コンストラクタ
      * 予めRollingHashをインスタンス化しておく必要がある
      */
-    RHString(RollingHash& rh) : rh(rh), sz(0), hash1(0), hash2(0) {}
-    RHString(RollingHash& rh, size_t sz, unsigned long long hash1, unsigned long long hash2) : rh(rh), sz(sz), hash1(hash1), hash2(hash2) {}
+    explicit RHString(RollingHash& rh) : rh(rh), sz(0), hash1(0), hash2(0) {}
+    RHString(RollingHash& rh, int sz, unsigned long long hash1, unsigned long long hash2) : rh(rh), sz(sz), hash1(hash1), hash2(hash2) {}
     RHString(const RHString& o) : rh(o.rh), sz(o.sz), hash1(o.hash1), hash2(o.hash2) {}
     /**
      * @brief vectorなどで初期化する
      */
-    template <class R, std::enable_if_t<is_range_v<R> && !std::is_convertible_v<R, std::string_view>, std::nullptr_t> = nullptr>
+    template <class R, ENABLE_IF_T(is_range_v<R> && !std::is_convertible_v<R, std::string_view>)>
     RHString(RollingHash& rh, R&& v) : rh(rh) {
         using std::begin, std::end, std::rbegin, std::rend;
-        sz = std::distance(begin(v), end(v));
+        sz = static_cast<int>(std::distance(begin(v), end(v)));
         hash1 = rh.build(begin(v), end(v)).back();
         hash2 = rh.build(rbegin(v), rend(v)).back();
     }
     /**
      * @brief charやunsigned long longなどで初期化する
      */
-    template <class T, std::enable_if_t<std::is_convertible_v<T, unsigned long long> && !std::is_convertible_v<T, std::string_view>, std::nullptr_t> = nullptr>
+    template <class T, ENABLE_IF_T(std::is_convertible_v<T, unsigned long long> && !std::is_convertible_v<T, std::string_view>)>
     RHString(RollingHash& rh, T&& x) : rh(rh) {
         sz = 1;
         hash1 = RollingHash::to_value(x);
@@ -165,7 +168,7 @@ struct RHString {
      * @brief 文字列(string, const char*, string_view)で初期化する
      */
     RHString(RollingHash& rh, std::string_view s) : rh(rh) {
-        sz = std::distance(s.begin(), s.end());
+        sz = static_cast<int>(s.size());
         hash1 = rh.build(s.begin(), s.end()).back();
         hash2 = rh.build(s.rbegin(), s.rend()).back();
     }
@@ -176,7 +179,7 @@ struct RHString {
     bool is_palindrome() const {
         return hash1 == hash2;
     }
-    size_t size() const {
+    int size() const {
         return sz;
     }
     void clear() {
@@ -209,17 +212,17 @@ struct RHString {
     /**
      * @brief vectorなどを再代入する
      */
-    template <class R, std::enable_if_t<is_range_v<R> && !std::is_convertible_v<R, std::string_view>, std::nullptr_t> = nullptr>
+    template <class R, ENABLE_IF_T(is_range_v<R> && !std::is_convertible_v<R, std::string_view>)>
     void assign(R&& v) {
         using std::begin, std::end, std::rbegin, std::rend;
-        sz = std::distance(begin(v), end(v));
+        sz = static_cast<int>(std::distance(begin(v), end(v)));
         hash1 = rh.build(begin(v), end(v)).back();
         hash2 = rh.build(rbegin(v), rend(v)).back();
     }
     /**
      * @brief charやunsigned long longなどを再代入する
      */
-    template <class T, std::enable_if_t<std::is_convertible_v<T, unsigned long long> && !std::is_convertible_v<T, std::string_view>, std::nullptr_t> = nullptr>
+    template <class T, ENABLE_IF_T(std::is_convertible_v<T, unsigned long long> && !std::is_convertible_v<T, std::string_view>)>
     void assign(T&& x) {
         sz = 1;
         hash1 = RollingHash::to_value(x);
@@ -229,7 +232,7 @@ struct RHString {
      * @brief 文字列(string, const char*, string_view)を再代入する
      */
     void assign(std::string_view s) {
-        sz = std::distance(s.begin(), s.end());
+        sz = static_cast<int>(s.size());
         hash1 = rh.build(s.begin(), s.end()).back();
         hash2 = rh.build(s.rbegin(), s.rend()).back();
     }
@@ -244,7 +247,7 @@ struct RHString {
     /**
      * @brief vectorなどを再代入する
      */
-    template <class R, std::enable_if_t<is_range_v<R> && !std::is_convertible_v<R, std::string_view>, std::nullptr_t> = nullptr>
+    template <class R, ENABLE_IF_T(is_range_v<R> && !std::is_convertible_v<R, std::string_view>)>
     RHString& operator=(R&& v) {
         assign(v);
         return *this;
@@ -252,7 +255,7 @@ struct RHString {
     /**
      * @brief charやunsigned long longなどを再代入する
      */
-    template <class T, std::enable_if_t<std::is_convertible_v<T, unsigned long long> && !std::is_convertible_v<T, std::string_view>, std::nullptr_t> = nullptr>
+    template <class T, ENABLE_IF_T(std::is_convertible_v<T, unsigned long long> && !std::is_convertible_v<T, std::string_view>)>
     RHString& operator=(T&& x) {
         assign(x);
         return *this;

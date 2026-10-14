@@ -7,6 +7,7 @@
 
 #include "io.hpp"
 #include "type_alias.hpp"
+// https://github.com/shogo314/shogo-library/blob/main/src/base/macro.hpp
 
 #pragma GCC target("avx2")
 #pragma GCC optimize("O3")
@@ -34,6 +35,8 @@
 #define rrep(i, n) rep(i, 1, (n) + 1)
 #define rrepd(i, n) repd(i, 1, (n) + 1)
 
+// 提出サイズを抑えるため 1 行に詰めて書いているので整形しない
+// clang-format off
 inline void scan(){}
 template<class Head,class... Tail>
 inline void scan(Head&head,Tail&... tail){std::cin>>head;scan(tail...);}
@@ -57,3 +60,4 @@ inline void scan(Head&head,Tail&... tail){std::cin>>head;scan(tail...);}
 #define Yes std::cout << "Yes" << std::endl; return;
 #define Takahashi std::cout << "Takahashi" << std::endl; return;
 #define Aoki std::cout << "Aoki" << std::endl; return;
+// clang-format on

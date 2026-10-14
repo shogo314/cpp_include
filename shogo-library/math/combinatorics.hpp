@@ -8,7 +8,9 @@
 #include <cassert>
 #include <numeric>
 #include <vector>
-#include "number-theory.hpp"
+
+#include "modular-arithmetic.hpp"
+// https://github.com/shogo314/shogo-library/blob/main/src/math/combinatorics.hpp
 
 /**
  * @brief 組み合わせ
@@ -16,9 +18,9 @@
 template <typename Modint>
 class Combination {
     static std::vector<Modint> fact, inv_fact;
-    static long long cached_mod; // dynamic_modint で mod が変わったら前計算をやり直す
+    static long long cached_mod;  // dynamic_modint で mod が変わったら前計算をやり直す
 
-public:
+   public:
     /**
      * @brief n までの階乗とその逆元を前計算する
      * @param n
@@ -42,7 +44,7 @@ public:
             inv_fact[i - 1] = inv_fact[i] * i;
         }
     }
-    
+
     /**
      * @brief n の階乗を返す
      * @param n
@@ -69,7 +71,7 @@ public:
      * @return n^-1
      * @note extend(n), O(1)
      */
-    inline static Modint inverse(int n) {
+    inline static Modint inv(int n) {
         assert(n > 0);
         extend(n);
         return inv_fact[n] * fact[n - 1];
@@ -136,7 +138,7 @@ public:
      */
     inline static Modint C_loop(long long n, long long r) {
         if (r < 0 || n < r) return 0;
-        if(r > n - r) r = n - r;
+        if (r > n - r) r = n - r;
         extend(r);
         return P_loop(n, r) * inv_fact[r];
     }
@@ -164,7 +166,7 @@ public:
         if (r < 0 || n < r) return 0;
         if (r == 0 || n == r) return 1;
         Modint res = 1;
-        while(r > 0) {
+        while (r > 0) {
             int ni = n % Modint::mod(), ri = r % Modint::mod();
             if (ni < ri) return 0;
             res *= C(ni, ri);
@@ -193,21 +195,27 @@ struct CombinationPQ {
     int delta;
     CombinationPQ(int p, int q) : p(p), q(q) {
         pq = 1;
-        for(int i = 0; i < q; i++) pq *= p;
+        for (int i = 0; i < q; i++) pq *= p;
         fact_p.resize(pq);
         fact_p[0] = 1;
-        for(int i = 1; i < pq; i++) {
-            if(i % p == 0) fact_p[i] = fact_p[i - 1];
-            else fact_p[i] = (long long)fact_p[i - 1] * i % pq;
+        for (int i = 1; i < pq; i++) {
+            if (i % p == 0)
+                fact_p[i] = fact_p[i - 1];
+            else
+                fact_p[i] = (long long)fact_p[i - 1] * i % pq;
         }
         inv_fact_p.resize(pq);
         inv_fact_p[pq - 1] = modinv(fact_p[pq - 1], pq);
-        for(int i = pq - 1; i > 0; i--) {
-            if(i % p == 0) inv_fact_p[i - 1] = inv_fact_p[i];
-            else inv_fact_p[i - 1] = (long long)inv_fact_p[i] * i % pq;
+        for (int i = pq - 1; i > 0; i--) {
+            if (i % p == 0)
+                inv_fact_p[i - 1] = inv_fact_p[i];
+            else
+                inv_fact_p[i - 1] = (long long)inv_fact_p[i] * i % pq;
         }
-        if(p == 2 && q >= 3) delta = 1;
-        else delta = -1;
+        if (p == 2 && q >= 3)
+            delta = 1;
+        else
+            delta = -1;
     }
     /**
      * @brief nCr mod p^q を返す
@@ -217,11 +225,11 @@ struct CombinationPQ {
      * @note O(log(n))
      */
     int C(long long n, long long r) {
-        if(r < 0 || n < r) return 0;
+        if (r < 0 || n < r) return 0;
         long long m = n - r;
         int ans = 1;
         std::vector<int> epsilon;
-        while(n > 0) {
+        while (n > 0) {
             ans = (long long)ans * fact_p[n % pq] % pq;
             ans = (long long)ans * inv_fact_p[m % pq] % pq;
             ans = (long long)ans * inv_fact_p[r % pq] % pq;
@@ -230,12 +238,13 @@ struct CombinationPQ {
             r /= p;
             epsilon.push_back(n - m - r);
         }
-        if(delta == -1 && (int)epsilon.size() >= q && std::accumulate(epsilon.begin()+q-1, epsilon.end(), 0) % 2 == 1) ans = pq - ans;
-        if(ans == pq) ans = 0;
+        if (delta == -1 && (int)epsilon.size() >= q && std::accumulate(epsilon.begin() + q - 1, epsilon.end(), 0) % 2 == 1) ans = pq - ans;
+        if (ans == pq) ans = 0;
         int e = std::accumulate(epsilon.begin(), epsilon.end(), 0);
-        if(e >= q) ans = 0;
+        if (e >= q)
+            ans = 0;
         else {
-            for(int i = 0; i < e; i++) {
+            for (int i = 0; i < e; i++) {
                 ans = (long long)ans * p % pq;
             }
         }

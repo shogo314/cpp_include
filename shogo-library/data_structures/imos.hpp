@@ -6,10 +6,11 @@
  */
 
 #include <cassert>
-#include <functional>
-#include <vector>
 #include <utility>
+#include <vector>
+
 #include "../algebra/acted-monoid.hpp"
+// https://github.com/shogo314/shogo-library/blob/main/src/data_structures/imos.hpp
 
 /**
  * @brief imos法で区間作用、1点取得する。
@@ -93,3 +94,10 @@ class Imos {
         return data[k];
     }
 };
+
+template <typename A>
+Imos(int, A) -> Imos<A>;
+template <typename A>
+Imos(int, typename A::S, A) -> Imos<A>;
+template <typename A>
+Imos(std::vector<typename A::S>, A) -> Imos<A>;

@@ -1,18 +1,20 @@
 #pragma once
+// https://github.com/shogo314/shogo-library/blob/main/src/others/mo.hpp
 
 /**
  * @file mo.hpp
  * @brief Mo's algorithm
  */
 
-#include <vector>
-#include <array>
-#include <type_traits>
 #include <algorithm>
+#include <array>
+#include <cassert>
 #include <cmath>
+#include <type_traits>
+#include <vector>
 
 template <typename U, class ADD_LEFT, class DELETE_LEFT, class ADD_RIGHT = ADD_LEFT, class DELETE_RIGHT = DELETE_LEFT>
-struct Mo {
+class Mo {
    private:
     int _n;
     std::vector<std::array<int, 3>> lri;
@@ -39,12 +41,13 @@ struct Mo {
        const ADD_LEFT& add_left,
        const DELETE_LEFT& delete_left) : _n(n), lri(), _e(e), _add_left(add_left), _delete_left(delete_left), _add_right(add_left), _delete_right(delete_left) {}
     void query(int l, int r) {
+        assert(0 <= l && l <= r && r <= _n);
         lri.push_back({l, r, (int)lri.size()});
     }
     template <typename T, class F>
     std::vector<T> solve(const F& f) {
         static_assert(std::is_invocable_r_v<T, F, U&>, "The function passed to solve must be callable with (U&) and return T");
-        
+
         const int w = std::max<int>(1, 1.0 * _n / std::max<double>(1.0, std::sqrt(lri.size() * 2.0 / 3.0)));
         std::sort(lri.begin(), lri.end(), [=](const std::array<int, 3>& a, const std::array<int, 3>& b) {
             int aw = a[0] / w;
