@@ -30,7 +30,21 @@ export CPLUS_INCLUDE_PATH="$HOME/cpp_include"
   - `requests`(Python パッケージ)と`unzip`コマンドが必要です。
   - 作業用に`./tmp`を作り直し、最後に削除するので、`./tmp`に置いたものは消えます。
   - `atcoder`も更新したい場合は`main()`の`download_atcoder()`のコメントアウトを外してください。
+  - ダウンロードした各ファイルには、取得元の GitHub へのリンクがコメントとして挿入されます(下記)。
 - `bash update.sh`:`update.py`を実行したあと、変更をすべて日時をメッセージにしてコミットし、push します。
+
+# GitHub へのリンク
+`update.py`でダウンロードしたファイルには、取得元へのリンクが 1 行コメントとして入ります。`oj-bundle`で展開したときに、どのコードがどのファイル由来かを辿れるようにするためです。
+
+```cpp
+#pragma once
+#include "number-theory.hpp"
+// https://github.com/shogo314/shogo-library/blob/<コミットハッシュ>/src/math/fps.hpp
+```
+
+- リンクにはダウンロードした時点のコミットハッシュが入るので、上流が更新されても参照先はずれません。ハッシュはアーカイブ zip のコメントから取得しています。
+- 挿入位置は最後の`#include "..."`の直後(なければ`#pragma once`の直後、それもなければ先頭)です。展開後は依存ファイルの中身がすべて先に来て、リンクの下はそのファイル自身のコードだけになります。
+- そのため、ライブラリ側ではローカルの`#include "..."`をファイル冒頭にまとめ、コードの途中に書かないようにしてください。
 
 # Boost の配置
 Boost はサイズが大きいので git では管理していません(`.gitignore`済み)。clone した後やバージョンを上げるときは、以下のようにして`boost/`を配置します。
