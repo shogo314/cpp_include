@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/data_structures/unionfind.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/data_structures/unionfind.hpp
 
 /**
  * @file unionfind.hpp
@@ -17,20 +17,20 @@ namespace internal_unionfind {
  * @param leader 要素 a の代表元を返す関数
  */
 template <typename F>
-std::vector<std::vector<int>> groups(int n, F leader) {
-    std::vector<int> leader_buf(n), group_size(n);
-    for (int i = 0; i < n; i++) {
+std::vector<std::vector<long long>> groups(long long n, F leader) {
+    std::vector<long long> leader_buf(n), group_size(n);
+    for (long long i = 0; i < n; i++) {
         leader_buf[i] = leader(i);
         group_size[leader_buf[i]]++;
     }
-    std::vector<std::vector<int>> result(n);
-    for (int i = 0; i < n; i++) {
+    std::vector<std::vector<long long>> result(n);
+    for (long long i = 0; i < n; i++) {
         result[i].reserve(group_size[i]);
     }
-    for (int i = 0; i < n; i++) {
+    for (long long i = 0; i < n; i++) {
         result[leader_buf[i]].push_back(i);
     }
-    result.erase(std::remove_if(result.begin(), result.end(), [&](const std::vector<int>& v) { return v.empty(); }), result.end());
+    result.erase(std::remove_if(result.begin(), result.end(), [&](const std::vector<long long>& v) { return v.empty(); }), result.end());
     return result;
 }
 }  // namespace internal_unionfind
@@ -40,8 +40,8 @@ std::vector<std::vector<int>> groups(int n, F leader) {
  */
 class UnionFind {
    protected:
-    int _n;
-    // 負ならサイズ、非負なら親
+    long long _n;
+    // 負ならサイズ、非負なら親 (メモリを抑えるため int で持つ)
     std::vector<int> parent_or_size;
 
    public:
@@ -52,32 +52,32 @@ class UnionFind {
      * auto [r, merged] = uf.merge(a, b); で代表元も受け取れる
      */
     struct MergeResult {
-        int leader;   //!< 統合後の代表元
-        bool merged;  //!< 新しく統合したか (もともと同じ連結成分なら false)
+        long long leader;  //!< 統合後の代表元
+        bool merged;       //!< 新しく統合したか (もともと同じ連結成分なら false)
         explicit operator bool() const { return merged; }
     };
 
     UnionFind() : _n(0) {}
-    explicit UnionFind(int n) : _n(n), parent_or_size(n, -1) {}
+    explicit UnionFind(long long n) : _n(n), parent_or_size(n, -1) {}
 
     /**
      * @brief 辺(a,b)を足す
      * @return 統合後の代表元と、新しく統合したか
      */
-    MergeResult merge(int a, int b) {
+    MergeResult merge(long long a, long long b) {
         assert(0 <= a && a < _n);
         assert(0 <= b && b < _n);
-        int x = leader(a), y = leader(b);
+        long long x = leader(a), y = leader(b);
         if (x == y) return {x, false};
         if (-parent_or_size[x] < -parent_or_size[y]) std::swap(x, y);
         parent_or_size[x] += parent_or_size[y];
-        parent_or_size[y] = x;
+        parent_or_size[y] = int(x);
         return {x, true};
     }
     /**
      * @brief 頂点a,bが連結かどうか
      */
-    bool same(int a, int b) {
+    bool same(long long a, long long b) {
         assert(0 <= a && a < _n);
         assert(0 <= b && b < _n);
         return leader(a) == leader(b);
@@ -85,10 +85,10 @@ class UnionFind {
     /**
      * @brief 頂点aの属する連結成分の代表元
      */
-    int leader(int a) {
+    long long leader(long long a) {
         assert(0 <= a && a < _n);
         if (parent_or_size[a] < 0) return a;
-        int x = a;
+        int x = int(a);
         while (parent_or_size[x] >= 0) {
             x = parent_or_size[x];
         }
@@ -102,7 +102,7 @@ class UnionFind {
     /**
      * @brief 頂点aの属する連結成分のサイズ
      */
-    int size(int a) {
+    long long size(long long a) {
         assert(0 <= a && a < _n);
         return -parent_or_size[leader(a)];
     }
@@ -110,7 +110,7 @@ class UnionFind {
      * @brief グラフを連結成分に分け、その情報を返す
      * @return 「一つの連結成分の頂点番号のリスト」のリスト
      */
-    std::vector<std::vector<int>> groups() {
-        return internal_unionfind::groups(_n, [&](int a) { return leader(a); });
+    std::vector<std::vector<long long>> groups() {
+        return internal_unionfind::groups(_n, [&](long long a) { return leader(a); });
     }
 };

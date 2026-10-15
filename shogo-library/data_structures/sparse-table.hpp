@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "../algebra/monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/data_structures/sparse-table.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/data_structures/sparse-table.hpp
 
 /**
  * @brief Sparse Table
@@ -29,7 +29,7 @@ class SparseTable {
 
    private:
     M m;
-    int n;
+    long long n;
     // table[k][i] は v[i] から v[i + 2^k - 1] までの積
     std::vector<std::vector<S>> table;
     std::vector<int> lg;  // lg[x] = floor(log2(x))
@@ -38,32 +38,32 @@ class SparseTable {
 
    public:
     explicit SparseTable(const std::vector<S>& v = {}, M m = M()) : m(std::move(m)), n(v.size()), table(1, v), lg(n + 1, 0) {
-        for (int x = 2; x <= n; x++) lg[x] = lg[x / 2] + 1;
-        for (int k = 1; (1 << k) <= n; k++) {
+        for (long long x = 2; x <= n; x++) lg[x] = lg[x / 2] + 1;
+        for (int k = 1; (1LL << k) <= n; k++) {
             const auto& prev = table[k - 1];
-            std::vector<S> cur(n - (1 << k) + 1);
-            for (int i = 0; i + (1 << k) <= n; i++) cur[i] = op(prev[i], prev[i + (1 << (k - 1))]);
+            std::vector<S> cur(n - (1LL << k) + 1);
+            for (long long i = 0; i + (1LL << k) <= n; i++) cur[i] = op(prev[i], prev[i + (1LL << (k - 1))]);
             table.push_back(std::move(cur));
         }
     }
 
-    int size() const { return n; }
+    long long size() const { return n; }
 
     /**
      * @brief v[k]
      */
-    S get(int k) const {
+    S get(long long k) const {
         assert(0 <= k && k < n);
         return table[0][k];
     }
     /**
      * @brief v[l] から v[r-1] までの積 O(1)。l = r なら単位元
      */
-    S prod(int l, int r) const {
+    S prod(long long l, long long r) const {
         assert(0 <= l && l <= r && r <= n);
         if (l == r) return e();
         int k = lg[r - l];
-        return op(table[k][l], table[k][r - (1 << k)]);
+        return op(table[k][l], table[k][r - (1LL << k)]);
     }
     S all_prod() const { return prod(0, n); }
 };

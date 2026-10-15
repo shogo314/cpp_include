@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/utility/bit.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/utility/bit.hpp
 
 /**
  * @file bit.hpp
@@ -23,11 +23,13 @@ inline long long btoll(std::string s, char one = '1') {
 
 #if __cplusplus < 202000L
 
+// C++20 の <bit> と同じ値を返す (0 のときも同じ)
+
 /**
  * @brief 立っているビットを数える
  * __builtin_popcountll
  */
-inline constexpr int popcount(long long a) {
+inline constexpr long long popcount(long long a) {
     assert(a >= 0);
     return __builtin_popcountll((unsigned long long)a);
 }
@@ -35,17 +37,54 @@ inline constexpr int popcount(long long a) {
  * @brief 左から連続した0のビットを数える
  * __builtin_clzll
  */
-inline constexpr int countl_zero(long long a) {
+inline constexpr long long countl_zero(long long a) {
     assert(a >= 0);
-    return __builtin_clzll((unsigned long long)a);
+    return a == 0 ? 64 : __builtin_clzll((unsigned long long)a);
+}
+/**
+ * @brief 左から連続した1のビットを数える
+ */
+inline constexpr long long countl_one(long long a) {
+    assert(a >= 0);
+    unsigned long long x = ~(unsigned long long)a;
+    return x == 0 ? 64 : __builtin_clzll(x);
 }
 /**
  * @brief 右から連続した0のビットを数える
  * __builtin_ctzll
  */
-inline constexpr int countr_zero(long long a) {
+inline constexpr long long countr_zero(long long a) {
     assert(a >= 0);
-    return __builtin_ctzll((unsigned long long)a);
+    return a == 0 ? 64 : __builtin_ctzll((unsigned long long)a);
+}
+/**
+ * @brief 右から連続した1のビットを数える
+ */
+inline constexpr long long countr_one(long long a) {
+    assert(a >= 0);
+    unsigned long long x = ~(unsigned long long)a;
+    return x == 0 ? 64 : __builtin_ctzll(x);
+}
+/**
+ * @brief 値を表現するために必要なビット幅を求める
+ */
+inline constexpr long long bit_width(long long a) {
+    assert(a >= 0);
+    return 64 - countl_zero(a);
+}
+/**
+ * @brief 整数値を2の累乗値に切り上げる
+ */
+inline constexpr long long bit_ceil(long long a) {
+    assert(0 <= a && a <= (1LL << 62));
+    return a <= 1 ? 1 : 1LL << bit_width(a - 1);
+}
+/**
+ * @brief 整数値を2の累乗値に切り下げる
+ */
+inline constexpr long long bit_floor(long long a) {
+    assert(a >= 0);
+    return a == 0 ? 0 : 1LL << (bit_width(a) - 1);
 }
 
 #else
@@ -80,7 +119,11 @@ BIT_FUNC_EXPAND(countr_one)
 /**
  * @brief 整数値を2の累乗値に切り上げる
  */
-BIT_FUNC_EXPAND(bit_ceil)
+inline constexpr long long bit_ceil(long long a) {
+    // 結果が long long に収まる範囲に限る
+    assert(0 <= a && a <= (1LL << 62));
+    return std::bit_ceil((unsigned long long)a);
+}
 /**
  * @brief 整数値を2の累乗値に切り下げる
  */

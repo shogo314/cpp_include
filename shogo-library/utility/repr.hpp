@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/utility/repr.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/utility/repr.hpp
 
 namespace internal_repr {
 
@@ -112,7 +112,7 @@ inline std::string repr(const std::array<T, N>&);
 ///////////////////////////////////////////////////////////////////
 
 template <typename T, ENABLE_IF_T(!has_type_str_v<T>)>
-inline std::string type_str(const T& t) {
+inline std::string type_str(const T&) {
     return "T";
 }
 template <typename T, ENABLE_IF_T(has_type_str_v<T>)>
@@ -120,7 +120,7 @@ inline std::string type_str(const T& t) {
     return t.type_str();
 }
 template <typename T, ENABLE_IF_T(!has_initializer_str_v<T>)>
-inline std::string initializer_str(const T& t) {
+inline std::string initializer_str(const T&) {
     return "{}";
 }
 template <typename T, ENABLE_IF_T(has_initializer_str_v<T>)>

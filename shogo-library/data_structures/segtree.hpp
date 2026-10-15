@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "../algebra/monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/data_structures/segtree.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/data_structures/segtree.hpp
 
 /**
  * @brief セグメント木
@@ -32,16 +32,17 @@ class SegTree {
     S op(const S& a, const S& b) const { return m.op(a, b); }
     S e() const { return m.e(); }
 
-    int n, sz, height;
+    long long n, sz;
+    int height;
     std::vector<S> data;
-    void update(int k) { data[k] = op(data[2 * k], data[2 * k + 1]); }
+    void update(long long k) { data[k] = op(data[2 * k], data[2 * k + 1]); }
 
     class SegTreeReference {
         SegTree& segtree;
-        int k;
+        long long k;
 
        public:
-        SegTreeReference(SegTree& segtree, int k) : segtree(segtree), k(k) {}
+        SegTreeReference(SegTree& segtree, long long k) : segtree(segtree), k(k) {}
         SegTreeReference& operator=(const S& x) {
             segtree.set(k, x);
             return *this;
@@ -66,7 +67,7 @@ class SegTree {
      * @param n 要素数
      * @param m モノイド
      */
-    explicit SegTree(int n = 0, M m = M()) : m(std::move(m)), n(n) {
+    explicit SegTree(long long n = 0, M m = M()) : m(std::move(m)), n(n) {
         construct_data();
     }
     /**
@@ -76,14 +77,14 @@ class SegTree {
      * @param m モノイド
      */
     explicit SegTree(const std::vector<S>& v, M m = M()) : SegTree(v.size(), std::move(m)) {
-        for (int i = 0; i < n; i++) data[sz + i] = v[i];
-        for (int i = sz - 1; i > 0; i--) update(i);
+        for (long long i = 0; i < n; i++) data[sz + i] = v[i];
+        for (long long i = sz - 1; i > 0; i--) update(i);
     }
 
     /**
      * @brief 要素数を返す
      */
-    int size() const { return n; }
+    long long size() const { return n; }
 
     /**
      * @brief 指定された要素の値を返す
@@ -91,7 +92,7 @@ class SegTree {
      * @param k インデックス
      * @return S 値
      */
-    S get(int k) const {
+    S get(long long k) const {
         assert(0 <= k && k < n);
         return data[sz + k];
     }
@@ -101,14 +102,14 @@ class SegTree {
      * @param k インデックス
      * @return S 値
      */
-    S operator[](int k) const { return get(k); }
+    S operator[](long long k) const { return get(k); }
     /**
      * @brief 指定された要素への参照を返す
      *
      * @param k
      * @return SegTreeReference 要素への参照 代入されるとset()が呼ばれる
      */
-    SegTreeReference operator[](int k) { return SegTreeReference(*this, k); }
+    SegTreeReference operator[](long long k) { return SegTreeReference(*this, k); }
 
     /**
      * @brief 内容を出力する
@@ -121,7 +122,7 @@ class SegTree {
      */
     template <class CharT, class Traits>
     friend std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os, const SegTree& rhs) {
-        for (int i = 0; i < rhs.n; i++) {
+        for (long long i = 0; i < rhs.n; i++) {
             if (i != 0) os << CharT(' ');
             os << rhs[i];
         }
@@ -134,7 +135,7 @@ class SegTree {
      * @param k インデックス
      * @param x 新しい値
      */
-    void set(int k, const S& x) {
+    void set(long long k, const S& x) {
         assert(0 <= k && k < n);
         k += sz;
         data[k] = x;
@@ -146,7 +147,7 @@ class SegTree {
      * @param k インデックス
      * @param x 作用素
      */
-    void apply(int k, const S& x) { set(k, op(get(k), x)); }
+    void apply(long long k, const S& x) { set(k, op(get(k), x)); }
 
     /**
      * @brief [l, r)の区間の総積を返す
@@ -155,7 +156,7 @@ class SegTree {
      * @param r 半開区間の終端 0<=l<=r<=n
      * @return S 総積
      */
-    S prod(int l, int r) const {
+    S prod(long long l, long long r) const {
         assert(0 <= l && l <= r && r <= n);
         S left_prod = e(), right_prod = e();
         l += sz;
@@ -182,10 +183,10 @@ class SegTree {
      * @tparam F
      * @param l 半開区間の開始 0<=l<=n
      * @param f 判定関数 f(e) = true
-     * @return int
+     * @return long long
      */
     template <typename F>
-    int max_right(int l, F f) const {
+    long long max_right(long long l, F f) const {
         assert(f(e()));
         assert(0 <= l && l <= n);
         if (l == n) return n;
@@ -215,10 +216,10 @@ class SegTree {
      * @tparam F
      * @param r 半開区間の終端 0<=r<=n
      * @param f 判定関数 f(e) = true
-     * @return int
+     * @return long long
      */
     template <typename F>
-    int min_left(int r, F f) const {
+    long long min_left(long long r, F f) const {
         assert(f(e()));
         assert(0 <= r && r <= n);
         if (r == 0) return 0;
@@ -244,7 +245,7 @@ class SegTree {
 };
 
 template <typename M>
-SegTree(int, M) -> SegTree<M>;
+SegTree(long long, M) -> SegTree<M>;
 template <typename M>
 SegTree(std::vector<typename M::S>, M) -> SegTree<M>;
 

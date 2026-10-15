@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/data_structures/tadpole-array.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/data_structures/tadpole-array.hpp
 
 /**
  * @file tadpole-array.hpp
@@ -18,14 +18,14 @@ template <typename T>
 class TadpoleArray {
    private:
     std::vector<T> data;
-    int k;
+    long long k;
 
    public:
     /**
      * @brief 最後の次のインデックスがi
      */
-    TadpoleArray(const std::vector<T>& v, int i) : data(v) {
-        assert(0 <= i && i < static_cast<int>(data.size()));
+    TadpoleArray(const std::vector<T>& v, long long i) : data(v) {
+        assert(0 <= i && i < static_cast<long long>(data.size()));
         k = i;
     }
     TadpoleArray() = default;

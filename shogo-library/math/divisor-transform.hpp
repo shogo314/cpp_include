@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "prime.hpp"
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/math/divisor-transform.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/math/divisor-transform.hpp
 
 /**
  * @brief 約数のゼータ変換 a[n] <- sum_{d | n} a[d] O(N log log N)
@@ -18,7 +18,7 @@
 template <typename T>
 void divisor_zeta(std::vector<T>& a) {
     int n = (int)a.size() - 1;
-    for (int p : enumerate_primes(n)) {
+    for (long long p : enumerate_primes(n)) {
         for (int i = 1; i <= n / p; i++) a[i * p] += a[i];
     }
 }
@@ -30,7 +30,7 @@ void divisor_zeta(std::vector<T>& a) {
 template <typename T>
 void divisor_mobius(std::vector<T>& a) {
     int n = (int)a.size() - 1;
-    for (int p : enumerate_primes(n)) {
+    for (long long p : enumerate_primes(n)) {
         for (int i = n / p; i >= 1; i--) a[i * p] -= a[i];
     }
 }
@@ -42,7 +42,7 @@ void divisor_mobius(std::vector<T>& a) {
 template <typename T>
 void multiple_zeta(std::vector<T>& a) {
     int n = (int)a.size() - 1;
-    for (int p : enumerate_primes(n)) {
+    for (long long p : enumerate_primes(n)) {
         for (int i = n / p; i >= 1; i--) a[i] += a[i * p];
     }
 }
@@ -54,7 +54,7 @@ void multiple_zeta(std::vector<T>& a) {
 template <typename T>
 void multiple_mobius(std::vector<T>& a) {
     int n = (int)a.size() - 1;
-    for (int p : enumerate_primes(n)) {
+    for (long long p : enumerate_primes(n)) {
         for (int i = 1; i <= n / p; i++) a[i] -= a[i * p];
     }
 }

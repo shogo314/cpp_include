@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "../algebra/acted-monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/data_structures/segtree-beats.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/data_structures/segtree-beats.hpp
 
 /**
  * @brief Segment Tree Beats
@@ -34,23 +34,24 @@ class SegTreeBeats {
     A a;
     S op(const S& x, const S& y) const { return a.op(x, y); }
     S e() const { return a.e(); }
-    std::pair<bool, S> mapping(const F& f, const S& x, int l, int r) const { return acted_monoid::apply_mapping(a, f, x, l, r); }
+    std::pair<bool, S> mapping(const F& f, const S& x, long long l, long long r) const { return acted_monoid::apply_mapping(a, f, x, l, r); }
     F composition(const F& f, const F& g) const { return a.composition(f, g); }
     F id() const { return a.id(); }
 
-    int n, sz, height;
+    long long n, sz;
+    int height;
     std::vector<S> data;
     std::vector<int> fail;
     std::vector<F> lazy;
 
-    void update(int k) {
+    void update(long long k) {
         data[k] = op(data[2 * k], data[2 * k + 1]);
         fail[k] = false;
     }
-    void apply_node(int k, int h, const F& f) {
+    void apply_node(long long k, int h, const F& f) {
         // 末尾の要素数を 2 べきにそろえるための余りの部分は区間に含めない
-        int l = std::min((k << h) & (sz - 1), n);
-        int r = std::min(((k << h) & (sz - 1)) + (1 << h), n);
+        long long l = std::min((k << h) & (sz - 1), n);
+        long long r = std::min(((k << h) & (sz - 1)) + (1LL << h), n);
         std::tie(fail[k], data[k]) = mapping(f, data[k], l, r);
         if (k < sz) {
             lazy[k] = composition(f, lazy[k]);
@@ -60,7 +61,7 @@ class SegTreeBeats {
             }
         }
     }
-    void push(int k, int h) {
+    void push(long long k, int h) {
         apply_node(2 * k, h - 1, lazy[k]);
         apply_node(2 * k + 1, h - 1, lazy[k]);
         lazy[k] = id();
@@ -68,10 +69,10 @@ class SegTreeBeats {
 
     class SegTreeBeatsReference {
         SegTreeBeats& segtree;
-        int k;
+        long long k;
 
        public:
-        SegTreeBeatsReference(SegTreeBeats& segtree, int k) : segtree(segtree), k(k) {}
+        SegTreeBeatsReference(SegTreeBeats& segtree, long long k) : segtree(segtree), k(k) {}
         SegTreeBeatsReference& operator=(const S& x) {
             segtree.set(k, x);
             return *this;
@@ -98,7 +99,7 @@ class SegTreeBeats {
      * @param n 要素数
      * @param a 作用素付きモノイド
      */
-    explicit SegTreeBeats(int n = 0, A a = A()) : a(std::move(a)), n(n) {
+    explicit SegTreeBeats(long long n = 0, A a = A()) : a(std::move(a)), n(n) {
         construct_data();
     }
     /**
@@ -108,14 +109,14 @@ class SegTreeBeats {
      * @param a 作用素付きモノイド
      */
     explicit SegTreeBeats(const std::vector<S>& v, A a = A()) : SegTreeBeats(v.size(), std::move(a)) {
-        for (int i = 0; i < n; i++) data[sz + i] = v[i];
-        for (int i = sz - 1; i > 0; i--) update(i);
+        for (long long i = 0; i < n; i++) data[sz + i] = v[i];
+        for (long long i = sz - 1; i > 0; i--) update(i);
     }
 
     /**
      * @brief 要素数を返す
      */
-    int size() const { return n; }
+    long long size() const { return n; }
 
     /**
      * @brief 指定された要素の値を返す
@@ -123,7 +124,7 @@ class SegTreeBeats {
      * @param k インデックス
      * @return S 値
      */
-    S get(int k) {
+    S get(long long k) {
         assert(0 <= k && k < n);
         k += sz;
         for (int h = height; h > 0; h--) {
@@ -137,7 +138,7 @@ class SegTreeBeats {
      * @param k
      * @return SegTreeReference 要素への参照 代入されるとset()が呼ばれる
      */
-    SegTreeBeatsReference operator[](int k) { return SegTreeBeatsReference(*this, k); }
+    SegTreeBeatsReference operator[](long long k) { return SegTreeBeatsReference(*this, k); }
 
     /**
      * @brief 内容を出力する
@@ -150,7 +151,7 @@ class SegTreeBeats {
      */
     template <class CharT, class Traits>
     friend std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os, SegTreeBeats& rhs) {
-        for (int i = 0; i < rhs.n; i++) {
+        for (long long i = 0; i < rhs.n; i++) {
             if (i != 0) os << CharT(' ');
             os << rhs[i];
         }
@@ -163,7 +164,7 @@ class SegTreeBeats {
      * @param k インデックス
      * @param x 新しい値
      */
-    void set(int k, const S& x) {
+    void set(long long k, const S& x) {
         assert(0 <= k && k < n);
         k += sz;
         for (int h = height; h > 0; h--) {
@@ -180,7 +181,7 @@ class SegTreeBeats {
      * @param r 半開区間の終端
      * @return S 総積
      */
-    S prod(int l, int r) {
+    S prod(long long l, long long r) {
         assert(0 <= l && l <= r && r <= n);
         l += sz;
         r += sz;
@@ -210,7 +211,7 @@ class SegTreeBeats {
      * @param k インデックス
      * @param x 作用素
      */
-    void apply(int k, const F& f) {
+    void apply(long long k, const F& f) {
         assert(0 <= k && k < n);
         k += sz;
         for (int h = height; h > 0; h--) {
@@ -226,7 +227,7 @@ class SegTreeBeats {
      * @param r 半開区間の終端
      * @param f 作用素
      */
-    void apply(int l, int r, const F& f) {
+    void apply(long long l, long long r, const F& f) {
         assert(0 <= l && l <= r && r <= n);
         if (l == r) return;
         l += sz;
@@ -236,7 +237,7 @@ class SegTreeBeats {
             if (((r >> h) << h) != r) push(r >> h, h);
         }
         {
-            int l2 = l, r2 = r;
+            long long l2 = l, r2 = r;
             int h = 0;
             while (l < r) {
                 if (l & 1) apply_node(l++, h, f);
@@ -261,10 +262,10 @@ class SegTreeBeats {
      * @tparam G
      * @param l 半開区間の開始
      * @param g 判定関数 g(e) = true
-     * @return int
+     * @return long long
      */
     template <typename G>
-    int max_right(int l, G g) {
+    long long max_right(long long l, G g) {
         assert(g(e()));
         assert(0 <= l && l <= n);
         if (l == n) return n;
@@ -306,10 +307,10 @@ class SegTreeBeats {
      * @tparam G
      * @param r 半開区間の終端
      * @param g 判定関数 g(e) = true
-     * @return int
+     * @return long long
      */
     template <typename G>
-    int min_left(int r, G g) {
+    long long min_left(long long r, G g) {
         assert(g(e()));
         assert(0 <= r && r <= n);
         if (r == 0) return 0;
@@ -344,6 +345,6 @@ class SegTreeBeats {
 };
 
 template <typename A>
-SegTreeBeats(int, A) -> SegTreeBeats<A>;
+SegTreeBeats(long long, A) -> SegTreeBeats<A>;
 template <typename A>
 SegTreeBeats(std::vector<typename A::S>, A) -> SegTreeBeats<A>;

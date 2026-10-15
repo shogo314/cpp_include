@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/data_structures/mex-update.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/data_structures/mex-update.hpp
 
 /**
  * @file mex-update.hpp
@@ -7,52 +7,62 @@
  */
 
 #include <cassert>
-#include <cstddef>
 #include <limits>
 #include <map>
 #include <set>
+#include <type_traits>
 #include <vector>
 
 template <typename T>
 class MexUpdate {
+    static_assert(std::is_integral_v<T>, "MexUpdate: T must be an integer type");
+
    public:
     using value_type = T;
 
    private:
     inline constexpr static value_type e = std::numeric_limits<value_type>::max();
 
-    int n;
+    long long n;
     std::vector<value_type> v;
     std::set<int> s;
-    std::map<int, std::size_t> m;
+    std::map<int, int> m;
+
+    // x が 0 以上 n 以下か (T が符号なしでも警告が出ないように比べる)
+    bool in_range(const value_type& x) const {
+        if constexpr (std::is_signed_v<value_type>) {
+            if (x < 0) return false;
+        }
+        return (unsigned long long)x <= (unsigned long long)n;
+    }
 
    public:
     MexUpdate() = default;
-    explicit MexUpdate(int n) : n(n), v(n, e) {
+    explicit MexUpdate(long long n) : n(n), v(n, e) {
         assert(n > 0);
-        assert(n + 1 < e);
+        assert((unsigned long long)n + 1 < (unsigned long long)e);
         std::set<int>::iterator hint = s.end();
-        for (int i = n; i >= 0; --i) {
-            hint = s.emplace_hint(hint, i);
+        for (long long i = n; i >= 0; --i) {
+            hint = s.emplace_hint(hint, int(i));
         }
     }
     explicit MexUpdate(const std::vector<value_type>& init) : n(init.size()), v(init) {
         assert(n > 0);
-        assert(n + 1 < e);
+        assert((unsigned long long)n + 1 < (unsigned long long)e);
         std::set<int>::iterator hint = s.end();
-        for (int i = n; i >= 0; --i) {
-            hint = s.emplace_hint(hint, i);
+        for (long long i = n; i >= 0; --i) {
+            hint = s.emplace_hint(hint, int(i));
         }
         for (const auto& i : init) {
-            if (0 <= i && i <= n) {
+            if (in_range(i)) {
                 m[i]++;
                 s.erase(i);
             }
         }
     }
-    void set(int k, const value_type& x) {
+    void set(long long k, const value_type& x) {
         assert(0 <= k && k < n);
-        if (0 <= v[k] && v[k] <= n) {
+        if (in_range(v[k])) {
             int v_k = v[k];
             auto itr = m.find(v_k);
             if (itr->second > 1) {
@@ -62,7 +72,7 @@ class MexUpdate {
                 s.insert(v_k);
             }
         }
-        if (0 <= x && x <= n) {
+        if (in_range(x)) {
             int xx = x;
             auto itr = m.find(xx);
             if (itr == m.end()) {

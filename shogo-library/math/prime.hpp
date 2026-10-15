@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "modular-arithmetic.hpp"
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/math/prime.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/math/prime.hpp
 
 namespace internal_prime {
 
@@ -89,7 +89,7 @@ constexpr bool is_prime(long long n) {
  * @brief n (>= 1) を素因数分解し、(素因数, 指数) を素因数の昇順に並べて返す
  * Pollard の ρ 法を使う。期待 O(n^(1/4)) 程度
  */
-inline std::vector<std::pair<long long, int>> factorize(long long n) {
+inline std::vector<std::pair<long long, long long>> factorize(long long n) {
     assert(n >= 1);
     std::vector<long long> ps;
     // 小さい素因数は割り算で取り除く
@@ -113,7 +113,7 @@ inline std::vector<std::pair<long long, int>> factorize(long long n) {
         st.push_back(x / d);
     }
     std::sort(ps.begin(), ps.end());
-    std::vector<std::pair<long long, int>> res;
+    std::vector<std::pair<long long, long long>> res;
     for (long long p : ps) {
         if (!res.empty() && res.back().first == p)
             res.back().second++;
@@ -129,11 +129,11 @@ inline std::vector<std::pair<long long, int>> factorize(long long n) {
 inline std::vector<long long> divisors(long long n) {
     std::vector<long long> res = {1};
     for (auto [p, e] : factorize(n)) {
-        int sz = res.size();
+        const long long sz = res.size();
         long long pw = 1;
-        for (int i = 0; i < e; i++) {
+        for (long long i = 0; i < e; i++) {
             pw *= p;
-            for (int j = 0; j < sz; j++) res.push_back(res[j] * pw);
+            for (long long j = 0; j < sz; j++) res.push_back(res[j] * pw);
         }
     }
     std::sort(res.begin(), res.end());
@@ -153,19 +153,19 @@ inline long long totient(long long n) {
  * @brief n 以下の素数を昇順に並べて返す
  * 奇数だけを区間ごとに篩う。O(n log log n)、メモリは O(√n + 素数の個数)
  */
-inline std::vector<int> enumerate_primes(int n) {
-    std::vector<int> res;
+inline std::vector<long long> enumerate_primes(long long n) {
+    std::vector<long long> res;
     if (n < 2) return res;
     res.push_back(2);
-    int r = 1;
-    while (static_cast<long long>(r + 1) * (r + 1) <= n) r++;
+    long long r = 1;
+    while ((r + 1) * (r + 1) <= n) r++;
     // √n 以下の奇素数 p と、次に篩う p の倍数 (奇数)
     std::vector<char> small(r + 1, 1);
-    std::vector<std::pair<int, long long>> sp;
-    for (int i = 3; i <= r; i += 2) {
+    std::vector<std::pair<long long, long long>> sp;
+    for (long long i = 3; i <= r; i += 2) {
         if (!small[i]) continue;
-        for (int j = i * i; j <= r; j += 2 * i) small[j] = 0;
-        sp.emplace_back(i, static_cast<long long>(i) * i);
+        for (long long j = i * i; j <= r; j += 2 * i) small[j] = 0;
+        sp.emplace_back(i, i * i);
     }
     // 奇数 2k+1 (1 <= k <= kmax) を、k の長さ B の区間ごとに篩う
     constexpr int B = 1 << 16;
@@ -195,20 +195,20 @@ inline std::vector<int> enumerate_primes(int n) {
  * sv.is_prime(x); sv.factorize(x);
  */
 class Sieve {
-    int n;
-    std::vector<int> lpf;  // 最小素因数
-    std::vector<int> ps;
+    long long n;
+    std::vector<int> lpf;  // 最小素因数 (メモリを抑えるため int で持つ)
+    std::vector<long long> ps;
 
    public:
-    explicit Sieve(int n) : n(n), lpf(n + 1, 0) {
+    explicit Sieve(long long n) : n(n), lpf(n + 1, 0) {
         assert(n >= 0);
         for (int i = 2; i <= n; i++) {
             if (lpf[i] == 0) {
                 lpf[i] = i;
                 ps.push_back(i);
             }
-            for (int p : ps) {
-                if (p > lpf[i] || static_cast<long long>(p) * i > n) break;
+            for (long long p : ps) {
+                if (p > lpf[i] || p * i > n) break;
                 lpf[p * i] = p;
             }
         }
@@ -217,33 +217,33 @@ class Sieve {
     /**
      * @brief 前計算した範囲の上限 n
      */
-    int limit() const { return n; }
+    long long limit() const { return n; }
     /**
      * @brief x (0 <= x <= n) が素数か O(1)
      */
-    bool is_prime(int x) const {
+    bool is_prime(long long x) const {
         assert(0 <= x && x <= n);
         return x >= 2 && lpf[x] == x;
     }
     /**
      * @brief x (2 <= x <= n) の最小素因数 O(1)
      */
-    int min_factor(int x) const {
+    long long min_factor(long long x) const {
         assert(2 <= x && x <= n);
         return lpf[x];
     }
     /**
      * @brief n 以下の素数を昇順に並べたもの
      */
-    const std::vector<int>& primes() const { return ps; }
+    const std::vector<long long>& primes() const { return ps; }
     /**
      * @brief x (1 <= x <= n) を素因数分解し、(素因数, 指数) を素因数の昇順に並べて返す O(log x)
      */
-    std::vector<std::pair<int, int>> factorize(int x) const {
+    std::vector<std::pair<long long, long long>> factorize(long long x) const {
         assert(1 <= x && x <= n);
-        std::vector<std::pair<int, int>> res;
+        std::vector<std::pair<long long, long long>> res;
         while (x > 1) {
-            int p = lpf[x], e = 0;
+            long long p = lpf[x], e = 0;
             while (x % p == 0) x /= p, e++;
             res.emplace_back(p, e);
         }
@@ -252,14 +252,14 @@ class Sieve {
     /**
      * @brief x (1 <= x <= n) の正の約数を昇順に並べて返す
      */
-    std::vector<int> divisors(int x) const {
-        std::vector<int> res = {1};
+    std::vector<long long> divisors(long long x) const {
+        std::vector<long long> res = {1};
         for (auto [p, e] : factorize(x)) {
-            int sz = res.size();
-            int pw = 1;
-            for (int i = 0; i < e; i++) {
+            const long long sz = res.size();
+            long long pw = 1;
+            for (long long i = 0; i < e; i++) {
                 pw *= p;
-                for (int j = 0; j < sz; j++) res.push_back(res[j] * pw);
+                for (long long j = 0; j < sz; j++) res.push_back(res[j] * pw);
             }
         }
         std::sort(res.begin(), res.end());

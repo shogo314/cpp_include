@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/utility/range.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/utility/range.hpp
 
 /**
  * @file range.hpp
@@ -18,7 +18,7 @@ struct Range {
    public:
     using value_type = long long;
     using const_reference = const value_type&;
-    using size_type = std::size_t;
+    using size_type = long long;
     using difference_type = std::ptrdiff_t;
 
     const value_type start;
@@ -165,7 +165,7 @@ struct Range {
     /**
      * @brief x の個数 (0 か 1)
      */
-    constexpr difference_type count(value_type x) const noexcept {
+    constexpr size_type count(value_type x) const noexcept {
         if (step > 0) {
             if (start <= x && x < stop) {
                 if ((x - start) % step == 0) {
@@ -245,7 +245,7 @@ struct Range {
         }
     }
     constexpr value_type at(size_type i) const {
-        assert(i < size());
+        assert(0 <= i && i < size());
         return start + i * step;
     }
     constexpr value_type operator[](size_type i) const {
@@ -255,7 +255,7 @@ struct Range {
         return start == norm_stop;
     }
     constexpr value_type sum() const noexcept {
-        return static_cast<Range::value_type>(size()) * (norm_stop - step + start) / 2;
+        return size() * (norm_stop - step + start) / 2;
     }
     /**
      * @brief 最小値
@@ -385,12 +385,12 @@ struct Range {
     constexpr Range slice(const Range& r) const {
         if (r.empty()) return {};
         if (r.max() < 0) return {};
-        if (r.min() >= static_cast<Range::value_type>(size())) return {};
-        Range trimmed_range(r.clipped(0, static_cast<Range::value_type>(size())));
+        if (r.min() >= size()) return {};
+        Range trimmed_range(r.clipped(0, size()));
         if (trimmed_range.empty()) return {};
         value_type _step = step * trimmed_range.step;
         value_type _start = at(trimmed_range.start);
-        value_type _stop = _start + _step * static_cast<Range::value_type>(trimmed_range.size());
+        value_type _stop = _start + _step * trimmed_range.size();
         return {_start, _stop, _step, _stop};
     }
 

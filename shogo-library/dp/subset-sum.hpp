@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/dp/subset-sum.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/dp/subset-sum.hpp
 
 /**
  * @file subset-sum.hpp
@@ -50,12 +50,12 @@ inline std::vector<unsigned long long> build(const std::vector<long long>& a, lo
     return bits;
 }
 inline bool test(const std::vector<unsigned long long>& bits, long long s) { return bits[s / 64] >> (s % 64) & 1; }
-// 作れる和 s から from をたどって、添字の昇順のリストにする
+// 作れる和 s から from をたどって、添字の昇順のリストにする (from は S + 1 個あるので int で持ち、返すときに long long にする)
 // s - a[from[s]] は from[s] より前の要素だけで作れていたので、添字は真に減っていく
-inline std::vector<int> trace(const std::vector<long long>& a, const std::vector<int>& from, long long s) {
-    std::vector<int> res;
+inline std::vector<long long> trace(const std::vector<long long>& a, const std::vector<int>& from, long long s) {
+    std::vector<long long> res;
     for (; s > 0; s -= a[res.back()]) res.push_back(from[s]);
-    return std::vector<int>(res.rbegin(), res.rend());
+    return std::vector<long long>(res.rbegin(), res.rend());
 }
 // 作れる和のうち S 以下の最大値
 inline long long max_bit(const std::vector<unsigned long long>& bits, long long S) {
@@ -125,7 +125,7 @@ inline std::vector<bool> subset_sum(const std::vector<long long>& a, long long S
  * @param a 0 以上の整数の列
  * @return 作れなければ std::nullopt
  */
-inline std::optional<std::vector<int>> subset_sum_restore(const std::vector<long long>& a, long long S) {
+inline std::optional<std::vector<long long>> subset_sum_restore(const std::vector<long long>& a, long long S) {
     std::vector<int> from;
     auto bits = internal_subset_sum::build(a, S, &from);
     if (!internal_subset_sum::test(bits, S)) return std::nullopt;
@@ -167,7 +167,7 @@ inline long long subset_sum_max(const std::vector<long long>& a, long long S) {
  * subset_sum_max と同じく、bitset O(N S / 64 + S) と半分全列挙 O(2^(N/2)) のうち計算量が小さい方を選ぶ
  * @param a 0 以上の整数の列
  */
-inline std::vector<int> subset_sum_max_restore(const std::vector<long long>& a, long long S) {
+inline std::vector<long long> subset_sum_max_restore(const std::vector<long long>& a, long long S) {
     using namespace internal_subset_sum;
     int n = a.size();
     if (cost_bitset(n, S) <= cost_meet_in_the_middle(n)) {
@@ -176,11 +176,11 @@ inline std::vector<int> subset_sum_max_restore(const std::vector<long long>& a, 
         return trace(a, from, max_bit(bits, S));
     }
     MitmResult r = meet_in_the_middle(a, S);
-    std::vector<int> res;
-    for (int i = 0; i < n / 2; i++) {
+    std::vector<long long> res;
+    for (long long i = 0; i < n / 2; i++) {
         if (r.left >> i & 1) res.push_back(i);
     }
-    for (int i = n / 2; i < n; i++) {
+    for (long long i = n / 2; i < n; i++) {
         if (r.right >> (i - n / 2) & 1) res.push_back(i);
     }
     return res;

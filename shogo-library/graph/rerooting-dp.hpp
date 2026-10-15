@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "tree.hpp"
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/graph/rerooting-dp.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/graph/rerooting-dp.hpp
 
 /**
  * @brief 全方位木DP
@@ -22,18 +22,18 @@
  * @param tree
  * @param e 可換モノイドの単位元
  * @param merge (E,E)->E 可換
- * @param addedge (V,Cost,int)->E
- * @param addnode (E,int)->V
+ * @param addedge (V,Cost,long long)->E 辺の番号は long long で渡す (int で受け取ってもよい)
+ * @param addnode (E,long long)->V 頂点番号は long long で渡す (int で受け取ってもよい)
  * @return std::vector<V>
  */
 template <typename E, typename V = E, class Merge, class AddEdge, class AddNode, typename Cost>
 std::vector<V> rerooting_dp(const Tree<Cost>& tree, E e, Merge merge, AddEdge addedge, AddNode addnode) {
     static_assert(std::is_invocable_r_v<E, Merge, E, E>);
-    static_assert(std::is_invocable_r_v<E, AddEdge, V, Cost, int>);
-    static_assert(std::is_invocable_r_v<V, AddNode, E, int>);
+    static_assert(std::is_invocable_r_v<E, AddEdge, V, Cost, long long>);
+    static_assert(std::is_invocable_r_v<V, AddNode, E, long long>);
     RootedTree<Cost> rooted(tree, 0);
     std::vector<V> subdp(rooted.n);
-    for (int u : rooted.postorder) {
+    for (long long u : rooted.postorder) {
         E tmp = e;
         for (auto edge : rooted.child[u]) {
             tmp = merge(tmp, addedge(subdp[edge.dst], edge.cost, edge.id));
@@ -42,7 +42,7 @@ std::vector<V> rerooting_dp(const Tree<Cost>& tree, E e, Merge merge, AddEdge ad
     }
     std::vector<V> dp(rooted.n);
     std::vector<E> pe(rooted.n, e);
-    for (int u : rooted.preorder) {
+    for (long long u : rooted.preorder) {
         const auto& ch = rooted.child[u];
         std::vector<E> ri(ch.size() + 1, e);
         for (std::size_t i = ch.size(); i > 0; i--) {
@@ -67,8 +67,8 @@ inline std::vector<Cost> farthest_node_dist(const Tree<Cost>& tree) {
         tree,
         Cost{},
         [](Cost a, Cost b) { return std::max<Cost>(a, b); },
-        [](Cost a, Cost c, int) { return a + c; },
-        [](Cost a, int) { return a; });
+        [](Cost a, Cost c, long long) { return a + c; },
+        [](Cost a, long long) { return a; });
 }
 
 /**
@@ -81,8 +81,8 @@ inline std::vector<Cost> distance_sums(const Tree<Cost>& tree) {
         tree,
         P{{}, 0},
         [](P a, P b) { return P{a.first + b.first, a.second + b.second}; },
-        [](P a, Cost c, int) { return P{a.first + a.second * c, a.second}; },
-        [](P a, int) { return P{a.first, a.second + 1}; });
+        [](P a, Cost c, long long) { return P{a.first + a.second * c, a.second}; },
+        [](P a, long long) { return P{a.first, a.second + 1}; });
     std::vector<Cost> res;
     res.reserve(tree.n);
     for (const P& s : tmp) res.push_back(s.first);
@@ -98,6 +98,6 @@ inline std::vector<V> connected_subgraph_count(const Tree<Cost>& tree) {
         tree,
         V(1),
         [](V a, V b) { return a * b; },
-        [](V a, Cost, int) { return a + 1; },
-        [](V a, int) { return a; });
+        [](V a, Cost, long long) { return a + 1; },
+        [](V a, long long) { return a; });
 }

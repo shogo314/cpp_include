@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/base/type_alias.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/base/type_alias.hpp
 
 /**
  * @file type_alias.hpp
@@ -7,6 +7,7 @@
  */
 
 #include <array>
+#include <cstddef>
 #include <deque>
 #include <functional>
 #include <list>
@@ -23,7 +24,7 @@ using ld = long double;
 
 template <typename T>
 using vec = std::vector<T>;
-template <typename T, int N>
+template <typename T, std::size_t N>
 using ary = std::array<T, N>;
 using str = std::string;
 using std::deque;
@@ -56,13 +57,13 @@ using vvpl = vv<pl>;
 using vd = vec<ld>;
 using vpd = vec<pd>;
 
-template <int N>
+template <std::size_t N>
 using al = ary<ll, N>;
-template <int N1, int N2>
+template <std::size_t N1, std::size_t N2>
 using aal = ary<ary<ll, N2>, N1>;
-template <int N>
+template <std::size_t N>
 using val = vec<al<N>>;
-template <int N>
+template <std::size_t N>
 using avl = ary<vl, N>;
 
 template <typename T>
@@ -70,9 +71,9 @@ using ml = std::map<ll, T>;
 using mll = std::map<ll, ll>;
 using sl = std::set<ll>;
 using spl = set<pl>;
-template <int N>
+template <std::size_t N>
 using sal = set<al<N>>;
-template <int N>
+template <std::size_t N>
 using asl = ary<sl, N>;
 
 template <typename T>

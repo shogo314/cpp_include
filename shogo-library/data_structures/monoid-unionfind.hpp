@@ -11,7 +11,7 @@
 
 #include "../algebra/monoid.hpp"
 #include "unionfind.hpp"
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/data_structures/monoid-unionfind.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/data_structures/monoid-unionfind.hpp
 
 /**
  * @brief 可換モノイドを乗せるUnionFind
@@ -34,7 +34,7 @@ class MonoidUnionFind : private UnionFind {
      * @param n 要素数 各要素の値は単位元で初期化する
      * @param m 可換モノイド
      */
-    explicit MonoidUnionFind(int n = 0, M m = M()) : UnionFind(n), m(std::move(m)), val(n, this->m.e()) {}
+    explicit MonoidUnionFind(long long n = 0, M m = M()) : UnionFind(n), m(std::move(m)), val(n, this->m.e()) {}
     /**
      * @param v 各要素の初期値
      * @param m 可換モノイド
@@ -49,26 +49,26 @@ class MonoidUnionFind : private UnionFind {
      * @brief a と b の連結成分を統合し、値の積を取る
      * @return 統合後の代表元と、新しく統合したか
      */
-    MergeResult merge(int a, int b) {
+    MergeResult merge(long long a, long long b) {
         assert(0 <= a && a < _n);
         assert(0 <= b && b < _n);
-        int x = leader(a), y = leader(b);
+        long long x = leader(a), y = leader(b);
         if (x == y) return {x, false};
         if (-parent_or_size[x] < -parent_or_size[y]) std::swap(x, y);
         parent_or_size[x] += parent_or_size[y];
-        parent_or_size[y] = x;
+        parent_or_size[y] = int(x);
         val[x] = m.op(val[x], val[y]);
         return {x, true};
     }
     /**
      * @brief 要素aの属する連結成分の値の総積
      */
-    const S& prod(int a) {
+    const S& prod(long long a) {
         return val[leader(a)];
     }
 };
 
 template <typename M>
-MonoidUnionFind(int, M) -> MonoidUnionFind<M>;
+MonoidUnionFind(long long, M) -> MonoidUnionFind<M>;
 template <typename M>
 MonoidUnionFind(std::vector<typename M::S>, M) -> MonoidUnionFind<M>;

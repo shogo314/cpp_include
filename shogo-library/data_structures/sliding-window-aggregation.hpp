@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "../algebra/monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/data_structures/sliding-window-aggregation.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/data_structures/sliding-window-aggregation.hpp
 
 /**
  * @brief Sliding Window Aggregation (モノイドを乗せたキュー)
@@ -45,7 +45,7 @@ class SlidingWindowAggregation {
     /**
      * @brief 要素数
      */
-    int size() const { return front_vals.size() + back_vals.size(); }
+    long long size() const { return front_vals.size() + back_vals.size(); }
     bool empty() const { return size() == 0; }
 
     /**
@@ -108,14 +108,14 @@ SlidingWindowAggregation(M) -> SlidingWindowAggregation<M>;
  * @param comp 大小の比較。std::greater<T>() を渡すと最大値になる
  */
 template <typename T, typename Compare = std::less<T>>
-std::vector<T> sliding_window_min(const std::vector<T>& a, int k, Compare comp = Compare()) {
-    int n = a.size();
+std::vector<T> sliding_window_min(const std::vector<T>& a, long long k, Compare comp = Compare()) {
+    long long n = a.size();
     assert(1 <= k && k <= n);
     std::vector<T> res;
     res.reserve(n - k + 1);
     // 窓の中で、後ろにそれ以下の値がない添字を、値の昇順に持つ
-    std::deque<int> dq;
-    for (int i = 0; i < n; i++) {
+    std::deque<long long> dq;
+    for (long long i = 0; i < n; i++) {
         while (!dq.empty() && !comp(a[dq.back()], a[i])) dq.pop_back();
         dq.push_back(i);
         if (dq.front() <= i - k) dq.pop_front();
@@ -128,6 +128,6 @@ std::vector<T> sliding_window_min(const std::vector<T>& a, int k, Compare comp =
  * @brief 長さ k の各区間 [i, i + k) の最大値を並べたもの (長さ n - k + 1) O(n)
  */
 template <typename T>
-std::vector<T> sliding_window_max(const std::vector<T>& a, int k) {
+std::vector<T> sliding_window_max(const std::vector<T>& a, long long k) {
     return sliding_window_min(a, k, std::greater<T>());
 }

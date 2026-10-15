@@ -11,7 +11,7 @@
 
 #include "../algebra/group.hpp"
 #include "unionfind.hpp"
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/data_structures/potentialized-unionfind.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/data_structures/potentialized-unionfind.hpp
 
 /**
  * @brief ポテンシャル付きUnionFind
@@ -25,8 +25,8 @@ class PotentializedUnionFind {
 
    private:
     G g;
-    int _n;
-    // 負ならサイズ、非負なら親
+    long long _n;
+    // 負ならサイズ、非負なら親 (メモリを抑えるため int で持つ)
     std::vector<int> parent_or_size;
     // 重み
     std::vector<S> diff_weight;
@@ -40,16 +40,16 @@ class PotentializedUnionFind {
      * @param n 要素数
      * @param g ポテンシャルの群
      */
-    explicit PotentializedUnionFind(int n = 0, G g = G()) : g(std::move(g)), _n(n), parent_or_size(n, -1), diff_weight(n, e()) {}
+    explicit PotentializedUnionFind(long long n = 0, G g = G()) : g(std::move(g)), _n(n), parent_or_size(n, -1), diff_weight(n, e()) {}
 
     /**
      * @brief 頂点aの属する連結成分の代表元
      */
-    int leader(int a) {
+    long long leader(long long a) {
         assert(0 <= a && a < _n);
         if (parent_or_size[a] < 0) return a;
         std::stack<int> stk;
-        stk.push(a);
+        stk.push(int(a));
         while (parent_or_size[stk.top()] >= 0) {
             stk.push(parent_or_size[stk.top()]);
         }
@@ -71,19 +71,19 @@ class PotentializedUnionFind {
      * @note すでに同じ連結成分なら何もしない (w が矛盾していても検出しない)。
      *       矛盾を調べるには、merged が false のときに diff(a, b) == w かを確かめる
      */
-    MergeResult merge(int a, int b, S w) {
+    MergeResult merge(long long a, long long b, S w) {
         assert(0 <= a && a < _n);
         assert(0 <= b && b < _n);
         w = op(weight(a), w);
         w = op(w, inv(weight(b)));
-        int x = leader(a), y = leader(b);
+        long long x = leader(a), y = leader(b);
         if (x == y) return {x, false};
         if (-parent_or_size[x] < -parent_or_size[y]) {
             std::swap(x, y);
             w = inv(w);
         }
         parent_or_size[x] += parent_or_size[y];
-        parent_or_size[y] = x;
+        parent_or_size[y] = int(x);
         diff_weight[y] = w;
         return {x, true};
     }
@@ -91,7 +91,7 @@ class PotentializedUnionFind {
     /**
      * @brief 頂点a,bが連結かどうか
      */
-    bool same(int a, int b) {
+    bool same(long long a, long long b) {
         assert(0 <= a && a < _n);
         assert(0 <= b && b < _n);
         return leader(a) == leader(b);
@@ -100,7 +100,7 @@ class PotentializedUnionFind {
     /**
      * @brief (b のポテンシャル) - (a のポテンシャル)
      */
-    S diff(int a, int b) {
+    S diff(long long a, long long b) {
         assert(same(a, b));
         return op(inv(weight(a)), weight(b));
     }
@@ -108,7 +108,7 @@ class PotentializedUnionFind {
     /**
      * @brief 頂点aの属する連結成分のサイズ
      */
-    int size(int a) {
+    long long size(long long a) {
         assert(0 <= a && a < _n);
         return -parent_or_size[leader(a)];
     }
@@ -117,16 +117,16 @@ class PotentializedUnionFind {
      * @brief グラフを連結成分に分け、その情報を返す
      * @return 「一つの連結成分の頂点番号のリスト」のリスト
      */
-    std::vector<std::vector<int>> groups() {
-        return internal_unionfind::groups(_n, [&](int a) { return leader(a); });
+    std::vector<std::vector<long long>> groups() {
+        return internal_unionfind::groups(_n, [&](long long a) { return leader(a); });
     }
 
    private:
-    S weight(int a) {
+    S weight(long long a) {
         leader(a);
         return diff_weight[a];
     }
 };
 
 template <typename G>
-PotentializedUnionFind(int, G) -> PotentializedUnionFind<G>;
+PotentializedUnionFind(long long, G) -> PotentializedUnionFind<G>;

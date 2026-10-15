@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "../utility/traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/data_structures/counter.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/data_structures/counter.hpp
 
 template <typename T>
 struct Counter {
@@ -81,8 +81,8 @@ struct Counter {
     /**
      * @brief 異なる値の個数 (重複は数えない)
      */
-    int size() const {
-        return static_cast<int>(data.size());
+    long long size() const {
+        return static_cast<long long>(data.size());
     }
     /**
      * @brief 重複を含めた要素数 (個数の総和)

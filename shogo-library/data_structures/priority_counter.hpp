@@ -12,7 +12,7 @@
 #include <utility>
 
 #include "../utility/traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/data_structures/priority_counter.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/data_structures/priority_counter.hpp
 
 template <typename T, std::size_t K = 1, class Compare = std::less<T>, ENABLE_IF_T(K >= 1)>
 struct PriorityCounter {
@@ -30,10 +30,10 @@ struct PriorityCounter {
         data[0].second = 1;
     }
 
-    constexpr int size() const {
+    constexpr long long size() const {
         for (std::size_t i = 0; i < k; i++) {
             if (data[i].second == 0) {
-                return static_cast<int>(i);
+                return static_cast<long long>(i);
             }
         }
         return k;

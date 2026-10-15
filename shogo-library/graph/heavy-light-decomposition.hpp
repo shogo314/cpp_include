@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "tree.hpp"
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/graph/heavy-light-decomposition.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/graph/heavy-light-decomposition.hpp
 
 /**
  * @brief HL 分解 (Heavy-Light Decomposition)
@@ -25,7 +25,8 @@
  * auto [l, r] = hld.subtree(v);  // 部分木は区間 [l, r)
  */
 class HeavyLightDecomposition {
-    int n, root;
+    long long n, root;
+    // 内部の配列は int で持ち、公開する関数で long long にする
     std::vector<int> par, dep, sz, heavy, head, in, order;
 
    public:
@@ -33,15 +34,15 @@ class HeavyLightDecomposition {
      * @brief 木 tree を根 root で HL 分解する
      */
     template <typename Cost>
-    explicit HeavyLightDecomposition(const Tree<Cost>& tree, int root = 0)
+    explicit HeavyLightDecomposition(const Tree<Cost>& tree, long long root = 0)
         : n(tree.size()), root(root), par(n, -1), dep(n, 0), sz(n, 1), heavy(n, -1), head(n), in(n), order(n) {
         assert(0 <= root && root < n);
         // 根からの BFS 順で親と深さを決める
-        std::vector<int> bfs = {root};
+        std::vector<int> bfs = {(int)root};
         bfs.reserve(n);
         for (int i = 0; i < (int)bfs.size(); i++) {
             int v = bfs[i];
-            for (int u : tree[v]) {
+            for (long long u : tree[v]) {
                 if (u == par[v]) continue;
                 assert(u != root && par[u] == -1 && "HeavyLightDecomposition: not a tree");
                 par[u] = v;
@@ -49,7 +50,7 @@ class HeavyLightDecomposition {
                 bfs.push_back(u);
             }
         }
-        assert((int)bfs.size() == n && "HeavyLightDecomposition: not connected");
+        assert((long long)bfs.size() == n && "HeavyLightDecomposition: not connected");
         // 葉の側から部分木の大きさを求め、最も大きい子を heavy にする
         for (int i = n - 1; i > 0; i--) {
             int v = bfs[i], p = par[v];
@@ -57,7 +58,7 @@ class HeavyLightDecomposition {
             if (heavy[p] == -1 || sz[v] > sz[heavy[p]]) heavy[p] = v;
         }
         // heavy な子を最後に積むと、次に取り出されて index が連続する
-        std::vector<int> st = {root};
+        std::vector<int> st = {(int)root};
         head[root] = root;
         int k = 0;
         while (!st.empty()) {
@@ -65,7 +66,7 @@ class HeavyLightDecomposition {
             st.pop_back();
             in[v] = k;
             order[k++] = v;
-            for (int u : tree[v]) {
+            for (long long u : tree[v]) {
                 if (u == par[v] || u == heavy[v]) continue;
                 head[u] = u;
                 st.push_back(u);
@@ -77,36 +78,36 @@ class HeavyLightDecomposition {
         }
     }
 
-    int size() const { return n; }
+    long long size() const { return n; }
     /**
      * @brief 頂点 v の列での位置
      */
-    int index(int v) const { return in[v]; }
+    long long index(long long v) const { return in[v]; }
     /**
      * @brief 列の i 番目の頂点 (index の逆)
      */
-    int vertex(int i) const { return order[i]; }
+    long long vertex(long long i) const { return order[i]; }
     /**
      * @brief v の親 (根なら -1)
      */
-    int parent(int v) const { return par[v]; }
+    long long parent(long long v) const { return par[v]; }
     /**
      * @brief v の深さ (根は 0、辺の本数)
      */
-    int depth(int v) const { return dep[v]; }
+    long long depth(long long v) const { return dep[v]; }
     /**
      * @brief v を根とする部分木の頂点の個数
      */
-    int subtree_size(int v) const { return sz[v]; }
+    long long subtree_size(long long v) const { return sz[v]; }
     /**
      * @brief v を根とする部分木の頂点に対応する区間 [l, r)
      */
-    std::pair<int, int> subtree(int v) const { return {in[v], in[v] + sz[v]}; }
+    std::pair<long long, long long> subtree(long long v) const { return {in[v], in[v] + sz[v]}; }
 
     /**
      * @brief u と v の最小共通祖先 O(log n)
      */
-    int lca(int u, int v) const {
+    long long lca(long long u, long long v) const {
         assert(0 <= u && u < n && 0 <= v && v < n);
         while (head[u] != head[v]) {
             if (dep[head[u]] < dep[head[v]]) std::swap(u, v);
@@ -117,15 +118,15 @@ class HeavyLightDecomposition {
     /**
      * @brief u と v の間の辺の本数 O(log n)
      */
-    int dist(int u, int v) const { return dep[u] + dep[v] - 2 * dep[lca(u, v)]; }
+    long long dist(long long u, long long v) const { return dep[u] + dep[v] - 2 * dep[lca(u, v)]; }
     /**
      * @brief v から根の方へ k 本の辺を進んだ頂点 (k > depth(v) なら -1) O(log n)
      */
-    int hop(int v, int k) const {
+    long long hop(long long v, long long k) const {
         assert(0 <= v && v < n && k >= 0);
         if (k > dep[v]) return -1;
         while (true) {
-            int h = head[v];
+            long long h = head[v];
             if (in[v] - in[h] >= k) return order[in[v] - k];
             k -= in[v] - in[h] + 1;
             v = par[h];
@@ -134,10 +135,10 @@ class HeavyLightDecomposition {
     /**
      * @brief u から v へのパスで、u から k 本の辺を進んだ頂点 (k > dist(u, v) なら -1) O(log n)
      */
-    int jump(int u, int v, int k) const {
+    long long jump(long long u, long long v, long long k) const {
         assert(0 <= u && u < n && 0 <= v && v < n && k >= 0);
-        int w = lca(u, v);
-        int du = dep[u] - dep[w], dv = dep[v] - dep[w];
+        long long w = lca(u, v);
+        long long du = dep[u] - dep[w], dv = dep[v] - dep[w];
         if (k <= du) return hop(u, k);
         if (k <= du + dv) return hop(v, du + dv - k);
         return -1;
@@ -152,9 +153,9 @@ class HeavyLightDecomposition {
      * 交換法則が成り立たない演算では、a > b の区間は逆順の積を使う
      * @param edge true なら辺についてのパスにする。辺 (parent(v), v) を index(v) 番目に対応させ、lca の位置を含めない
      */
-    std::vector<std::pair<int, int>> path(int u, int v, bool edge = false) const {
+    std::vector<std::pair<long long, long long>> path(long long u, long long v, bool edge = false) const {
         assert(0 <= u && u < n && 0 <= v && v < n);
-        std::vector<std::pair<int, int>> up, down;
+        std::vector<std::pair<long long, long long>> up, down;
         while (head[u] != head[v]) {
             if (dep[head[u]] >= dep[head[v]]) {
                 up.emplace_back(in[u], in[head[u]]);
@@ -166,11 +167,11 @@ class HeavyLightDecomposition {
         }
         if (dep[u] >= dep[v]) {
             // v が lca
-            int l = in[v] + edge;
+            long long l = in[v] + edge;
             if (l <= in[u]) up.emplace_back(in[u], l);
         } else {
             // u が lca
-            int l = in[u] + edge;
+            long long l = in[u] + edge;
             if (l <= in[v]) down.emplace_back(l, in[v]);
         }
         up.insert(up.end(), down.rbegin(), down.rend());

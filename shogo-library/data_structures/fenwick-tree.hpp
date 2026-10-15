@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "../algebra/group.hpp"
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/data_structures/fenwick-tree.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/data_structures/fenwick-tree.hpp
 
 /**
  * @brief Fenwick Tree (Binary Indexed Tree)
@@ -30,7 +30,7 @@ class FenwickTree {
 
    private:
     G g;
-    int n;
+    long long n;
     // data[i] は a[i - (i & -i)] から a[i-1] までの積 (1-indexed)
     std::vector<S> data;
     S op(const S& a, const S& b) const { return g.op(a, b); }
@@ -41,31 +41,31 @@ class FenwickTree {
     /**
      * @brief 要素数 n で、すべての要素が単位元の Fenwick Tree を作る
      */
-    explicit FenwickTree(int n = 0, G g = G()) : g(std::move(g)), n(n), data(n + 1, e()) {}
+    explicit FenwickTree(long long n = 0, G g = G()) : g(std::move(g)), n(n), data(n + 1, e()) {}
     /**
      * @brief v を初期値とする Fenwick Tree を作る O(n)
      */
     explicit FenwickTree(const std::vector<S>& v, G g = G()) : FenwickTree(v.size(), std::move(g)) {
-        for (int i = 1; i <= n; i++) {
+        for (long long i = 1; i <= n; i++) {
             data[i] = op(data[i], v[i - 1]);
-            int j = i + (i & -i);
+            long long j = i + (i & -i);
             if (j <= n) data[j] = op(data[j], data[i]);
         }
     }
 
-    int size() const { return n; }
+    long long size() const { return n; }
 
     /**
      * @brief a[k] を op(a[k], x) にする O(log n)
      */
-    void apply(int k, const S& x) {
+    void apply(long long k, const S& x) {
         assert(0 <= k && k < n);
         for (k++; k <= n; k += k & -k) data[k] = op(data[k], x);
     }
     /**
      * @brief a[0] から a[r-1] までの積 O(log n)
      */
-    S prefix_prod(int r) const {
+    S prefix_prod(long long r) const {
         assert(0 <= r && r <= n);
         S res = e();
         for (; r > 0; r -= r & -r) res = op(data[r], res);
@@ -74,7 +74,7 @@ class FenwickTree {
     /**
      * @brief a[l] から a[r-1] までの積 O(log n)。逆元を使う
      */
-    S prod(int l, int r) const {
+    S prod(long long l, long long r) const {
         assert(0 <= l && l <= r && r <= n);
         return op(inv(prefix_prod(l)), prefix_prod(r));
     }
@@ -82,25 +82,25 @@ class FenwickTree {
     /**
      * @brief a[k] O(log n)。逆元を使う
      */
-    S get(int k) const {
+    S get(long long k) const {
         assert(0 <= k && k < n);
         return prod(k, k + 1);
     }
     /**
      * @brief a[k] を x にする O(log n)。逆元を使う
      */
-    void set(int k, const S& x) { apply(k, op(inv(get(k)), x)); }
+    void set(long long k, const S& x) { apply(k, op(inv(get(k)), x)); }
 
     /**
      * @brief f(prefix_prod(r)) = true となる最大の r を返す O(log n)
      * f は単調 (ある r までは true でそれ以降は false) であること。f(e()) = true
      */
     template <typename F>
-    int max_right(F f) const {
+    long long max_right(F f) const {
         assert(f(e()));
-        int r = 0;
+        long long r = 0;
         S sum = e();
-        int step = 1;
+        long long step = 1;
         while (step * 2 <= n) step *= 2;
         for (; step > 0; step /= 2) {
             if (r + step <= n && f(op(sum, data[r + step]))) {
@@ -113,6 +113,6 @@ class FenwickTree {
 };
 
 template <typename G>
-FenwickTree(int, G) -> FenwickTree<G>;
+FenwickTree(long long, G) -> FenwickTree<G>;
 template <typename G>
 FenwickTree(std::vector<typename G::S>, G) -> FenwickTree<G>;

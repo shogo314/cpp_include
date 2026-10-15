@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/graph/max-flow.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/graph/max-flow.hpp
 
 /**
  * @file max-flow.hpp
@@ -31,17 +31,18 @@ class MaxFlow {
      * @brief 辺の情報
      */
     struct Edge {
-        int from, to;
+        long long from, to;
         Cap cap;   //!< 容量
         Cap flow;  //!< 流れている量
     };
 
    private:
+    // 内部の辺と配列は int で持ち、公開する関数で long long にする
     struct InnerEdge {
         int to, rev;
         Cap cap;  // 残りの容量
     };
-    int n;
+    long long n;
     std::vector<std::vector<InnerEdge>> g;
     std::vector<std::pair<int, int>> pos;  // 追加した辺が g のどこにあるか
     std::vector<int> level, iter;
@@ -83,21 +84,21 @@ class MaxFlow {
     }
 
    public:
-    explicit MaxFlow(int n = 0) : n(n), g(n) {}
+    explicit MaxFlow(long long n = 0) : n(n), g(n) {}
 
-    int size() const { return n; }
+    long long size() const { return n; }
 
     /**
      * @brief from から to への容量 cap の辺を追加し、辺の番号 (追加した順に 0, 1, ...) を返す
      */
-    int add_edge(int from, int to, Cap cap) {
+    long long add_edge(long long from, long long to, Cap cap) {
         assert(0 <= from && from < n && 0 <= to && to < n && cap >= 0);
-        int id = pos.size();
+        long long id = pos.size();
         int from_id = g[from].size();
         int to_id = g[to].size() + (from == to);
         pos.emplace_back(from, from_id);
-        g[from].push_back({to, to_id, cap});
-        g[to].push_back({from, from_id, 0});
+        g[from].push_back({(int)to, to_id, cap});
+        g[to].push_back({(int)from, from_id, 0});
         return id;
     }
 
@@ -105,7 +106,7 @@ class MaxFlow {
      * @brief s から t へ、limit を上限としてできるだけ流し、流した量を返す
      * 何度も呼ぶと、前回までの流れに追加して流す
      */
-    Cap flow(int s, int t, Cap limit = std::numeric_limits<Cap>::max()) {
+    Cap flow(long long s, long long t, Cap limit = std::numeric_limits<Cap>::max()) {
         assert(0 <= s && s < n && 0 <= t && t < n && s != t);
         Cap res = 0;
         while (res < limit && bfs(s, t)) {
@@ -120,8 +121,8 @@ class MaxFlow {
     /**
      * @brief 番号 i の辺の情報
      */
-    Edge get_edge(int i) const {
-        assert(0 <= i && i < (int)pos.size());
+    Edge get_edge(long long i) const {
+        assert(0 <= i && i < (long long)pos.size());
         const auto& e = g[pos[i].first][pos[i].second];
         const auto& re = g[e.to][e.rev];
         return {pos[i].first, e.to, e.cap + re.cap, re.cap};
@@ -130,8 +131,8 @@ class MaxFlow {
      * @brief 番号 i の辺の容量を new_cap に、流れている量を new_flow に変える
      * ほかの辺の流量は変えないので、流量の保存則が崩れることがある
      */
-    void change_edge(int i, Cap new_cap, Cap new_flow) {
-        assert(0 <= i && i < (int)pos.size() && 0 <= new_flow && new_flow <= new_cap);
+    void change_edge(long long i, Cap new_cap, Cap new_flow) {
+        assert(0 <= i && i < (long long)pos.size() && 0 <= new_flow && new_flow <= new_cap);
         auto& e = g[pos[i].first][pos[i].second];
         auto& re = g[e.to][e.rev];
         e.cap = new_cap - new_flow;
@@ -142,7 +143,7 @@ class MaxFlow {
      */
     std::vector<Edge> edges() const {
         std::vector<Edge> res;
-        for (int i = 0; i < (int)pos.size(); i++) res.push_back(get_edge(i));
+        for (long long i = 0; i < (long long)pos.size(); i++) res.push_back(get_edge(i));
         return res;
     }
 
@@ -150,12 +151,12 @@ class MaxFlow {
      * @brief 直前の flow(s, t) の後で、残余グラフで s から行ける頂点か
      * flow(s, t) で流しきっていれば、true の頂点の集合が最小カットの s 側になる
      */
-    std::vector<bool> min_cut(int s) const {
+    std::vector<bool> min_cut(long long s) const {
         std::vector<bool> visited(n);
-        std::vector<int> st = {s};
+        std::vector<long long> st = {s};
         visited[s] = true;
         while (!st.empty()) {
-            int v = st.back();
+            long long v = st.back();
             st.pop_back();
             for (const auto& e : g[v]) {
                 if (e.cap > 0 && !visited[e.to]) {

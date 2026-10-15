@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "vector.hpp"
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/geometry/circle.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/geometry/circle.hpp
 
 /**
  * @brief 円

@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/math/matrix.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/math/matrix.hpp
 
 /**
  * @file matrix.hpp
@@ -50,7 +50,7 @@ struct OperatorPropertyDefault {
 template <class T, class OperatorProperty = matrix::OperatorPropertyDefault<T>>
 class Matrix {
    public:
-    int n, m;
+    long long n, m;
     std::vector<std::vector<T>> v;
 
     /**
@@ -61,7 +61,7 @@ class Matrix {
     template <typename Iterable>
     Matrix(const std::vector<Iterable>& v_) noexcept : n(v_.size()), m(v_.size() == 0 ? 0 : v_[0].size()) {
         v.resize(n);
-        for (int i = 0; i < n; i++) {
+        for (long long i = 0; i < n; i++) {
             v[i].assign(v_[i].begin(), v_[i].end());
         }
     }
@@ -82,7 +82,7 @@ class Matrix {
      * @param _val 行列(グリッド)の要素の初期値
      * @return Matrix
      */
-    Matrix(int _n, int _m, T _val = OperatorProperty::zero()) : n(_n), m(_m), v(n, std::vector<T>(m, _val)) {}
+    Matrix(long long _n, long long _m, T _val = OperatorProperty::zero()) : n(_n), m(_m), v(n, std::vector<T>(m, _val)) {}
 
     auto begin() noexcept { return v.begin(); }
     auto end() noexcept { return v.end(); }
@@ -91,13 +91,13 @@ class Matrix {
 
     /**
      * @brief 行列(グリッド)の行数
-     * @return std::size_t
+     * @return long long
      */
     [[nodiscard]]
-    std::size_t size() const { return v.size(); }
+    long long size() const { return v.size(); }
 
-    std::vector<T>& operator[](int i) { return v[i]; }
-    const std::vector<T>& operator[](int i) const { return v[i]; }
+    std::vector<T>& operator[](long long i) { return v[i]; }
+    const std::vector<T>& operator[](long long i) const { return v[i]; }
     Matrix& operator=(const std::vector<std::vector<T>>& A) noexcept {
         n = A.size();
         m = (n == 0 ? 0 : A[0].size());
@@ -119,9 +119,9 @@ class Matrix {
     Matrix transpose() const noexcept {
         if (n == 0) return Matrix(v);
         std::vector<std::vector<T>> ret(m);
-        for (int i = 0; i < m; i++) {
+        for (long long i = 0; i < m; i++) {
             ret[i].resize(n);
-            for (int j = 0; j < n; j++) ret[i][j] = v[j][i];
+            for (long long j = 0; j < n; j++) ret[i][j] = v[j][i];
         }
         return Matrix(ret);
     }
@@ -133,7 +133,7 @@ class Matrix {
     [[nodiscard]]
     Matrix rev_lr() const noexcept {
         std::vector<std::vector<T>> ret = v;
-        for (int i = 0; i < n; i++) std::reverse(ret[i].begin(), ret[i].end());
+        for (long long i = 0; i < n; i++) std::reverse(ret[i].begin(), ret[i].end());
         return Matrix(ret);
     }
 
@@ -154,21 +154,21 @@ class Matrix {
      * @return Matrix
      */
     [[nodiscard]]
-    Matrix rotate(int k) const noexcept {
+    Matrix rotate(long long k) const noexcept {
         k %= 4;
         if (k == 0) return *this;
         if (k < 0) k += 4;
         if (k == 2) return this->rev_lr().rev_ud();
         std::vector<std::vector<T>> ret(m);
         if (k == 1) {
-            for (int i = 0; i < m; i++) {
+            for (long long i = 0; i < m; i++) {
                 ret[i].resize(n);
-                for (int j = 0; j < n; j++) ret[i][j] = v[n - j - 1][i];
+                for (long long j = 0; j < n; j++) ret[i][j] = v[n - j - 1][i];
             }
         } else {
-            for (int i = 0; i < m; i++) {
+            for (long long i = 0; i < m; i++) {
                 ret[i].resize(n);
-                for (int j = 0; j < n; j++) ret[i][j] = v[j][m - i - 1];
+                for (long long j = 0; j < n; j++) ret[i][j] = v[j][m - i - 1];
             }
         }
         return Matrix(ret);
@@ -179,14 +179,14 @@ class Matrix {
      * @return Matrix
      */
     [[nodiscard]]
-    Matrix shift(int dy, int dx) const noexcept {
+    Matrix shift(long long dy, long long dx) const noexcept {
         if (n == 0 || m == 0) return *this;
         dy = (dy % n + n) % n;
         dx = (dx % m + m) % m;
         std::vector<std::vector<T>> ret = v;
-        for (int i = 0, ni = dy; i < n; i++, ni++) {
+        for (long long i = 0, ni = dy; i < n; i++, ni++) {
             if (ni >= n) ni = 0;
-            for (int j = 0, nj = dx; j < m; j++, nj++) {
+            for (long long j = 0, nj = dx; j < m; j++, nj++) {
                 if (nj >= m) nj = 0;
                 ret[ni][nj] = v[i][j];
             }
@@ -199,7 +199,7 @@ class Matrix {
      * @return Matrix
      */
     [[nodiscard]]
-    Matrix shift_l(int k) const noexcept {
+    Matrix shift_l(long long k) const noexcept {
         return this->shift(0, -k);
     }
 
@@ -208,7 +208,7 @@ class Matrix {
      * @return Matrix
      */
     [[nodiscard]]
-    Matrix shift_r(int k) const noexcept {
+    Matrix shift_r(long long k) const noexcept {
         return this->shift(0, k);
     }
 
@@ -217,7 +217,7 @@ class Matrix {
      * @return Matrix
      */
     [[nodiscard]]
-    Matrix shift_u(int k) const noexcept {
+    Matrix shift_u(long long k) const noexcept {
         return this->shift(-k, 0);
     }
 
@@ -226,7 +226,7 @@ class Matrix {
      * @return Matrix
      */
     [[nodiscard]]
-    Matrix shift_d(int k) const noexcept {
+    Matrix shift_d(long long k) const noexcept {
         return this->shift(k, 0);
     }
 
@@ -237,7 +237,7 @@ class Matrix {
     [[nodiscard]]
     std::vector<std::string> vstr() const noexcept {
         std::vector<std::string> ret(n);
-        for (int i = 0; i < n; i++) {
+        for (long long i = 0; i < n; i++) {
             ret[i].assign(v[i].begin(), v[i].end());
         }
         return ret;
@@ -249,9 +249,9 @@ class Matrix {
      * @return std::vector<T>
      */
     [[nodiscard]]
-    std::vector<T> col(int j) const noexcept {
+    std::vector<T> col(long long j) const noexcept {
         std::vector<T> ret(n);
-        for (int i = 0; i < n; i++) {
+        for (long long i = 0; i < n; i++) {
             ret[i] = v[i][j];
         }
         return ret;
@@ -263,7 +263,7 @@ class Matrix {
      * @return std::string
      */
     [[nodiscard]]
-    std::string str(int i) const noexcept {
+    std::string str(long long i) const noexcept {
         std::string ret;
         ret.assign(v[i].begin(), v[i].end());
         return ret;
@@ -276,8 +276,8 @@ class Matrix {
     Matrix& operator+=(const Matrix& B) {
         if (n == 0) return (*this);
         assert(n == B.n && m == B.m);
-        for (int i = 0; i < n; i++)
-            for (int j = 0; j < m; j++)
+        for (long long i = 0; i < n; i++)
+            for (long long j = 0; j < m; j++)
                 (*this)[i][j] = OperatorProperty::add((*this)[i][j], B[i][j]);
         return (*this);
     }
@@ -289,8 +289,8 @@ class Matrix {
     Matrix& operator-=(const Matrix& B) {
         if (n == 0) return (*this);
         assert(n == B.n && m == B.m);
-        for (int i = 0; i < n; i++)
-            for (int j = 0; j < m; j++)
+        for (long long i = 0; i < n; i++)
+            for (long long j = 0; j < m; j++)
                 (*this)[i][j] = OperatorProperty::add((*this)[i][j], OperatorProperty::neg(B[i][j]));
         return (*this);
     }
@@ -302,11 +302,11 @@ class Matrix {
      */
     Matrix& operator*=(const Matrix& B) {
         assert(m == B.n);
-        int p = B.m;
+        const long long p = B.m;
         Matrix C(n, p);
-        for (int i = 0; i < n; i++) {
-            for (int k = 0; k < m; k++) {
-                for (int j = 0; j < p; j++) {
+        for (long long i = 0; i < n; i++) {
+            for (long long k = 0; k < m; k++) {
+                for (long long j = 0; j < p; j++) {
                     C[i][j] = OperatorProperty::add(C[i][j], OperatorProperty::mul((*this)[i][k], B[k][j]));
                 }
             }
@@ -324,7 +324,7 @@ class Matrix {
     [[nodiscard]]
     Matrix pow(long long k) const {
         Matrix A = *this, B(n, n);
-        for (int i = 0; i < n; i++) B[i][i] = OperatorProperty::one();
+        for (long long i = 0; i < n; i++) B[i][i] = OperatorProperty::one();
         while (k > 0) {
             if (k & 1) B *= A;
             A *= A;
@@ -348,10 +348,10 @@ class Matrix {
      */
     [[nodiscard]]
     friend std::vector<T> operator*(const Matrix& A, const std::vector<T>& B) {
-        assert(A.m == (int)B.size());
+        assert(A.m == (long long)B.size());
         std::vector<T> ret(A.n, OperatorProperty::zero());
-        for (int i = 0; i < A.n; i++) {
-            for (int j = 0; j < A.m; j++) {
+        for (long long i = 0; i < A.n; i++) {
+            for (long long j = 0; j < A.m; j++) {
                 ret[i] = OperatorProperty::add(ret[i], OperatorProperty::mul(A[i][j], B[j]));
             }
         }
@@ -366,10 +366,10 @@ class Matrix {
      */
     [[nodiscard]]
     friend std::vector<T> operator*(const std::vector<T>& A, const Matrix& B) {
-        assert((int)A.size() == B.n);
+        assert((long long)A.size() == B.n);
         std::vector<T> ret(B.m, OperatorProperty::zero());
-        for (int i = 0; i < B.n; i++) {
-            for (int j = 0; j < B.m; j++) {
+        for (long long i = 0; i < B.n; i++) {
+            for (long long j = 0; j < B.m; j++) {
                 ret[j] = OperatorProperty::add(ret[j], OperatorProperty::mul(A[i], B[i][j]));
             }
         }
@@ -388,8 +388,8 @@ class Matrix {
         if (n == 0) return T(1);
         if constexpr (std::is_same_v<OperatorProperty, matrix::OperatorPropertyDefault<T>>) {
             std::vector A(n, std::valarray(T(0), n));
-            for (int i = 0; i < n; i++)
-                for (int j = 0; j < n; j++) A[i][j] = this->v[i][j];
+            for (long long i = 0; i < n; i++)
+                for (long long j = 0; j < n; j++) A[i][j] = this->v[i][j];
             return forward_elimination(A);
         } else {
             auto A = this->v;
@@ -408,39 +408,39 @@ class Matrix {
         if (n == 0) return Matrix(n, n);
         if constexpr (std::is_same_v<OperatorProperty, matrix::OperatorPropertyDefault<T>>) {
             std::vector A(n, std::valarray(T(0), n + n));
-            for (int i = 0; i < n; i++) {
-                for (int j = 0; j < n; j++) A[i][j] = this->v[i][j];
+            for (long long i = 0; i < n; i++) {
+                for (long long j = 0; j < n; j++) A[i][j] = this->v[i][j];
                 A[i][n + i] = T(1);
             }
             [[maybe_unused]] T d = forward_elimination(A);
             assert(d != T(0));
-            for (int i = n - 1; i >= 0; i--) {
-                for (int j = i - 1; j >= 0; j--) {
+            for (long long i = n - 1; i >= 0; i--) {
+                for (long long j = i - 1; j >= 0; j--) {
                     A[j] -= A[i] * A[j][i];
                 }
             }
             Matrix ret(n, n);
-            for (int i = 0; i < n; i++)
-                for (int j = 0; j < n; j++) ret[i][j] = A[i][n + j];
+            for (long long i = 0; i < n; i++)
+                for (long long j = 0; j < n; j++) ret[i][j] = A[i][n + j];
             return ret;
         } else {
             std::vector A(n, std::vector<T>(n + n, OperatorProperty::zero()));
-            for (int i = 0; i < n; i++) {
-                for (int j = 0; j < n; j++) A[i][j] = this->v[i][j];
+            for (long long i = 0; i < n; i++) {
+                for (long long j = 0; j < n; j++) A[i][j] = this->v[i][j];
                 A[i][n + i] = OperatorProperty::one();
             }
             [[maybe_unused]] T d = forward_elimination(A);
             assert(d != OperatorProperty::zero());
-            for (int i = n - 1; i >= 0; i--) {
-                for (int j = i - 1; j >= 0; j--) {
-                    for (int k = n; k < n + n; k++) {
+            for (long long i = n - 1; i >= 0; i--) {
+                for (long long j = i - 1; j >= 0; j--) {
+                    for (long long k = n; k < n + n; k++) {
                         A[j][k] = OperatorProperty::add(A[j][k], OperatorProperty::neg(OperatorProperty::mul(A[i][k], A[j][i])));
                     }
                 }
             }
             Matrix ret(n, n);
-            for (int i = 0; i < n; i++)
-                for (int j = 0; j < n; j++) ret[i][j] = A[i][n + j];
+            for (long long i = 0; i < n; i++)
+                for (long long j = 0; j < n; j++) ret[i][j] = A[i][n + j];
             return ret;
         }
     }
@@ -455,14 +455,14 @@ class Matrix {
      * 正方行列ではない場合、0以外が残る左からn個の列を使って行列式を計算する
      */
     T forward_elimination(std::vector<std::valarray<T>>& A) const {
-        std::vector<int> pivot_col(n, 0);
+        std::vector<long long> pivot_col(n, 0);
         T d(1);
-        for (int i = 0; i < n; i++) {
+        for (long long i = 0; i < n; i++) {
             if (i - 1 >= 0) pivot_col[i] = pivot_col[i - 1] + 1;
             while (pivot_col[i] < m) {
-                int pivot = i;
+                long long pivot = i;
                 if constexpr (std::is_floating_point_v<T>) {
-                    for (int j = i + 1; j < n; j++)
+                    for (long long j = i + 1; j < n; j++)
                         if (std::abs(A[j][pivot_col[i]]) > std::abs(A[pivot][pivot_col[i]])) pivot = j;
                     if (std::abs(A[pivot][pivot_col[i]]) < 1e-9) {
                         pivot_col[i]++;
@@ -485,7 +485,7 @@ class Matrix {
             T scale = A[i][pivot_col[i]];
             d *= scale;
             A[i] /= scale;
-            for (int j = i + 1; j < n; j++) A[j] -= A[i] * A[j][pivot_col[i]];
+            for (long long j = i + 1; j < n; j++) A[j] -= A[i] * A[j][pivot_col[i]];
         }
         return d;
     }
@@ -499,12 +499,12 @@ class Matrix {
      * 正方行列ではない場合、0以外が残る左からn個の列を使って行列式を計算する
      */
     T forward_elimination(std::vector<std::vector<T>>& A) const {
-        std::vector<int> pivot_col(n, 0);
+        std::vector<long long> pivot_col(n, 0);
         T d = OperatorProperty::one();
-        for (int i = 0; i < n; i++) {
+        for (long long i = 0; i < n; i++) {
             if (i - 1 >= 0) pivot_col[i] = pivot_col[i - 1] + 1;
             while (pivot_col[i] < m) {
-                int pivot = i;
+                long long pivot = i;
                 while (pivot < n && A[pivot][pivot_col[i]] == OperatorProperty::zero()) pivot++;
                 if (pivot == n) {
                     pivot_col[i]++;
@@ -517,13 +517,13 @@ class Matrix {
                 break;
             }
             if (pivot_col[i] == m) return OperatorProperty::zero();
-            const int w = A[i].size();
+            const long long w = A[i].size();
             T scale = A[i][pivot_col[i]];
             d = OperatorProperty::mul(d, scale);
-            for (int j = pivot_col[i]; j < w; j++) A[i][j] = OperatorProperty::mul(A[i][j], OperatorProperty::inv(scale));
-            for (int j = i + 1; j < n; j++) {
+            for (long long j = pivot_col[i]; j < w; j++) A[i][j] = OperatorProperty::mul(A[i][j], OperatorProperty::inv(scale));
+            for (long long j = i + 1; j < n; j++) {
                 T scale = A[j][pivot_col[i]];
-                for (int k = pivot_col[i]; k < w; k++) {
+                for (long long k = pivot_col[i]; k < w; k++) {
                     A[j][k] = OperatorProperty::add(A[j][k], OperatorProperty::neg(OperatorProperty::mul(A[i][k], scale)));
                 }
             }

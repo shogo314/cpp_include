@@ -14,13 +14,13 @@
 #include <vector>
 
 #include "traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/utility/vector_func.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/utility/vector_func.hpp
 
 template <typename T>
-std::vector<int> sorted_idx(const std::vector<T>& v, bool reverse = false) {
-    std::vector<int> ret(v.size());
-    std::iota(ret.begin(), ret.end(), 0);
-    std::sort(ret.begin(), ret.end(), [&](int i, int j) {
+std::vector<long long> sorted_idx(const std::vector<T>& v, bool reverse = false) {
+    std::vector<long long> ret(v.size());
+    std::iota(ret.begin(), ret.end(), 0LL);
+    std::sort(ret.begin(), ret.end(), [&](long long i, long long j) {
         return v[i] < v[j];
     });
     if (reverse) std::reverse(ret.begin(), ret.end());

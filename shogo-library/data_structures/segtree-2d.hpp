@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "../algebra/monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/data_structures/segtree-2d.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/data_structures/segtree-2d.hpp
 
 /**
  * @brief 2次元セグメント木 (更新・取得する座標を先読みして圧縮する)
@@ -29,18 +29,19 @@ class SegTree2D {
     S op(const S& a, const S& b) const { return m.op(a, b); }
     S e() const { return m.e(); }
 
-    int h, w, sz_x, sz_y, height_x, height_y;
-    std::vector<std::vector<int>> y_indices;
+    long long h, w, sz_x, sz_y;
+    int height_x, height_y;
+    std::vector<std::vector<int>> y_indices;  // 各 x のノードが持つ y のノード番号 (メモリを抑えるため int で持つ)
     std::vector<std::vector<S>> data_compressed;
 
-    S get_y(int kx, int ky) {
+    S get_y(long long kx, long long ky) {
         ky += sz_y;
         auto it = std::lower_bound(y_indices[kx].begin(), y_indices[kx].end(), ky);
         if (it == y_indices[kx].end() || *it != ky) return e();
         return data_compressed[kx][it - y_indices[kx].begin()];
     }
 
-    S updated_y(int kx, int ky, int child_y_idx, bool child_y_right, const S& child_val) {
+    S updated_y(long long kx, long long ky, int child_y_idx, bool child_y_right, const S& child_val) {
         if (!child_y_right && child_y_idx + 1 < (int)y_indices[kx].size() && y_indices[kx][child_y_idx + 1] == ky * 2 + 1) {
             return op(child_val, data_compressed[kx][child_y_idx + 1]);
         }
@@ -50,7 +51,7 @@ class SegTree2D {
         return child_val;
     }
 
-    void update_tree_y(int kx, int ky, const S& val) {
+    void update_tree_y(long long kx, long long ky, const S& val) {
         ky += sz_y;
         int y_idx = std::lower_bound(y_indices[kx].begin(), y_indices[kx].end(), ky) - y_indices[kx].begin();
         S tmp_val = val;
@@ -62,7 +63,7 @@ class SegTree2D {
         }
     }
 
-    S updated_x(int kx, int ky, bool child_x_right, const S& child_val) {
+    S updated_x(long long kx, long long ky, bool child_x_right, const S& child_val) {
         if (!child_x_right) {
             return op(child_val, get_y(kx * 2 + 1, ky));
         } else {
@@ -70,7 +71,7 @@ class SegTree2D {
         }
     }
 
-    void update_tree_x(int kx, int ky, const S& val) {
+    void update_tree_x(long long kx, long long ky, const S& val) {
         kx += sz_x;
         S tmp_val = val;
         update_tree_y(kx, ky, tmp_val);
@@ -80,7 +81,7 @@ class SegTree2D {
         }
     }
 
-    S prod_y(int kx, int ly, int ry) {
+    S prod_y(long long kx, long long ly, long long ry) {
         S left_prod = e(), right_prod = e();
         ly += sz_y;
         ry += sz_y;
@@ -102,7 +103,7 @@ class SegTree2D {
         return op(left_prod, right_prod);
     }
 
-    S prod_x(int lx, int rx, int ly, int ry) {
+    S prod_x(long long lx, long long rx, long long ly, long long ry) {
         S left_prod = e(), right_prod = e();
         lx += sz_x;
         rx += sz_x;
@@ -119,7 +120,7 @@ class SegTree2D {
         return op(left_prod, right_prod);
     }
 
-    void construct_data(const std::vector<std::tuple<int, int>>& set_query_indices, const std::vector<std::tuple<int, int, int, int>>& prod_query_indices) {
+    void construct_data(const std::vector<std::tuple<long long, long long>>& set_query_indices, const std::vector<std::tuple<long long, long long, long long, long long>>& prod_query_indices) {
         sz_x = 1;
         height_x = 0;
         while (sz_x < h) {
@@ -137,7 +138,7 @@ class SegTree2D {
 
         for (auto [x, y] : set_query_indices) {
             x += sz_x;
-            std::vector<int> x_indices_tmp;
+            std::vector<long long> x_indices_tmp;
             for (int i = 0; i <= height_x; ++i) {
                 x_indices_tmp.push_back(x);
                 x >>= 1;
@@ -145,17 +146,17 @@ class SegTree2D {
             y += sz_y;
             std::vector<int> y_indices_tmp;
             for (int i = 0; i <= height_y; ++i) {
-                y_indices_tmp.push_back(y);
+                y_indices_tmp.push_back(int(y));
                 y >>= 1;
             }
-            for (int x : x_indices_tmp) {
+            for (long long x : x_indices_tmp) {
                 for (int y : y_indices_tmp) {
                     y_indices[x].push_back(y);
                 }
             }
         }
         for (auto [lx, rx, ly, ry] : prod_query_indices) {
-            std::vector<int> x_indices_tmp;
+            std::vector<long long> x_indices_tmp;
             lx += sz_x;
             rx += sz_x;
             while (lx < rx) {
@@ -168,23 +169,23 @@ class SegTree2D {
             ry += sz_y;
             std::vector<int> y_indices_tmp;
             while (ly < ry) {
-                if (ly & 1) y_indices_tmp.push_back(ly++);
-                if (ry & 1) y_indices_tmp.push_back(--ry);
+                if (ly & 1) y_indices_tmp.push_back(int(ly++));
+                if (ry & 1) y_indices_tmp.push_back(int(--ry));
                 ly >>= 1;
                 ry >>= 1;
             }
-            for (int x : x_indices_tmp) {
+            for (long long x : x_indices_tmp) {
                 for (int y : y_indices_tmp) {
                     y_indices[x].push_back(y);
                 }
             }
         }
 
-        for (int x = 1; x < sz_x * 2; x++) {
+        for (long long x = 1; x < sz_x * 2; x++) {
             std::sort(y_indices[x].begin(), y_indices[x].end());
             y_indices[x].erase(std::unique(y_indices[x].begin(), y_indices[x].end()), y_indices[x].end());
         }
-        for (int i = 1; i < sz_x * 2; ++i) {
+        for (long long i = 1; i < sz_x * 2; ++i) {
             data_compressed[i].assign(y_indices[i].size(), e());
         }
     }
@@ -200,7 +201,7 @@ class SegTree2D {
      * @param prod_query_indices prod する範囲 (lx, rx, ly, ry) の列
      * @param m モノイド
      */
-    explicit SegTree2D(int h, int w, const std::vector<std::tuple<int, int>>& set_query_indices, const std::vector<std::tuple<int, int, int, int>>& prod_query_indices, M m = M())
+    explicit SegTree2D(long long h, long long w, const std::vector<std::tuple<long long, long long>>& set_query_indices, const std::vector<std::tuple<long long, long long, long long, long long>>& prod_query_indices, M m = M())
         : m(std::move(m)), h(h), w(w) {
         construct_data(set_query_indices, prod_query_indices);
     }
@@ -211,7 +212,7 @@ class SegTree2D {
      * @param ky y座標
      * @return 要素の値
      */
-    S get(int kx, int ky) {
+    S get(long long kx, long long ky) {
         assert(0 <= kx && kx < h && 0 <= ky && ky < w);
         kx += sz_x;
         return get_y(kx, ky);
@@ -223,7 +224,7 @@ class SegTree2D {
      * @param ky y座標
      * @param x 代入する値
      */
-    void set(int kx, int ky, const S& x) {
+    void set(long long kx, long long ky, const S& x) {
         assert(0 <= kx && kx < h && 0 <= ky && ky < w);
         update_tree_x(kx, ky, x);
     }
@@ -235,7 +236,7 @@ class SegTree2D {
      * @param ky y座標
      * @param x 作用素
      */
-    void apply(int kx, int ky, const S& x) {
+    void apply(long long kx, long long ky, const S& x) {
         set(kx, ky, op(get(kx, ky), x));
     }
 
@@ -247,7 +248,7 @@ class SegTree2D {
      * @param ly y座標の半開区間の開始
      * @param ry y座標の半開区間の終端
      */
-    S prod(int lx, int rx, int ly, int ry) {
+    S prod(long long lx, long long rx, long long ly, long long ry) {
         assert(0 <= lx && lx <= rx && rx <= h);
         assert(0 <= ly && ly <= ry && ry <= w);
         return prod_x(lx, rx, ly, ry);
@@ -255,7 +256,7 @@ class SegTree2D {
 };
 
 template <typename M>
-SegTree2D(int, int, std::vector<std::tuple<int, int>>, std::vector<std::tuple<int, int, int, int>>, M) -> SegTree2D<M>;
+SegTree2D(long long, long long, std::vector<std::tuple<long long, long long>>, std::vector<std::tuple<long long, long long, long long, long long>>, M) -> SegTree2D<M>;
 
 /**
  * @brief RangeMaxQuery

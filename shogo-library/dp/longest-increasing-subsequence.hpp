@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/dp/longest-increasing-subsequence.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/dp/longest-increasing-subsequence.hpp
 
 /**
  * @file longest-increasing-subsequence.hpp
@@ -16,12 +16,12 @@
  * @param comp 大小の比較。std::greater<T>() を渡すと減少列になる
  */
 template <typename T, typename Compare = std::less<T>>
-std::vector<int> longest_increasing_subsequence_lengths(const std::vector<T>& a, bool strict = true,
-                                                        Compare comp = Compare()) {
+std::vector<long long> longest_increasing_subsequence_lengths(const std::vector<T>& a, bool strict = true,
+                                                              Compare comp = Compare()) {
     // tail[k] は、長さ k + 1 の増加部分列の末尾として最も小さい値
     std::vector<T> tail;
-    std::vector<int> res(a.size());
-    for (int i = 0; i < (int)a.size(); i++) {
+    std::vector<long long> res(a.size());
+    for (long long i = 0; i < (long long)a.size(); i++) {
         auto it = strict ? std::lower_bound(tail.begin(), tail.end(), a[i], comp)
                          : std::upper_bound(tail.begin(), tail.end(), a[i], comp);
         res[i] = it - tail.begin() + 1;
@@ -39,7 +39,7 @@ std::vector<int> longest_increasing_subsequence_lengths(const std::vector<T>& a,
  * @param comp 大小の比較。std::greater<T>() を渡すと減少列になる
  */
 template <typename T, typename Compare = std::less<T>>
-int longest_increasing_subsequence(const std::vector<T>& a, bool strict = true, Compare comp = Compare()) {
+long long longest_increasing_subsequence(const std::vector<T>& a, bool strict = true, Compare comp = Compare()) {
     // tail[k] は、長さ k + 1 の増加部分列の末尾として最も小さい値
     std::vector<T> tail;
     for (const T& x : a) {
@@ -59,14 +59,14 @@ int longest_increasing_subsequence(const std::vector<T>& a, bool strict = true, 
  * @param comp 大小の比較。std::greater<T>() を渡すと減少列になる
  */
 template <typename T, typename Compare = std::less<T>>
-std::vector<int> longest_increasing_subsequence_restore(const std::vector<T>& a, bool strict = true,
-                                                        Compare comp = Compare()) {
-    std::vector<int> len = longest_increasing_subsequence_lengths(a, strict, comp);
-    int k = len.empty() ? 0 : *std::max_element(len.begin(), len.end());
+std::vector<long long> longest_increasing_subsequence_restore(const std::vector<T>& a, bool strict = true,
+                                                              Compare comp = Compare()) {
+    std::vector<long long> len = longest_increasing_subsequence_lengths(a, strict, comp);
+    long long k = len.empty() ? 0 : *std::max_element(len.begin(), len.end());
     // 後ろから、長さが 1 ずつ減り、値が条件を満たす添字を選ぶ
-    std::vector<int> res(k);
-    int last = -1;
-    for (int i = (int)a.size() - 1; i >= 0 && k > 0; i--) {
+    std::vector<long long> res(k);
+    long long last = -1;
+    for (long long i = (long long)a.size() - 1; i >= 0 && k > 0; i--) {
         if (len[i] != k) continue;
         if (last != -1 && !(strict ? comp(a[i], a[last]) : !comp(a[last], a[i]))) continue;
         res[--k] = i;

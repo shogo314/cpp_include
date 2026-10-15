@@ -16,7 +16,7 @@
 
 #include "../data_structures/unionfind.hpp"
 #include "graph.hpp"
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/graph/graph_util.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/graph/graph_util.hpp
 
 /**
  * @brief 無向グラフについて、二部グラフなら0と1に彩色した結果をひとつ返し、二部グラフでないなら空のvectorを返す。
@@ -26,15 +26,15 @@
 template <typename Cost = int>
 std::vector<int> bipartite_coloring(const Graph<Cost>& graph) {
     std::vector<int> color(graph.n, -1);
-    for (int i = 0; i < graph.n; i++) {
+    for (long long i = 0; i < graph.n; i++) {
         if (color[i] != -1) continue;
-        std::stack<int> stk;
+        std::stack<long long> stk;
         stk.push(i);
         color[i] = 0;
         while (!stk.empty()) {
-            int u = stk.top();
+            long long u = stk.top();
             stk.pop();
-            for (int v : graph[u]) {
+            for (long long v : graph[u]) {
                 if (color[v] == -1) {
                     color[v] = color[u] ^ 1;
                     stk.push(v);
@@ -58,22 +58,22 @@ bool is_bipartite(const Graph<Cost>& graph) {
 
 /**
  * @brief 無向グラフについて、連結成分分解する。
- * @return std::vector<std::vector<int>> 「同じ連結成分となる頂点のリスト」のリスト
+ * @return std::vector<std::vector<long long>> 「同じ連結成分となる頂点のリスト」のリスト
  */
 template <typename Cost = int>
-std::vector<std::vector<int>> connected_components(const Graph<Cost>& graph) {
-    std::vector<std::vector<int>> groups;
+std::vector<std::vector<long long>> connected_components(const Graph<Cost>& graph) {
+    std::vector<std::vector<long long>> groups;
     std::vector<bool> visited(graph.n);
-    for (int i = 0; i < graph.n; i++) {
+    for (long long i = 0; i < graph.n; i++) {
         if (visited[i]) continue;
-        std::stack<int> stk;
+        std::stack<long long> stk;
         stk.push(i);
         visited[i] = true;
         groups.push_back({i});
         while (!stk.empty()) {
-            int u = stk.top();
+            long long u = stk.top();
             stk.pop();
-            for (int v : graph[u]) {
+            for (long long v : graph[u]) {
                 if (visited[v]) continue;
                 visited[v] = true;
                 stk.push(v);
@@ -104,27 +104,28 @@ bool is_tree(const Graph<Cost>& graph) {
 
 /**
  * @brief 有向グラフをトポロジカルソートする
- * @return std::vector<int> トポロジカル順に並べた頂点のリスト。DAG でなければ空
+ * @return std::vector<long long> トポロジカル順に並べた頂点のリスト。DAG でなければ空
  */
 template <typename Cost = int>
-std::vector<int> topological_sort(const Graph<Cost>& graph) {
-    std::vector<int> indeg(graph.n), sorted;
-    std::queue<int> q;
-    for (int i = 0; i < graph.n; i++) {
-        for (int dst : graph[i]) indeg[dst]++;
+std::vector<long long> topological_sort(const Graph<Cost>& graph) {
+    std::vector<int> indeg(graph.n);
+    std::vector<long long> sorted;
+    std::queue<long long> q;
+    for (long long i = 0; i < graph.n; i++) {
+        for (long long dst : graph[i]) indeg[dst]++;
     }
-    for (int i = 0; i < graph.n; i++) {
+    for (long long i = 0; i < graph.n; i++) {
         if (!indeg[i]) q.push(i);
     }
     while (!q.empty()) {
-        int cur = q.front();
+        long long cur = q.front();
         q.pop();
-        for (int dst : graph[cur]) {
+        for (long long dst : graph[cur]) {
             if (!--indeg[dst]) q.push(dst);
         }
         sorted.push_back(cur);
     }
-    if ((int)sorted.size() < graph.n) return {};
+    if ((long long)sorted.size() < graph.n) return {};
     return sorted;
 }
 
@@ -157,19 +158,19 @@ std::vector<typename Graph<Cost>::Edge> find_cycle_directed(const Graph<Cost>& g
     // state: 0 は未訪問、1 は DFS のスタック上、2 は探索済み
     std::vector<int> state(graph.n, 0), iter(graph.n, 0);
     std::vector<Edge> in(graph.n);  // DFS 木で v に入る辺
-    for (int root = 0; root < graph.n; root++) {
+    for (long long root = 0; root < graph.n; root++) {
         if (state[root]) continue;
-        std::vector<int> st = {root};
+        std::vector<long long> st = {root};
         state[root] = 1;
         while (!st.empty()) {
-            int v = st.back();
+            long long v = st.back();
             if (iter[v] == (int)graph[v].size()) {
                 state[v] = 2;
                 st.pop_back();
                 continue;
             }
             const Edge& e = graph[v][iter[v]++];
-            int u = e.dst;
+            long long u = e.dst;
             if (state[u] == 0) {
                 state[u] = 1;
                 in[u] = e;
@@ -177,7 +178,7 @@ std::vector<typename Graph<Cost>::Edge> find_cycle_directed(const Graph<Cost>& g
             } else if (state[u] == 1) {
                 // u はスタック上にあるので、u から v への木の辺と e で閉路になる
                 std::vector<Edge> res = {e};
-                for (int w = v; w != u; w = in[w].src) res.push_back(in[w]);
+                for (long long w = v; w != u; w = in[w].src) res.push_back(in[w]);
                 std::reverse(res.begin(), res.end());
                 return res;
             }
@@ -198,12 +199,12 @@ std::vector<typename Graph<Cost>::Edge> find_cycle_undirected(const Graph<Cost>&
     using Edge = typename Graph<Cost>::Edge;
     std::vector<int> state(graph.n, 0), iter(graph.n, 0);
     std::vector<Edge> in(graph.n);
-    for (int root = 0; root < graph.n; root++) {
+    for (long long root = 0; root < graph.n; root++) {
         if (state[root]) continue;
-        std::vector<int> st = {root};
+        std::vector<long long> st = {root};
         state[root] = 1;
         while (!st.empty()) {
-            int v = st.back();
+            long long v = st.back();
             if (iter[v] == (int)graph[v].size()) {
                 state[v] = 2;
                 st.pop_back();
@@ -212,7 +213,7 @@ std::vector<typename Graph<Cost>::Edge> find_cycle_undirected(const Graph<Cost>&
             const Edge& e = graph[v][iter[v]++];
             // 親へ戻る辺は、頂点ではなく辺の番号で区別する (多重辺を閉路として見つけるため)
             if (e.id == in[v].id) continue;  // 根では in[v].id == -1
-            int u = e.dst;
+            long long u = e.dst;
             if (state[u] == 0) {
                 state[u] = 1;
                 in[u] = e;
@@ -220,7 +221,7 @@ std::vector<typename Graph<Cost>::Edge> find_cycle_undirected(const Graph<Cost>&
             } else if (state[u] == 1) {
                 // u は v の祖先 (か v 自身) なので、u から v への木の辺と e で閉路になる
                 std::vector<Edge> res = {e};
-                for (int w = v; w != u; w = in[w].src) res.push_back(in[w]);
+                for (long long w = v; w != u; w = in[w].src) res.push_back(in[w]);
                 std::reverse(res.begin(), res.end());
                 return res;
             }
@@ -235,25 +236,25 @@ std::vector<typename Graph<Cost>::Edge> find_cycle_undirected(const Graph<Cost>&
  *
  * Tarjan のアルゴリズムを再帰を使わずに行う。O(n + m)
  *
- * @return std::vector<std::vector<int>> 強連結成分ごとの頂点のリスト。
+ * @return std::vector<std::vector<long long>> 強連結成分ごとの頂点のリスト。
  * 成分はトポロジカル順に並ぶ (成分 A から成分 B へ辺があれば A が B より前)
  */
 template <typename Cost = int>
-std::vector<std::vector<int>> strongly_connected_components(const Graph<Cost>& graph) {
-    const int n = graph.n;
+std::vector<std::vector<long long>> strongly_connected_components(const Graph<Cost>& graph) {
+    const long long n = graph.n;
     std::vector<int> ord(n, -1), low(n), comp(n, -1), iter(n, 0);
-    std::vector<int> visiting;  // 成分がまだ決まっていない訪問済みの頂点
-    std::vector<int> call;      // DFS の呼び出しスタック
+    std::vector<long long> visiting;  // 成分がまだ決まっていない訪問済みの頂点
+    std::vector<long long> call;      // DFS の呼び出しスタック
     int now = 0, k = 0;
-    for (int s = 0; s < n; s++) {
+    for (long long s = 0; s < n; s++) {
         if (ord[s] != -1) continue;
         ord[s] = low[s] = now++;
         visiting.push_back(s);
         call.push_back(s);
         while (!call.empty()) {
-            int v = call.back();
+            long long v = call.back();
             if (iter[v] < (int)graph[v].size()) {
-                int to = graph[v][iter[v]++].dst;
+                long long to = graph[v][iter[v]++].dst;
                 if (ord[to] == -1) {
                     ord[to] = low[to] = now++;
                     visiting.push_back(to);
@@ -267,7 +268,7 @@ std::vector<std::vector<int>> strongly_connected_components(const Graph<Cost>& g
             if (!call.empty()) low[call.back()] = std::min(low[call.back()], low[v]);
             if (low[v] == ord[v]) {
                 while (true) {
-                    int u = visiting.back();
+                    long long u = visiting.back();
                     visiting.pop_back();
                     comp[u] = k;
                     if (u == v) break;
@@ -277,8 +278,8 @@ std::vector<std::vector<int>> strongly_connected_components(const Graph<Cost>& g
         }
     }
     // Tarjan のアルゴリズムは成分をトポロジカル順の逆に見つけるので、逆順に並べる
-    std::vector<std::vector<int>> groups(k);
-    for (int v = 0; v < n; v++) groups[k - 1 - comp[v]].push_back(v);
+    std::vector<std::vector<long long>> groups(k);
+    for (long long v = 0; v < n; v++) groups[k - 1 - comp[v]].push_back(v);
     return groups;
 }
 
@@ -324,14 +325,14 @@ Cost minimum_steiner_tree(const Graph<Cost>& graph, const std::vector<T>& X, Cos
     for (int p = 0; p < (int)X.size(); p++) dp[X[p]][1 << p] = {};
     for (int i = 0; i < (1 << X.size()); i++) {
         for (int j = i; j > 0; j = (j - 1) & i) {
-            for (int k = 0; k < graph.n; k++) {
+            for (long long k = 0; k < graph.n; k++) {
                 if (dp[k][j] != inf && dp[k][i ^ j] != inf) {
                     if (dp[k][i] == inf || dp[k][i] > dp[k][j] + dp[k][i ^ j]) dp[k][i] = dp[k][j] + dp[k][i ^ j];
                 }
             }
         }
-        std::priority_queue<std::pair<Cost, int>, std::vector<std::pair<Cost, int>>, std::greater<std::pair<Cost, int>>> que;
-        for (int k = 0; k < graph.n; k++)
+        std::priority_queue<std::pair<Cost, long long>, std::vector<std::pair<Cost, long long>>, std::greater<std::pair<Cost, long long>>> que;
+        for (long long k = 0; k < graph.n; k++)
             if (dp[k][i] != inf) que.emplace(dp[k][i], k);
         while (que.size()) {
             auto [d, u] = que.top();
@@ -346,7 +347,7 @@ Cost minimum_steiner_tree(const Graph<Cost>& graph, const std::vector<T>& X, Cos
         }
     }
     Cost res = inf;
-    for (int k = 0; k < graph.n; k++) {
+    for (long long k = 0; k < graph.n; k++) {
         if (dp[k].back() != inf && (res == inf || res > dp[k].back())) res = dp[k].back();
     }
     return res;

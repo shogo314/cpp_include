@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "../algebra/acted-monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/data_structures/dual-segtree.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/data_structures/dual-segtree.hpp
 
 /**
  * @brief 双対セグメント木 (区間作用、1点取得)
@@ -32,22 +32,23 @@ class DualSegTree {
 
    private:
     A a;
-    int n, sz, height;
+    long long n, sz;
+    int height;
     std::vector<S> data;  // 葉の値 (作用素をまだ適用していないもの)
     std::vector<F> lazy;  // 各ノードの区間に、まだ下へ伝えていない作用素
 
-    S mapping(const F& f, const S& x, int k) const { return acted_monoid::apply_mapping(a, f, x, k, k + 1); }
+    S mapping(const F& f, const S& x, long long k) const { return acted_monoid::apply_mapping(a, f, x, k, k + 1); }
     F composition(const F& f, const F& g) const { return a.composition(f, g); }
     F id() const { return a.id(); }
 
-    void apply_node(int k, const F& f) { lazy[k] = composition(f, lazy[k]); }
-    void push(int k) {
+    void apply_node(long long k, const F& f) { lazy[k] = composition(f, lazy[k]); }
+    void push(long long k) {
         apply_node(2 * k, lazy[k]);
         apply_node(2 * k + 1, lazy[k]);
         lazy[k] = id();
     }
     // 葉 k の祖先の作用素をすべて下へ伝える
-    void push_ancestors(int k) {
+    void push_ancestors(long long k) {
         for (int h = height; h > 0; h--) push(k >> h);
     }
 
@@ -66,13 +67,13 @@ class DualSegTree {
      * @param n 要素数 各要素は S() で初期化する
      * @param a 作用素付きモノイド
      */
-    explicit DualSegTree(int n = 0, A a = A()) : DualSegTree(n, S(), std::move(a)) {}
+    explicit DualSegTree(long long n = 0, A a = A()) : DualSegTree(n, S(), std::move(a)) {}
     /**
      * @param n 要素数
      * @param value 各要素の初期値
      * @param a 作用素付きモノイド
      */
-    DualSegTree(int n, const S& value, A a = A()) : a(std::move(a)), n(n), data(n, value) { construct(); }
+    DualSegTree(long long n, const S& value, A a = A()) : a(std::move(a)), n(n), data(n, value) { construct(); }
     /**
      * @param v 初期の要素
      * @param a 作用素付きモノイド
@@ -82,31 +83,31 @@ class DualSegTree {
     /**
      * @brief 要素数を返す
      */
-    int size() const { return n; }
+    long long size() const { return n; }
 
     /**
      * @brief 指定された要素の値を返す O(log n)
      */
-    S get(int k) const {
+    S get(long long k) const {
         assert(0 <= k && k < n);
         // 根に近いノードほど後に作用した作用素なので、葉から順に合成する
         F f = id();
-        for (int i = k + sz; i > 0; i >>= 1) f = composition(lazy[i], f);
+        for (long long i = k + sz; i > 0; i >>= 1) f = composition(lazy[i], f);
         return mapping(f, data[k], k);
     }
     /**
      * @brief すべての要素の値を返す O(n)
      */
     std::vector<S> to_vector() {
-        for (int k = 1; k < sz; k++) push(k);
+        for (long long k = 1; k < sz; k++) push(k);
         std::vector<S> res(n);
-        for (int k = 0; k < n; k++) res[k] = mapping(lazy[k + sz], data[k], k);
+        for (long long k = 0; k < n; k++) res[k] = mapping(lazy[k + sz], data[k], k);
         return res;
     }
     /**
      * @brief 指定された要素の値を x にする O(log n)
      */
-    void set(int k, const S& x) {
+    void set(long long k, const S& x) {
         assert(0 <= k && k < n);
         push_ancestors(k + sz);
         data[k] = x;
@@ -116,7 +117,7 @@ class DualSegTree {
     /**
      * @brief 1点作用 O(log n)
      */
-    void apply(int k, const F& f) {
+    void apply(long long k, const F& f) {
         assert(0 <= k && k < n);
         push_ancestors(k + sz);
         apply_node(k + sz, f);
@@ -124,7 +125,7 @@ class DualSegTree {
     /**
      * @brief [l, r) の区間の値に f を作用させる O(log n)
      */
-    void apply(int l, int r, const F& f) {
+    void apply(long long l, long long r, const F& f) {
         assert(0 <= l && l <= r && r <= n);
         if (l == r) return;
         l += sz;
@@ -142,8 +143,8 @@ class DualSegTree {
 };
 
 template <typename A>
-DualSegTree(int, A) -> DualSegTree<A>;
+DualSegTree(long long, A) -> DualSegTree<A>;
 template <typename A>
-DualSegTree(int, typename A::S, A) -> DualSegTree<A>;
+DualSegTree(long long, typename A::S, A) -> DualSegTree<A>;
 template <typename A>
 DualSegTree(std::vector<typename A::S>, A) -> DualSegTree<A>;

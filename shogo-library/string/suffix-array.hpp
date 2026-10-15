@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/string/suffix-array.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/string/suffix-array.hpp
 
 /**
  * @file suffix-array.hpp
@@ -8,7 +8,10 @@
 
 #include <algorithm>
 #include <cassert>
+#include <climits>
+#include <cstddef>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 namespace internal_suffix_array {
@@ -95,17 +98,26 @@ inline std::vector<int> sa_is(const std::vector<int>& s, int upper) {
     }
     return sa;
 }
+// 内部の int の Suffix Array を、返す long long の列に直す
+inline std::vector<long long> to_long_long(const std::vector<int>& sa) { return std::vector<long long>(sa.begin(), sa.end()); }
 }  // namespace internal_suffix_array
 
 /**
  * @brief Suffix Array を求める O(n + upper)
  * 接尾辞 s[i:] を辞書順に並べたときの開始位置 i のリスト
+ * @tparam T 整数型 (int や long long)
  * @param s 値は 0 以上 upper 以下
  */
-inline std::vector<int> suffix_array(const std::vector<int>& s, int upper) {
-    assert(0 <= upper);
-    for ([[maybe_unused]] int x : s) assert(0 <= x && x <= upper);
-    return internal_suffix_array::sa_is(s, upper);
+template <typename T, std::enable_if_t<std::is_integral_v<T>, std::nullptr_t> = nullptr>
+std::vector<long long> suffix_array(const std::vector<T>& s, long long upper) {
+    assert(0 <= upper && upper < INT_MAX);
+    for ([[maybe_unused]] T x : s) assert(0 <= (long long)x && (long long)x <= upper);
+    if constexpr (std::is_same_v<T, int>) {
+        return internal_suffix_array::to_long_long(internal_suffix_array::sa_is(s, (int)upper));
+    } else {
+        std::vector<int> s2(s.begin(), s.end());
+        return internal_suffix_array::to_long_long(internal_suffix_array::sa_is(s2, (int)upper));
+    }
 }
 
 /**
@@ -114,7 +126,7 @@ inline std::vector<int> suffix_array(const std::vector<int>& s, int upper) {
  * @tparam T operator< で比較できる型
  */
 template <typename T>
-std::vector<int> suffix_array(const std::vector<T>& s) {
+std::vector<long long> suffix_array(const std::vector<T>& s) {
     int n = s.size();
     std::vector<int> idx(n);
     for (int i = 0; i < n; i++) idx[i] = i;
@@ -125,39 +137,40 @@ std::vector<int> suffix_array(const std::vector<T>& s) {
         if (i && s[idx[i - 1]] < s[idx[i]]) now++;
         s2[idx[i]] = now;
     }
-    return internal_suffix_array::sa_is(s2, now);
+    return internal_suffix_array::to_long_long(internal_suffix_array::sa_is(s2, now));
 }
 
 /**
  * @brief 文字列の Suffix Array を求める O(n)
  * 接尾辞 s[i:] を辞書順に並べたときの開始位置 i のリスト
  */
-inline std::vector<int> suffix_array(const std::string& s) {
+inline std::vector<long long> suffix_array(const std::string& s) {
     int n = s.size();
     std::vector<int> s2(n);
     for (int i = 0; i < n; i++) s2[i] = (unsigned char)s[i];
-    return internal_suffix_array::sa_is(s2, 255);
+    return internal_suffix_array::to_long_long(internal_suffix_array::sa_is(s2, 255));
 }
 
 /**
  * @brief LCP 配列を求める (Kasai 法) O(n)
  * 長さ n - 1 の配列 lcp を返す。lcp[i] は s[sa[i]:] と s[sa[i + 1]:] の最長共通接頭辞の長さ
  * @tparam R std::string や std::vector など、size() と operator[] を持つ型
+ * @tparam I sa の要素の型 (long long や int)
  * @param sa s の Suffix Array
  */
-template <typename R>
-std::vector<int> lcp_array(const R& s, const std::vector<int>& sa) {
-    int n = s.size();
-    assert((int)sa.size() == n);
+template <typename R, typename I>
+std::vector<long long> lcp_array(const R& s, const std::vector<I>& sa) {
+    long long n = s.size();
+    assert((long long)sa.size() == n);
     if (n == 0) return {};
-    std::vector<int> rank(n);
-    for (int i = 0; i < n; i++) rank[sa[i]] = i;
-    std::vector<int> lcp(n - 1);
+    std::vector<long long> rank(n);
+    for (long long i = 0; i < n; i++) rank[sa[i]] = i;
+    std::vector<long long> lcp(n - 1);
     // s[i:] と辞書順で 1 つ前の接尾辞との LCP は、s[i - 1:] のときの値から 1 を引いたもの以上になる
-    for (int i = 0, h = 0; i < n; i++) {
+    for (long long i = 0, h = 0; i < n; i++) {
         if (h > 0) h--;
         if (rank[i] == 0) continue;
-        int j = sa[rank[i] - 1];
+        long long j = sa[rank[i] - 1];
         while (j + h < n && i + h < n && s[j + h] == s[i + h]) h++;
         lcp[rank[i] - 1] = h;
     }

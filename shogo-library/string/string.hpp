@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/string/string.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/string/string.hpp
 
 /**
  * @file string.hpp
@@ -17,19 +17,19 @@
  * @tparam It 配列のイテレータ
  * @param begin 配列の開始イテレータ
  * @param end 配列の終了イテレータ
- * @return std::vector<int> z
+ * @return std::vector<long long> z
  */
 template <typename It>
-std::vector<int> z_algorithm(It begin, It end) {
-    int n = end - begin;
+std::vector<long long> z_algorithm(It begin, It end) {
+    long long n = end - begin;
     if (n == 0) return {};
-    std::vector<int> z(n);
+    std::vector<long long> z(n);
     z[0] = n;
-    for (int i = 1, j = 0; i < n;) {
+    for (long long i = 1, j = 0; i < n;) {
         // [0, j)と[i, i + j)が一致している
         while (i + j < n && begin[j] == begin[i + j]) j++;
         z[i] = j;
-        int k = 1;  // [k,)と[i+k,)はLCPが等しいと確定している
+        long long k = 1;  // [k,)と[i+k,)はLCPが等しいと確定している
         for (; k < j && k + z[k] < j; k++) {
             z[i + k] = z[k];
         }
@@ -45,10 +45,10 @@ std::vector<int> z_algorithm(It begin, It end) {
  *
  * @tparam R 配列の型
  * @param s 配列
- * @return std::vector<int> z
+ * @return std::vector<long long> z
  */
 template <typename R>
-std::vector<int> z_algorithm(const R& s) {
+std::vector<long long> z_algorithm(const R& s) {
     return z_algorithm(std::begin(s), std::end(s));
 }
 
@@ -59,14 +59,14 @@ std::vector<int> z_algorithm(const R& s) {
  * @tparam It 配列のイテレータ
  * @param begin 配列の開始イテレータ
  * @param end 配列の終了イテレータ
- * @return std::vector<int> pi
+ * @return std::vector<long long> pi
  */
 template <typename It>
-std::vector<int> prefix_function(It begin, It end) {
-    int n = end - begin;
-    std::vector<int> pi(n);
-    for (int i = 1; i < n; i++) {
-        int j = pi[i - 1];
+std::vector<long long> prefix_function(It begin, It end) {
+    long long n = end - begin;
+    std::vector<long long> pi(n);
+    for (long long i = 1; i < n; i++) {
+        long long j = pi[i - 1];
         while (j > 0 && !(begin[i] == begin[j])) j = pi[j - 1];
         if (begin[i] == begin[j]) j++;
         pi[i] = j;
@@ -80,10 +80,10 @@ std::vector<int> prefix_function(It begin, It end) {
  *
  * @tparam R 配列の型
  * @param s 配列
- * @return std::vector<int> pi
+ * @return std::vector<long long> pi
  */
 template <typename R>
-std::vector<int> prefix_function(const R& s) {
+std::vector<long long> prefix_function(const R& s) {
     return prefix_function(std::begin(s), std::end(s));
 }
 
@@ -95,20 +95,20 @@ std::vector<int> prefix_function(const R& s) {
  * @tparam R2 配列の型
  * @param text 探す対象
  * @param pattern 探す列
- * @return std::vector<int> 出現位置
+ * @return std::vector<long long> 出現位置
  */
 template <typename R1, typename R2>
-std::vector<int> kmp_search(const R1& text, const R2& pattern) {
+std::vector<long long> kmp_search(const R1& text, const R2& pattern) {
     auto t = std::begin(text);
     auto p = std::begin(pattern);
-    int n = std::end(text) - t, m = std::end(pattern) - p;
-    std::vector<int> res;
+    long long n = std::end(text) - t, m = std::end(pattern) - p;
+    std::vector<long long> res;
     if (m == 0) {
-        for (int i = 0; i <= n; i++) res.push_back(i);
+        for (long long i = 0; i <= n; i++) res.push_back(i);
         return res;
     }
-    std::vector<int> pi = prefix_function(pattern);
-    for (int i = 0, j = 0; i < n; i++) {
+    std::vector<long long> pi = prefix_function(pattern);
+    for (long long i = 0, j = 0; i < n; i++) {
         // pattern[0, j) と text[i - j, i) が一致している
         while (j > 0 && !(t[i] == p[j])) j = pi[j - 1];
         if (t[i] == p[j]) j++;
@@ -127,15 +127,15 @@ std::vector<int> kmp_search(const R1& text, const R2& pattern) {
  * @tparam It 配列のイテレータ
  * @param begin 配列の開始イテレータ
  * @param end 配列の終了イテレータ
- * @return std::vector<int> r
+ * @return std::vector<long long> r
  */
 template <typename It>
-std::vector<int> manacher(It begin, It end) {
-    int n = end - begin;
-    std::vector<int> r(n);
+std::vector<long long> manacher(It begin, It end) {
+    long long n = end - begin;
+    std::vector<long long> r(n);
     // [l, rr] は、これまでに見つけた回文のうち右端が最も右にあるもの
-    for (int i = 0, l = 0, rr = -1; i < n; i++) {
-        int k = i > rr ? 1 : std::min(r[l + rr - i], rr - i + 1);
+    for (long long i = 0, l = 0, rr = -1; i < n; i++) {
+        long long k = i > rr ? 1 : std::min(r[l + rr - i], rr - i + 1);
         while (0 <= i - k && i + k < n && begin[i - k] == begin[i + k]) k++;
         r[i] = k--;
         if (i + k > rr) {
@@ -152,10 +152,10 @@ std::vector<int> manacher(It begin, It end) {
  *
  * @tparam R 配列の型
  * @param s 配列
- * @return std::vector<int> r
+ * @return std::vector<long long> r
  */
 template <typename R>
-std::vector<int> manacher(const R& s) {
+std::vector<long long> manacher(const R& s) {
     return manacher(std::begin(s), std::end(s));
 }
 
@@ -166,17 +166,17 @@ std::vector<int> manacher(const R& s) {
  * @tparam It 配列のイテレータ
  * @param begin 配列の開始イテレータ
  * @param end 配列の終了イテレータ
- * @return std::vector<int> len
+ * @return std::vector<long long> len
  */
 template <typename It>
-std::vector<int> palindrome_lengths(It begin, It end) {
-    int n = end - begin;
+std::vector<long long> palindrome_lengths(It begin, It end) {
+    long long n = end - begin;
     if (n == 0) return {};
-    std::vector<int> odd = manacher(begin, end);
+    std::vector<long long> odd = manacher(begin, end);
     // even[i] は s[i - 1] と s[i] の間を中心とする偶数長の回文の最大の半径
-    std::vector<int> even(n);
-    for (int i = 0, l = 0, rr = -1; i < n; i++) {
-        int k = i > rr ? 0 : std::min(even[l + rr - i + 1], rr - i + 1);
+    std::vector<long long> even(n);
+    for (long long i = 0, l = 0, rr = -1; i < n; i++) {
+        long long k = i > rr ? 0 : std::min(even[l + rr - i + 1], rr - i + 1);
         while (0 <= i - k - 1 && i + k < n && begin[i - k - 1] == begin[i + k]) k++;
         even[i] = k--;
         if (i + k > rr) {
@@ -184,9 +184,9 @@ std::vector<int> palindrome_lengths(It begin, It end) {
             rr = i + k;
         }
     }
-    std::vector<int> len(2 * n - 1);
-    for (int i = 0; i < n; i++) len[2 * i] = 2 * odd[i] - 1;
-    for (int i = 0; i + 1 < n; i++) len[2 * i + 1] = 2 * even[i + 1];
+    std::vector<long long> len(2 * n - 1);
+    for (long long i = 0; i < n; i++) len[2 * i] = 2 * odd[i] - 1;
+    for (long long i = 0; i + 1 < n; i++) len[2 * i + 1] = 2 * even[i + 1];
     return len;
 }
 
@@ -196,9 +196,9 @@ std::vector<int> palindrome_lengths(It begin, It end) {
  *
  * @tparam R 配列の型
  * @param s 配列
- * @return std::vector<int> len
+ * @return std::vector<long long> len
  */
 template <typename R>
-std::vector<int> palindrome_lengths(const R& s) {
+std::vector<long long> palindrome_lengths(const R& s) {
     return palindrome_lengths(std::begin(s), std::end(s));
 }

@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/graph/bipartite-matching.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/graph/bipartite-matching.hpp
 
 /**
  * @file bipartite-matching.hpp
@@ -20,10 +20,11 @@
  * 例:
  * BipartiteMatching bm(l, r);
  * bm.add_edge(0, 1);
- * int k = bm.solve();
+ * long long k = bm.solve();
  */
 class BipartiteMatching {
-    int l, r;
+    long long l, r;
+    // 内部の配列は int で持ち、公開する関数で long long にする
     std::vector<std::vector<int>> g;
     std::vector<int> match_l, match_r;
 
@@ -55,21 +56,21 @@ class BipartiteMatching {
     }
 
    public:
-    BipartiteMatching(int l, int r) : l(l), r(r), g(l), match_l(l, -1), match_r(r, -1) {}
+    BipartiteMatching(long long l, long long r) : l(l), r(r), g(l), match_l(l, -1), match_r(r, -1) {}
 
     /**
      * @brief 左側の頂点数
      */
-    int left_size() const { return l; }
+    long long left_size() const { return l; }
     /**
      * @brief 右側の頂点数
      */
-    int right_size() const { return r; }
+    long long right_size() const { return r; }
 
     /**
      * @brief 左側の頂点 u と右側の頂点 v の間に辺を追加する
      */
-    void add_edge(int u, int v) {
+    void add_edge(long long u, long long v) {
         assert(0 <= u && u < l && 0 <= v && v < r);
         g[u].push_back(v);
     }
@@ -78,7 +79,7 @@ class BipartiteMatching {
      * @brief 最大マッチングを求め、その辺の数を返す
      * 辺を追加してからもう一度呼ぶと、前回のマッチングを広げる
      */
-    int solve() {
+    long long solve() {
         std::vector<int> dist, iter(l);
         std::vector<int> st;
         while (bfs(dist)) {
@@ -114,7 +115,7 @@ class BipartiteMatching {
                 }
             }
         }
-        int res = 0;
+        long long res = 0;
         for (int u = 0; u < l; u++) res += match_l[u] != -1;
         return res;
     }
@@ -122,17 +123,17 @@ class BipartiteMatching {
     /**
      * @brief 左側の頂点 u とマッチした右側の頂点 (なければ -1)。solve() の後で使う
      */
-    int left_match(int u) const { return match_l[u]; }
+    long long left_match(long long u) const { return match_l[u]; }
     /**
      * @brief 右側の頂点 v とマッチした左側の頂点 (なければ -1)。solve() の後で使う
      */
-    int right_match(int v) const { return match_r[v]; }
+    long long right_match(long long v) const { return match_r[v]; }
     /**
      * @brief マッチングの辺 (左側の頂点, 右側の頂点) のリスト (左側の頂点の昇順)。solve() の後で使う
      */
-    std::vector<std::pair<int, int>> matching() const {
-        std::vector<std::pair<int, int>> res;
-        for (int u = 0; u < l; u++) {
+    std::vector<std::pair<long long, long long>> matching() const {
+        std::vector<std::pair<long long, long long>> res;
+        for (long long u = 0; u < l; u++) {
             if (match_l[u] != -1) res.emplace_back(u, match_l[u]);
         }
         return res;

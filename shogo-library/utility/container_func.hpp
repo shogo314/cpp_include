@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/utility/container_func.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/utility/container_func.hpp
 
 #define METHOD_EXPAND(func)                                        \
     template <typename T, ENABLE_IF_T(has_##func##_v<T>)>          \
@@ -139,31 +139,6 @@ inline constexpr T product_xor(const std::initializer_list<T>& v) {
     return std::accumulate(v.begin(), v.end(), T{0}, std::bit_xor<T>());
 }
 
-template <class C>
-inline constexpr mem_value_type<C> maximum_subarray(const C& v) {
-    assert(!v.empty());
-    auto itr = v.begin();
-    mem_value_type<C> tmp = *itr++;
-    mem_value_type<C> res = tmp;
-    while (itr != v.end()) {
-        tmp += *itr;
-        if (tmp < *itr) tmp = *itr;
-        if (res < tmp) res = tmp;
-        ++itr;
-    }
-    return res;
-}
-template <class C>
-inline constexpr mem_value_type<C> maximum_subarray(const C& v, mem_value_type<C> init) {
-    mem_value_type<C> res = init, tmp = init;
-    for (const auto& a : v) {
-        tmp += a;
-        if (tmp < init) tmp = init;
-        if (res < tmp) res = tmp;
-    }
-    return res;
-}
-
 METHOD_AND_FUNC_ARG_EXPAND(count)
 METHOD_AND_FUNC_ARG_EXPAND(find)
 METHOD_AND_FUNC_ARG_EXPAND(lower_bound)
@@ -184,7 +159,8 @@ inline constexpr mem_value_type<C> gcd(const C& v) {
 template <class C>
 inline constexpr mem_value_type<C> average(const C& v) {
     assert(v.size());
-    return sum(v) / v.size();
+    // v.size() は符号なしなので、そのまま割ると負の和が符号なしに変換されて壊れる
+    return sum(v) / static_cast<mem_value_type<C>>(v.size());
 }
 
 template <class C>
@@ -205,10 +181,10 @@ inline constexpr mem_value_type<C> median(const C& v) {
 
 // x が最初に現れる位置。なければ -1
 template <class C, typename U>
-inline constexpr int index(const C& v, const U& x) {
+inline constexpr long long index(const C& v, const U& x) {
     auto it = find(v, x);
     if (it == v.end()) return -1;
-    return static_cast<int>(std::distance(v.begin(), it));
+    return static_cast<long long>(std::distance(v.begin(), it));
 }
 
 template <class C, ENABLE_IF_T(std::is_integral_v<mem_value_type<C>>)>
@@ -230,10 +206,10 @@ inline constexpr mem_value_type<C> mex(const C& v) {
 }
 
 template <class C>
-inline constexpr int bisect_left(const C& v, const mem_value_type<C>& x) {
-    return static_cast<int>(std::distance(v.begin(), lower_bound(v, x)));
+inline constexpr long long bisect_left(const C& v, const mem_value_type<C>& x) {
+    return static_cast<long long>(std::distance(v.begin(), lower_bound(v, x)));
 }
 template <class C>
-inline constexpr int bisect_right(const C& v, const mem_value_type<C>& x) {
-    return static_cast<int>(std::distance(v.begin(), upper_bound(v, x)));
+inline constexpr long long bisect_right(const C& v, const mem_value_type<C>& x) {
+    return static_cast<long long>(std::distance(v.begin(), upper_bound(v, x)));
 }

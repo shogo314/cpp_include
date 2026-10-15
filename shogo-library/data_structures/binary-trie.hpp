@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/data_structures/binary-trie.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/data_structures/binary-trie.hpp
 
 /**
  * @file binary-trie.hpp
@@ -67,12 +67,12 @@ class BinaryTrie {
         cur_ptr->subcnt += 1;
     }
 
-    int size() const { return root_ptr->subcnt; }
+    long long size() const { return root_ptr->subcnt; }
 
     /**
      * @brief 集合からnを検索し、見つかった数を求める (O(d))
      */
-    int count(T n) const {
+    long long count(T n) const {
         NodePtr cur_ptr = root_ptr;
         while (!cur_ptr->is_leaf()) {
             cur_ptr->affect_xor();
@@ -131,7 +131,7 @@ class BinaryTrie {
      * @brief 昇順でn番目の要素を探索 (O(d))
      * @note nがtrie木のサイズ以上な場合、assert
      */
-    T nth_element(int n) const {
+    T nth_element(long long n) const {
         assert(0 <= n && n < size());
         T ret = 0;
         NodePtr cur_ptr = root_ptr;
@@ -142,7 +142,7 @@ class BinaryTrie {
             NodePtr& z_ptr = cur_ptr->children[0];
             NodePtr& o_ptr = cur_ptr->children[1];
             assert(state > 0);
-            if (state == 1 || (state == 3 && n < (int)z_ptr->subcnt)) {
+            if (state == 1 || (state == 3 && n < (long long)z_ptr->subcnt)) {
                 cur_ptr = z_ptr;
             } else {
                 n -= (state & 1 ? z_ptr->subcnt : 0);
@@ -157,11 +157,11 @@ class BinaryTrie {
      * @brief n以上の要素を探索 (O(d))
      * @return 探索した値が昇順で何番目か (0-indexed)。該当する要素がなければtrie木のサイズが返る
      */
-    int bisect_left(T n) const {
+    long long bisect_left(T n) const {
         if constexpr (d < std::numeric_limits<T>::digits) {
             if ((n >> d) != 0) return size();
         }
-        int ret = 0;
+        long long ret = 0;
         NodePtr cur_ptr = root_ptr;
         while (!cur_ptr->is_leaf()) {
             cur_ptr->affect_xor();
@@ -183,7 +183,7 @@ class BinaryTrie {
      * @brief nより大きな要素を探索 (O(d))
      * @return 探索した値が昇順で何番目か (0-indexed)。該当する要素がなければtrie木のサイズが返る
      */
-    int bisect_right(T n) const {
+    long long bisect_right(T n) const {
         return (n < std::numeric_limits<T>::max() ? bisect_left(n + 1) : size());
     }
 

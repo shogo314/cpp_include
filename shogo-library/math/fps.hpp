@@ -11,7 +11,7 @@
 
 #include "combinatorics.hpp"
 #include "convolution.hpp"
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/math/fps.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/math/fps.hpp
 
 template <typename mint>
 struct FPS : std::vector<mint> {
@@ -21,8 +21,8 @@ struct FPS : std::vector<mint> {
     FPS(const std::vector<mint>& r) : std::vector<mint>(r) {}
 
     // core operator
-    inline FPS pre(int siz) const {
-        return FPS(begin(*this), begin(*this) + std::min((int)this->size(), siz));
+    inline FPS pre(long long siz) const {
+        return FPS(begin(*this), begin(*this) + std::min((long long)this->size(), siz));
     }
     inline FPS rev() const {
         FPS res = *this;
@@ -47,8 +47,8 @@ struct FPS : std::vector<mint> {
     inline FPS operator*(const mint& v) const { return FPS(*this) *= v; }
     inline FPS operator*(const FPS& r) const { return FPS(*this) *= r; }
     inline FPS operator/(const mint& v) const { return FPS(*this) /= v; }
-    inline FPS operator<<(int x) const { return FPS(*this) <<= x; }
-    inline FPS operator>>(int x) const { return FPS(*this) >>= x; }
+    inline FPS operator<<(long long x) const { return FPS(*this) <<= x; }
+    inline FPS operator>>(long long x) const { return FPS(*this) >>= x; }
     inline FPS& operator+=(const mint& v) {
         if (this->empty()) this->resize(1);
         (*this)[0] += v;
@@ -82,13 +82,13 @@ struct FPS : std::vector<mint> {
         for (int i = 0; i < (int)this->size(); ++i) (*this)[i] *= iv;
         return *this;
     }
-    inline FPS& operator<<=(int x) {
+    inline FPS& operator<<=(long long x) {
         FPS res(x, 0);
         res.insert(res.end(), begin(*this), end(*this));
         return *this = res;
     }
-    inline FPS& operator>>=(int x) {
-        if ((int)this->size() <= x) return *this = FPS<mint>(1, 0);
+    inline FPS& operator>>=(long long x) {
+        if ((long long)this->size() <= x) return *this = FPS<mint>(1, 0);
         FPS res;
         res.insert(res.end(), begin(*this) + x, end(*this));
         return *this = res;
@@ -125,12 +125,12 @@ struct FPS : std::vector<mint> {
     }
 
     // inv(f), f[0] must not be 0
-    inline friend FPS inv(const FPS& f, int deg) {
+    inline friend FPS inv(const FPS& f, long long deg) {
         assert(!f.empty() && f[0] != 0);
-        if (deg < 0) deg = (int)f.size();
+        if (deg < 0) deg = (long long)f.size();
         if (deg == 0) return FPS();
         FPS res({mint(1) / f[0]});
-        for (int i = 1; i < deg; i <<= 1) {
+        for (long long i = 1; i < deg; i <<= 1) {
             res = (res + res - res * res * f.pre(i << 1)).pre(i << 1);
         }
         res.resize(deg);
@@ -149,7 +149,7 @@ struct FPS : std::vector<mint> {
             this->clear();
             return *this;
         }
-        int need = (int)this->size() - (int)r.size() + 1;
+        const long long need = (long long)this->size() - (long long)r.size() + 1;
         *this = ((*this).rev().pre(need) * inv(r.rev(), need)).pre(need).rev();
         return *this;
     }
@@ -164,7 +164,7 @@ struct FPS : std::vector<mint> {
     inline FPS operator%(const FPS& r) const { return FPS(*this) %= r; }
 
     // log(f) = \int f'/f dx, f[0] must be 1
-    inline friend FPS log(const FPS& f, int deg) {
+    inline friend FPS log(const FPS& f, long long deg) {
         assert(!f.empty() && f[0] == 1);
         FPS res = intg(diff(f) * inv(f, deg));
         res.resize(deg);
@@ -175,10 +175,10 @@ struct FPS : std::vector<mint> {
     }
 
     // exp(f), f[0] must be 0
-    inline friend FPS exp(const FPS& f, int deg) {
+    inline friend FPS exp(const FPS& f, long long deg) {
         assert(f.empty() || f[0] == 0);
         FPS res(1, 1);
-        for (int i = 1; i < deg; i <<= 1) {
+        for (long long i = 1; i < deg; i <<= 1) {
             res = res * (f.pre(i << 1) - log(res, i << 1) + 1).pre(i << 1);
         }
         res.resize(deg);
@@ -189,15 +189,15 @@ struct FPS : std::vector<mint> {
     }
 
     // pow(f) = exp(e * log f)
-    inline friend FPS pow(const FPS& f, long long e, int deg) {
+    inline friend FPS pow(const FPS& f, long long e, long long deg) {
         if (e == 0) {
             auto ret = FPS(deg, 0);
             if (deg > 0) ret[0] = 1;
             return ret;
         }
         long long i = 0;
-        while (i < (int)f.size() && f[i] == 0) ++i;
-        if (i == (int)f.size()) return FPS(deg, 0);
+        while (i < (long long)f.size() && f[i] == 0) ++i;
+        if (i == (long long)f.size()) return FPS(deg, 0);
         if ((i >= 1 && e >= deg) || i * e >= deg) return FPS(deg, 0);
         mint k = f[i];
         FPS res = exp(log((f >> i) / k, deg) * e, deg) * k.pow(e) << (e * i);

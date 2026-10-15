@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/utility/compress.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/utility/compress.hpp
 
 /**
  * @file compress.hpp
@@ -8,7 +8,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <cstddef>
 #include <vector>
 
 /**
@@ -17,7 +16,7 @@
  * 値を add で登録し、build でソートと重複除去をしてから使う
  * 例:
  * Compress<long long> cp(A);  // A を登録して build まで行う
- * int i = cp.id(A[0]);        // 0 <= i < cp.size()
+ * long long i = cp.id(A[0]);  // 0 <= i < cp.size()
  *
  * @tparam T 値の型 (< で比較できること)
  */
@@ -60,29 +59,29 @@ class Compress {
     /**
      * @brief 異なる値の個数
      */
-    int size() const {
+    long long size() const {
         assert(built);
         return xs.size();
     }
     /**
      * @brief 登録した値 x の番号 O(log n)。登録していない値なら assert で落ちる
      */
-    int id(const T& x) const {
-        int i = bisect_left(x);
+    long long id(const T& x) const {
+        const long long i = bisect_left(x);
         assert(i < size() && !(x < xs[i]));
         return i;
     }
     /**
      * @brief x 以上で最小の値の番号 O(log n)。なければ size()
      */
-    int bisect_left(const T& x) const {
+    long long bisect_left(const T& x) const {
         assert(built);
         return std::lower_bound(xs.begin(), xs.end(), x) - xs.begin();
     }
     /**
      * @brief x より大きい最小の値の番号 O(log n)。なければ size()
      */
-    int bisect_right(const T& x) const {
+    long long bisect_right(const T& x) const {
         assert(built);
         return std::upper_bound(xs.begin(), xs.end(), x) - xs.begin();
     }
@@ -90,22 +89,22 @@ class Compress {
      * @brief x を登録したか O(log n)
      */
     bool contains(const T& x) const {
-        int i = bisect_left(x);
+        const long long i = bisect_left(x);
         return i < size() && !(x < xs[i]);
     }
     /**
      * @brief 番号 i の値
      */
-    const T& operator[](int i) const {
+    const T& operator[](long long i) const {
         assert(built && 0 <= i && i < size());
         return xs[i];
     }
     /**
      * @brief v の各値を番号に置き換えた列
      */
-    std::vector<int> ids(const std::vector<T>& v) const {
-        std::vector<int> res(v.size());
-        for (std::size_t i = 0; i < v.size(); i++) res[i] = id(v[i]);
+    std::vector<long long> ids(const std::vector<T>& v) const {
+        std::vector<long long> res(v.size());
+        for (long long i = 0; i < (long long)v.size(); i++) res[i] = id(v[i]);
         return res;
     }
     /**

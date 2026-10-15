@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/data_structures/erasable-priority-queue.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/data_structures/erasable-priority-queue.hpp
 
 /**
  * @file erasable-priority-queue.hpp
@@ -43,7 +43,7 @@ class ErasablePriorityQueue {
     /**
      * @brief 要素数
      */
-    int size() const { return que.size() - del.size(); }
+    long long size() const { return que.size() - del.size(); }
     bool empty() const { return size() == 0; }
 
     /**

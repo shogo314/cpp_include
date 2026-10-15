@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "../algebra/group.hpp"
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/data_structures/merge-sort-tree.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/data_structures/merge-sort-tree.hpp
 
 /**
  * @brief 区間の閾値以内の値の積
@@ -39,7 +39,8 @@ class MergeSortTree {
     value_type inv(const value_type& x) const { return g.inv(x); }
 
    private:
-    int n, sz, height;
+    long long n, sz;
+    int height;
     std::vector<key_type> key_data;
     std::vector<value_type> cumulative_value;
 
@@ -54,19 +55,19 @@ class MergeSortTree {
         key_data.assign(sz * height, {});
         std::vector<value_type> value_data(sz * height, e());
         cumulative_value.assign(sz * height, {});
-        for (int i = 0; i < n; i++) {
+        for (long long i = 0; i < n; i++) {
             key_data[(height - 1) * sz + i] = key[i];
             value_data[(height - 1) * sz + i] = value[i];
             cumulative_value[(height - 1) * sz + i] = value[i];
         }
-        int t = 1;
+        long long t = 1;
         for (int h = height - 1; h > 0; h--) {
-            for (int i = 0; i < n; i += t * 2) {
-                int j1 = h * sz + i;
-                int j2 = h * sz + std::min(n, i + t);
-                int j0 = (h - 1) * sz + i;
-                int last1 = j2;
-                int last2 = h * sz + std::min(n, i + t * 2);
+            for (long long i = 0; i < n; i += t * 2) {
+                long long j1 = h * sz + i;
+                long long j2 = h * sz + std::min(n, i + t);
+                long long j0 = (h - 1) * sz + i;
+                long long last1 = j2;
+                long long last2 = h * sz + std::min(n, i + t * 2);
                 while (j1 != last1 || j2 != last2) {
                     if (j1 == last1 || (j2 < last2 && comp(key_data[j2], key_data[j1]))) {
                         key_data[j0] = key_data[j2];
@@ -81,7 +82,7 @@ class MergeSortTree {
                     }
                 }
                 cumulative_value[(h - 1) * sz + i] = value_data[(h - 1) * sz + i];
-                for (int j = i + 1; j < std::min(n, i + t * 2); j++) {
+                for (long long j = i + 1; j < std::min(n, i + t * 2); j++) {
                     cumulative_value[(h - 1) * sz + j] = op(cumulative_value[(h - 1) * sz + j - 1], value_data[(h - 1) * sz + j]);
                 }
             }
@@ -89,10 +90,10 @@ class MergeSortTree {
         }
     }
 
-    value_type prod_section(int l, int r, std::optional<key_type> a, std::optional<key_type> b) const {
+    value_type prod_section(long long l, long long r, std::optional<key_type> a, std::optional<key_type> b) const {
         value_type ret = cumulative_value[r - 1];
         if (b.has_value()) {
-            int i = std::lower_bound(key_data.begin() + l, key_data.begin() + r, b.value(), comp) - key_data.begin();
+            long long i = std::lower_bound(key_data.begin() + l, key_data.begin() + r, b.value(), comp) - key_data.begin();
             if (i != l) {
                 ret = cumulative_value[i - 1];
             } else {
@@ -100,7 +101,7 @@ class MergeSortTree {
             }
         }
         if (a.has_value()) {
-            int i = std::lower_bound(key_data.begin() + l, key_data.begin() + r, a.value(), comp) - key_data.begin();
+            long long i = std::lower_bound(key_data.begin() + l, key_data.begin() + r, a.value(), comp) - key_data.begin();
             if (i != l) {
                 ret = op(ret, inv(cumulative_value[i - 1]));
             }
@@ -141,13 +142,13 @@ class MergeSortTree {
      * @param a nulloptの場合は負の無限大
      * @param b nulloptの場合は正の無限大
      */
-    value_type prod(std::optional<int> l_ = std::nullopt, std::optional<int> r_ = std::nullopt, std::optional<key_type> a = std::nullopt, std::optional<key_type> b = std::nullopt) const {
-        int l = l_.value_or(0), r = r_.value_or(n);
+    value_type prod(std::optional<long long> l_ = std::nullopt, std::optional<long long> r_ = std::nullopt, std::optional<key_type> a = std::nullopt, std::optional<key_type> b = std::nullopt) const {
+        long long l = l_.value_or(0), r = r_.value_or(n);
         assert(0 <= l && l <= r && r <= n);
         if (a.has_value() && b.has_value() && !comp(a.value(), b.value())) return e();
         value_type ret = e();
         int h = height - 1;
-        int t = 1;
+        long long t = 1;
         while (l < r) {
             if (l & t) {
                 ret = op(ret, prod_section(h * sz + l, h * sz + l + t, a, b));

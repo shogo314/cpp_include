@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "../utility/traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/a2fefc7ec36d798ade24522d799381341eac20dd/src/data_structures/interval-set.hpp
+// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/data_structures/interval-set.hpp
 /**
  * @brief 半開区間を管理する
  * @tparam T スカラー
@@ -111,8 +111,8 @@ class IntervalSet {
             tmp.pop_back();
         }
     }
-    int size() const {
-        return static_cast<int>(data.size());
+    long long size() const {
+        return static_cast<long long>(data.size());
     }
     std::vector<value_type> to_vector() const {
         return std::vector<value_type>(data.begin(), data.end());
