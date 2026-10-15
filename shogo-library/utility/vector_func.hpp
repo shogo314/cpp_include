@@ -14,7 +14,7 @@
 #include <vector>
 
 #include "traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/utility/vector_func.hpp
+// https://github.com/shogo314/shogo-library/blob/24638d870d2ac03d01e1498411ab8aa477ea366f/src/utility/vector_func.hpp
 
 template <typename T>
 std::vector<long long> sorted_idx(const std::vector<T>& v, bool reverse = false) {

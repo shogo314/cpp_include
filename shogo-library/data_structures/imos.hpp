@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "../algebra/acted-monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/data_structures/imos.hpp
+// https://github.com/shogo314/shogo-library/blob/24638d870d2ac03d01e1498411ab8aa477ea366f/src/data_structures/imos.hpp
 
 /**
  * @brief imos法で区間作用、1点取得する。

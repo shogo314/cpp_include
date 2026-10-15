@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/a60d38e806cfff5b358d4b2185661826b189fb6e/src/algebra/monoid.hpp
+// https://github.com/shogo314/shogo-library/blob/24638d870d2ac03d01e1498411ab8aa477ea366f/src/algebra/monoid.hpp
 
 /**
  * @file monoid.hpp
@@ -274,6 +274,110 @@ struct MaxCount {
         return {a.first, a.second + b.second};
     }
     static constexpr S e() { return {std::numeric_limits<T>::lowest(), U(0)}; }
+};
+
+/**
+ * @brief 区間の和と、空を含む prefix の和の最大値
+ * S(x) で値 x の1要素を表す要素を作る。単位元は空の区間 {0, 0}
+ */
+template <typename T>
+struct PrefixSumMax {
+    struct S {
+        T sum;  // 区間の和
+        T max;  // 空を含む prefix の和の最大値 (0 以上)
+        constexpr S() : sum(0), max(0) {}
+        constexpr S(const T& x) : sum(x), max(x < T(0) ? T(0) : x) {}
+        constexpr S(const T& sum, const T& max) : sum(sum), max(max) {}
+        friend constexpr bool operator==(const S& a, const S& b) { return a.sum == b.sum && a.max == b.max; }
+        friend constexpr bool operator!=(const S& a, const S& b) { return !(a == b); }
+    };
+    static constexpr S op(const S& a, const S& b) { return S(a.sum + b.sum, std::max(a.max, a.sum + b.max)); }
+    static constexpr S e() { return S(); }
+};
+
+/**
+ * @brief 区間の和と、空を含む prefix の和の最小値
+ * S(x) で値 x の1要素を表す要素を作る。単位元は空の区間 {0, 0}
+ */
+template <typename T>
+struct PrefixSumMin {
+    struct S {
+        T sum;  // 区間の和
+        T min;  // 空を含む prefix の和の最小値 (0 以下)
+        constexpr S() : sum(0), min(0) {}
+        constexpr S(const T& x) : sum(x), min(T(0) < x ? T(0) : x) {}
+        constexpr S(const T& sum, const T& min) : sum(sum), min(min) {}
+        friend constexpr bool operator==(const S& a, const S& b) { return a.sum == b.sum && a.min == b.min; }
+        friend constexpr bool operator!=(const S& a, const S& b) { return !(a == b); }
+    };
+    static constexpr S op(const S& a, const S& b) { return S(a.sum + b.sum, std::min(a.min, a.sum + b.min)); }
+    static constexpr S e() { return S(); }
+};
+
+/**
+ * @brief 区間の和と、空を含む suffix の和の最大値
+ * S(x) で値 x の1要素を表す要素を作る。単位元は空の区間 {0, 0}
+ */
+template <typename T>
+struct SuffixSumMax {
+    struct S {
+        T sum;  // 区間の和
+        T max;  // 空を含む suffix の和の最大値 (0 以上)
+        constexpr S() : sum(0), max(0) {}
+        constexpr S(const T& x) : sum(x), max(x < T(0) ? T(0) : x) {}
+        constexpr S(const T& sum, const T& max) : sum(sum), max(max) {}
+        friend constexpr bool operator==(const S& a, const S& b) { return a.sum == b.sum && a.max == b.max; }
+        friend constexpr bool operator!=(const S& a, const S& b) { return !(a == b); }
+    };
+    static constexpr S op(const S& a, const S& b) { return S(a.sum + b.sum, std::max(b.max, a.max + b.sum)); }
+    static constexpr S e() { return S(); }
+};
+
+/**
+ * @brief 区間の和と、空を含む suffix の和の最小値
+ * S(x) で値 x の1要素を表す要素を作る。単位元は空の区間 {0, 0}
+ */
+template <typename T>
+struct SuffixSumMin {
+    struct S {
+        T sum;  // 区間の和
+        T min;  // 空を含む suffix の和の最小値 (0 以下)
+        constexpr S() : sum(0), min(0) {}
+        constexpr S(const T& x) : sum(x), min(T(0) < x ? T(0) : x) {}
+        constexpr S(const T& sum, const T& min) : sum(sum), min(min) {}
+        friend constexpr bool operator==(const S& a, const S& b) { return a.sum == b.sum && a.min == b.min; }
+        friend constexpr bool operator!=(const S& a, const S& b) { return !(a == b); }
+    };
+    static constexpr S op(const S& a, const S& b) { return S(a.sum + b.sum, std::min(b.min, a.min + b.sum)); }
+    static constexpr S e() { return S(); }
+};
+
+/**
+ * @brief 区間の和、空を含む prefix・suffix の和の最大値、空を含む連続部分列の和の最大値
+ * S(x) で値 x の1要素を表す要素を作る。単位元は空の区間 {0, 0, 0, 0}
+ * 静的な列に対して一度だけ求めるなら dp/maximum-subarray.hpp の maximum_subarray
+ */
+template <typename T>
+struct MaxSubarraySum {
+    struct S {
+        T sum;     // 区間の和
+        T prefix;  // 空を含む prefix の和の最大値 (0 以上)
+        T suffix;  // 空を含む suffix の和の最大値 (0 以上)
+        T best;    // 空を含む連続部分列の和の最大値 (0 以上)
+        constexpr S() : sum(0), prefix(0), suffix(0), best(0) {}
+        constexpr S(const T& x) : sum(x), prefix(x < T(0) ? T(0) : x), suffix(prefix), best(prefix) {}
+        constexpr S(const T& sum, const T& prefix, const T& suffix, const T& best)
+            : sum(sum), prefix(prefix), suffix(suffix), best(best) {}
+        friend constexpr bool operator==(const S& a, const S& b) {
+            return a.sum == b.sum && a.prefix == b.prefix && a.suffix == b.suffix && a.best == b.best;
+        }
+        friend constexpr bool operator!=(const S& a, const S& b) { return !(a == b); }
+    };
+    static constexpr S op(const S& a, const S& b) {
+        return S(a.sum + b.sum, std::max(a.prefix, a.sum + b.prefix), std::max(b.suffix, a.suffix + b.sum),
+                 std::max({a.best, b.best, a.suffix + b.prefix}));
+    }
+    static constexpr S e() { return S(); }
 };
 
 /**
