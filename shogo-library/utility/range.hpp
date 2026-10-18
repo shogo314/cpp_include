@@ -1,9 +1,9 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/cfbc779abd4bff3efa5b12de9b69f0aabc01392d/src/utility/range.hpp
+// https://github.com/shogo314/shogo-library/blob/17d2ef2dd4949a8970024228f924be340a812e67/src/utility/range.hpp
 
 /**
  * @file range.hpp
- * @brief Python の range のような整数列
+ * @brief Python の range のような整数列と、その直積の Rect
  */
 
 #include <cassert>
@@ -166,6 +166,8 @@ struct Range {
      * @brief x の個数 (0 か 1)
      */
     constexpr size_type count(value_type x) const noexcept {
+        // step がコンパイル時に分からないときも、よく使う step = 1 では割り算をしない
+        if (step == 1) return start <= x && x < stop;
         if (step > 0) {
             if (start <= x && x < stop) {
                 if ((x - start) % step == 0) {
@@ -193,6 +195,7 @@ struct Range {
      */
     constexpr size_type index(value_type x) const {
         assert(contains(x));
+        if (step == 1) return x - start;
         return (x - start) / step;
     }
     /**
@@ -427,6 +430,215 @@ struct Range {
         return true;
     }
     constexpr friend bool operator!=(const Range& a, const Range& b) noexcept {
+        return !(a == b);
+    }
+};
+
+/**
+ * @brief 2 つの Range の直積 rows × cols
+ * (i, j) を i の昇順、同じ i では j の昇順 (行優先) に並べたものとして扱う
+ */
+struct Rect {
+   public:
+    using value_type = std::pair<long long, long long>;
+    using size_type = long long;
+    using difference_type = std::ptrdiff_t;
+
+    const Range rows;
+    const Range cols;
+
+   private:
+    const long long width;  // cols.size() (index や at で毎回割り算しないように持っておく)
+
+   public:
+    /**
+     * @brief [0, h) × [0, w)
+     */
+    constexpr Rect(long long h, long long w) : rows(h), cols(w), width(cols.size()) {}
+    constexpr Rect(const Range& _rows, const Range& _cols) : rows(_rows), cols(_cols), width(cols.size()) {}
+    constexpr Rect(const Rect& o) = default;
+    Rect& operator=(const Rect& o) = delete;
+
+    struct const_iterator {
+       public:
+        using difference_type = Rect::difference_type;
+        using value_type = Rect::value_type;
+        using pointer = void;
+        using reference = value_type;
+        using iterator_category = std::forward_iterator_tag;
+
+       private:
+        const Rect* rect = nullptr;
+        long long w = 0;   // cols.size()
+        long long ic = 0;  // rows の何番目か
+        long long jc = 0;  // cols の何番目か
+
+       public:
+        constexpr const_iterator() noexcept = default;
+        constexpr const_iterator(const Rect* _rect, long long _w, long long _ic, long long _jc) noexcept
+            : rect(_rect), w(_w), ic(_ic), jc(_jc) {}
+        constexpr value_type operator*() const noexcept {
+            return {rect->rows.start + ic * rect->rows.step, rect->cols.start + jc * rect->cols.step};
+        }
+        constexpr const_iterator& operator++() noexcept {
+            if (++jc == w) {
+                jc = 0;
+                ++ic;
+            }
+            return *this;
+        }
+        constexpr const_iterator operator++(int) noexcept {
+            const_iterator ret(*this);
+            ++*this;
+            return ret;
+        }
+        constexpr friend bool operator==(const const_iterator& a, const const_iterator& b) noexcept {
+            return a.ic == b.ic && a.jc == b.jc;
+        }
+        constexpr friend bool operator!=(const const_iterator& a, const const_iterator& b) noexcept {
+            return !(a == b);
+        }
+    };
+
+    constexpr const_iterator begin() const noexcept {
+        return {this, width, width == 0 ? rows.size() : 0, 0};
+    }
+    constexpr const_iterator end() const noexcept {
+        return {this, width, rows.size(), 0};
+    }
+    /**
+     * @brief 要素数 rows.size() * cols.size()
+     */
+    constexpr size_type size() const noexcept {
+        return rows.size() * width;
+    }
+    constexpr bool empty() const noexcept {
+        return rows.empty() || cols.empty();
+    }
+    /**
+     * @brief (i, j) が含まれるか
+     */
+    constexpr bool contains(long long i, long long j) const noexcept {
+        return rows.contains(i) && cols.contains(j);
+    }
+    constexpr bool contains(const value_type& p) const noexcept {
+        return contains(p.first, p.second);
+    }
+    /**
+     * @brief (i, j) の行優先での位置 (グリッドの頂点番号に使う)
+     * (i, j) が含まれないとエラー
+     */
+    constexpr size_type index(long long i, long long j) const {
+        assert(contains(i, j));
+        return rows.index(i) * width + cols.index(j);
+    }
+    constexpr size_type index(const value_type& p) const {
+        return index(p.first, p.second);
+    }
+    /**
+     * @brief 行優先で k 番目の要素 (index の逆)
+     */
+    constexpr value_type at(size_type k) const {
+        assert(0 <= k && k < size());
+        return {rows[k / width], cols[k % width]};
+    }
+    constexpr value_type operator[](size_type k) const {
+        return at(k);
+    }
+
+   private:
+    // 近傍の方向 (rows・cols の中での位置の差) を Rect の順に並べたもの。先頭 4 つは上下左右だけを並べた別の表
+    static constexpr int neighbor_dirs[12][2] = {{-1, 0}, {0, -1}, {0, 1}, {1, 0},
+                                                 {-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
+
+   public:
+    /**
+     * @brief neighbors4 / neighbors8 の戻り値 (範囲 for で使う)
+     * 作るときに Rect に含まれる方向をビットで持っておき、立っているビットを順に返す
+     */
+    struct Neighbors {
+        long long i, j, row_step, col_step;
+        int first;      // neighbor_dirs[first + k] がビット k の方向
+        unsigned mask;  // Rect に含まれる方向
+
+        struct iterator {
+            using difference_type = std::ptrdiff_t;
+            using value_type = Rect::value_type;
+            using pointer = void;
+            using reference = value_type;
+            using iterator_category = std::forward_iterator_tag;
+
+            const Neighbors* nb = nullptr;
+            unsigned rest = 0;  // まだ返していない方向
+
+            constexpr value_type operator*() const noexcept {
+                const int k = nb->first + __builtin_ctz(rest);
+                return {nb->i + neighbor_dirs[k][0] * nb->row_step, nb->j + neighbor_dirs[k][1] * nb->col_step};
+            }
+            constexpr iterator& operator++() noexcept {
+                rest &= rest - 1;
+                return *this;
+            }
+            constexpr iterator operator++(int) noexcept {
+                iterator ret(*this);
+                ++*this;
+                return ret;
+            }
+            constexpr friend bool operator==(const iterator& a, const iterator& b) noexcept { return a.rest == b.rest; }
+            constexpr friend bool operator!=(const iterator& a, const iterator& b) noexcept { return a.rest != b.rest; }
+        };
+        constexpr iterator begin() const noexcept { return {this, mask}; }
+        constexpr iterator end() const noexcept { return {this, 0}; }
+        constexpr long long size() const noexcept { return __builtin_popcount(mask); }
+        constexpr bool empty() const noexcept { return mask == 0; }
+    };
+
+   private:
+    constexpr Neighbors neighbors(long long i, long long j, int first, int last) const {
+        assert(contains(i, j));
+        unsigned mask = 0;
+        for (int k = first; k < last; k++) {
+            if (contains(i + neighbor_dirs[k][0] * rows.step, j + neighbor_dirs[k][1] * cols.step)) mask |= 1u << (k - first);
+        }
+        return {i, j, rows.step, cols.step, first, mask};
+    }
+
+   public:
+    /**
+     * @brief (i, j) の上下左右のうち Rect に含まれるものを、Rect の順に返す
+     * 隣は rows・cols の中で隣り合う要素 (i ± rows.step など)。(i, j) が含まれないとエラー
+     */
+    constexpr Neighbors neighbors4(long long i, long long j) const {
+        return neighbors(i, j, 0, 4);
+    }
+    constexpr Neighbors neighbors4(const value_type& p) const {
+        return neighbors4(p.first, p.second);
+    }
+    /**
+     * @brief (i, j) を囲む 8 つのうち Rect に含まれるものを、Rect の順に返す
+     */
+    constexpr Neighbors neighbors8(long long i, long long j) const {
+        return neighbors(i, j, 4, 12);
+    }
+    constexpr Neighbors neighbors8(const value_type& p) const {
+        return neighbors8(p.first, p.second);
+    }
+
+    static std::string type_str() {
+        return "Rect";
+    }
+    std::string initializer_str() const {
+        return "{" + rows.initializer_str() + ", " + cols.initializer_str() + "}";
+    }
+    std::string repr() const {
+        return "Rect(" + rows.repr() + ", " + cols.repr() + ")";
+    }
+
+    constexpr friend bool operator==(const Rect& a, const Rect& b) noexcept {
+        if (a.empty() && b.empty()) return true;
+        return a.rows == b.rows && a.cols == b.cols;
+    }
+    constexpr friend bool operator!=(const Rect& a, const Rect& b) noexcept {
         return !(a == b);
     }
 };
