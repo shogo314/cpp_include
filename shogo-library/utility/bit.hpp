@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/17d2ef2dd4949a8970024228f924be340a812e67/src/utility/bit.hpp
+// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/utility/bit.hpp
 
 /**
  * @file bit.hpp
@@ -87,6 +87,13 @@ inline constexpr long long bit_floor(long long a) {
     assert(a >= 0);
     return a == 0 ? 0 : 1LL << (bit_width(a) - 1);
 }
+/**
+ * @brief 2 の累乗か (ちょうど 1 つのビットが立っているか)
+ */
+inline constexpr bool has_single_bit(long long a) {
+    assert(a >= 0);
+    return a != 0 && (a & (a - 1)) == 0;
+}
 
 #else
 
@@ -133,6 +140,13 @@ BIT_FUNC_EXPAND(bit_floor)
  * @brief 値を表現するために必要なビット幅を求める
  */
 BIT_FUNC_EXPAND(bit_width)
+/**
+ * @brief 2 の累乗か (ちょうど 1 つのビットが立っているか)
+ */
+inline constexpr bool has_single_bit(long long a) {
+    assert(a >= 0);
+    return std::has_single_bit((unsigned long long)a);
+}
 
 #endif
 
@@ -142,6 +156,151 @@ BIT_FUNC_EXPAND(bit_width)
 inline constexpr long long hamming_distance(long long a, long long b) {
     assert(a >= 0 && b >= 0);
     return popcount(a ^ b);
+}
+
+/**
+ * @brief 最上位の立っているビットの位置 (0 なら -1)
+ */
+inline constexpr long long msb(long long a) { return bit_width(a) - 1; }
+/**
+ * @brief 最下位の立っているビットの位置 (0 なら -1)
+ */
+inline constexpr long long lsb(long long a) {
+    assert(a >= 0);
+    return a == 0 ? -1 : countr_zero(a);
+}
+/**
+ * @brief 最下位の立っているビットだけを残した値 a & -a (0 なら 0)
+ */
+inline constexpr long long lowbit(long long a) {
+    assert(a >= 0);
+    return a & -a;
+}
+/**
+ * @brief a の i ビット目が立っているか
+ */
+inline constexpr bool test_bit(long long a, long long i) {
+    assert(a >= 0 && 0 <= i && i < 63);
+    return a >> i & 1;
+}
+/**
+ * @brief a の i ビット目を 1 にした値
+ */
+inline constexpr long long set_bit(long long a, long long i) {
+    assert(a >= 0 && 0 <= i && i < 63);
+    return a | 1LL << i;
+}
+/**
+ * @brief a の i ビット目を 0 にした値
+ */
+inline constexpr long long reset_bit(long long a, long long i) {
+    assert(a >= 0 && 0 <= i && i < 63);
+    return a & ~(1LL << i);
+}
+/**
+ * @brief a の i ビット目を反転した値
+ */
+inline constexpr long long flip_bit(long long a, long long i) {
+    assert(a >= 0 && 0 <= i && i < 63);
+    return a ^ 1LL << i;
+}
+/**
+ * @brief 立っているビットの数の偶奇 (popcount(a) % 2)
+ */
+inline constexpr long long parity(long long a) { return popcount(a) & 1; }
+/**
+ * @brief long long を n 桁の 2 進数の文字列にする (btoll の逆)
+ * n を省略すると bit_width(a) 桁 (0 なら "0")
+ */
+inline std::string lltob(long long a, long long n = -1, char one = '1', char zero = '0') {
+    assert(a >= 0);
+    if (n < 0) n = a == 0 ? 1 : bit_width(a);
+    assert(n >= bit_width(a));
+    std::string res(n, zero);
+    for (long long i = 0; i < n && i < 63; i++) {
+        if (a >> i & 1) res[n - 1 - i] = one;
+    }
+    return res;
+}
+/**
+ * @brief 下位 n ビットの並びを逆にする (a < 2^n)
+ */
+inline constexpr long long reverse_bits(long long a, long long n) {
+    assert(0 <= n && n <= 63 && 0 <= a && bit_width(a) <= n);
+    long long res = 0;
+    for (long long i = 0; i < n; i++) {
+        if (a >> i & 1) res |= 1LL << (n - 1 - i);
+    }
+    return res;
+}
+/**
+ * @brief 下位 n ビットを左に k ビット巡回シフトする (a < 2^n、k は負でもよい)
+ */
+inline constexpr long long rotate_left(long long a, long long k, long long n) {
+    assert(1 <= n && n <= 63 && 0 <= a && bit_width(a) <= n);
+    k %= n;
+    if (k < 0) k += n;
+    if (k == 0) return a;
+    unsigned long long full = (1ULL << n) - 1;
+    return (long long)(((unsigned long long)a << k & full) | (unsigned long long)a >> (n - k));
+}
+/**
+ * @brief 下位 n ビットを右に k ビット巡回シフトする (a < 2^n、k は負でもよい)
+ */
+inline constexpr long long rotate_right(long long a, long long k, long long n) {
+    assert(1 <= n && n <= 63);
+    return rotate_left(a, -(k % n), n);
+}
+/**
+ * @brief グレイコード (隣り合う値で 1 ビットだけ変わる) a ^ (a >> 1)
+ */
+inline constexpr long long gray_code(long long a) {
+    assert(a >= 0);
+    return a ^ a >> 1;
+}
+/**
+ * @brief グレイコードから元の値に戻す (gray_code の逆)
+ */
+inline constexpr long long inverse_gray_code(long long g) {
+    assert(g >= 0);
+    for (long long s = 1; s < 64; s <<= 1) g ^= g >> s;
+    return g;
+}
+/**
+ * @brief mask の立っているビットのうち、下から k 番目 (0-indexed) の位置 O(log 64)
+ */
+inline constexpr long long kth_set_bit(long long mask, long long k) {
+    assert(mask >= 0 && 0 <= k && k < popcount(mask));
+    long long res = 0;
+    for (long long w = 32; w > 0; w >>= 1) {
+        // 下位 w ビットに立っているビットの数で、答えが上下どちらにあるかを決める
+        long long c = popcount(mask & ((1LL << w) - 1));
+        if (k >= c) {
+            k -= c;
+            mask >>= w;
+            res += w;
+        }
+    }
+    return res;
+}
+/**
+ * @brief 0 ^ 1 ^ ... ^ n
+ */
+inline constexpr long long xor_upto(long long n) {
+    assert(n >= 0);
+    // 4 つごとに周期的になる
+    long long r = n & 3;
+    return r == 0 ? n : r == 1 ? 1 : r == 2 ? n + 1 : 0;
+}
+/**
+ * @brief 0 以上 n 以下の整数のうち、i ビット目が立っているものの数
+ */
+inline constexpr long long count_bit_upto(long long n, long long i) {
+    assert(0 <= n && n < 0x7fffffffffffffffLL && 0 <= i && i < 63);
+    // 2^(i + 1) ごとに、後半の 2^i 個で立つ
+    unsigned long long m = (unsigned long long)n + 1, half = 1ULL << i, cycle = half << 1;
+    unsigned long long r = m % cycle;
+    return (long long)(m / cycle * half + (r > half ? r - half : 0));
 }
 
 namespace internal_bit {
@@ -210,6 +369,16 @@ inline constexpr auto bits(long long mask) {
     return Bits{mask};
 }
 /**
+ * @brief s と立っているビットの数が同じで、s より大きい最小の値 (Gosper's hack)
+ * long long に収まらなければ -1
+ */
+inline constexpr long long next_combination_mask(long long s) {
+    assert(s > 0);
+    unsigned long long u = s, c = u & -u, r = u + c;
+    unsigned long long t = (((r ^ u) >> 2) / c) | r;
+    return t > 0x7fffffffffffffffULL ? -1 : (long long)t;
+}
+/**
  * @brief n ビットの集合のうち、ちょうど k 個のビットが立つものを昇順に列挙する (Gosper's hack) 全体で O(C(n, k))
  * k > n なら何も列挙しない
  */
@@ -218,9 +387,33 @@ inline constexpr auto combinations_mask(long long n, long long k) {
     long long limit = 1LL << n;
     return internal_bit::make_bit_enumeration(k > n ? -1 : (1LL << k) - 1, k > n, [limit](long long s) {
         if (s == 0) return -1LL;  // k = 0 のときは 0 だけ
-        long long c = s & -s, r = s + c;
-        long long t = (((r ^ s) >> 2) / c) | r;
+        long long t = next_combination_mask(s);
         return t >= limit ? -1 : t;
+    });
+}
+/**
+ * @brief mask の部分集合のうち、ちょうど k 個のビットが立つものを昇順に列挙する 1 つあたり O(k)
+ * k > popcount(mask) なら何も列挙しない
+ */
+inline constexpr auto subsets_of_size(long long mask, long long k) {
+    assert(mask >= 0 && 0 <= k);
+    // mask の下位 cnt 個の立っているビット
+    auto lowest = [mask](long long cnt) {
+        long long res = 0, rest = mask;
+        for (long long j = 0; j < cnt; j++) {
+            res |= rest & -rest;
+            rest &= rest - 1;
+        }
+        return res;
+    };
+    bool empty = k > popcount(mask);
+    return internal_bit::make_bit_enumeration(empty ? -1 : lowest(k), empty, [mask, k, lowest](long long s) {
+        if (s == 0) return -1LL;  // k = 0 のときは 0 だけ
+        // mask の外のビットを 1 とみなして最下位ビットを足すと、繰り上がりが mask の中だけを進む
+        unsigned long long c = s & -s, r = (((unsigned long long)s | ~(unsigned long long)mask) + c) & (unsigned long long)mask;
+        if (r == 0) return -1LL;  // 繰り上がりが mask の最上位を越えた
+        // 繰り上がりで消えたビットを mask の下位に詰め直す
+        return (long long)r | lowest(k - popcount((long long)r));
     });
 }
 
@@ -261,4 +454,32 @@ inline constexpr internal_bit::ToggleOneBit add_one(long long mask, long long n)
 inline constexpr internal_bit::ToggleOneBit remove_one(long long mask) {
     assert(mask >= 0);
     return {mask, mask};
+}
+
+/**
+ * @brief n ビットのすべての集合 S と、その部分集合 T の組 (S, T) を列挙する 全体で O(3^n)
+ * S は 0 から昇順、各 S の中で T は S から 0 まで降順
+ */
+inline constexpr auto subset_pairs(long long n) {
+    assert(0 <= n && n <= 62);
+    struct SubsetPairs {
+        long long n;
+        struct iterator {
+            long long s, t;
+            constexpr std::pair<long long, long long> operator*() const { return {s, t}; }
+            constexpr iterator& operator++() {
+                if (t == 0) {
+                    t = ++s;
+                } else {
+                    t = (t - 1) & s;
+                }
+                return *this;
+            }
+            constexpr bool operator!=(const iterator& other) const { return s != other.s || t != other.t; }
+            constexpr bool operator==(const iterator& other) const { return s == other.s && t == other.t; }
+        };
+        constexpr iterator begin() const { return {0, 0}; }
+        constexpr iterator end() const { return {1LL << n, 1LL << n}; }
+    };
+    return SubsetPairs{n};
 }
