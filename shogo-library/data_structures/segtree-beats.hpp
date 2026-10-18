@@ -14,7 +14,7 @@
 
 #include "../algebra/acted-monoid.hpp"
 #include "../algebra/beats-acted-monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/db9a2f114afe8539fdb02e5a44fc654c2297c5fa/src/data_structures/segtree-beats.hpp
+// https://github.com/shogo314/shogo-library/blob/cfbc779abd4bff3efa5b12de9b69f0aabc01392d/src/data_structures/segtree-beats.hpp
 
 /**
  * @brief Segment Tree Beats

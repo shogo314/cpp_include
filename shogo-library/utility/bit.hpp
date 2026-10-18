@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/db9a2f114afe8539fdb02e5a44fc654c2297c5fa/src/utility/bit.hpp
+// https://github.com/shogo314/shogo-library/blob/cfbc779abd4bff3efa5b12de9b69f0aabc01392d/src/utility/bit.hpp
 
 /**
  * @file bit.hpp
@@ -8,6 +8,7 @@
 
 #include <cassert>
 #include <string>
+#include <utility>
 
 /**
  * @brief 2進数の文字列をlong longにする
@@ -221,4 +222,43 @@ inline constexpr auto combinations_mask(long long n, long long k) {
         long long t = (((r ^ s) >> 2) / c) | r;
         return t >= limit ? -1 : t;
     });
+}
+
+namespace internal_bit {
+// rest の立っているビット i を昇順に、(i, mask ^ (1 << i)) の組で列挙する
+struct ToggleOneBit {
+    long long mask, rest;
+    struct iterator {
+        long long mask, s;
+        constexpr std::pair<long long, long long> operator*() const {
+            long long i = countr_zero(s);
+            return {i, mask ^ (1LL << i)};
+        }
+        constexpr iterator& operator++() {
+            s &= s - 1;
+            return *this;
+        }
+        constexpr bool operator!=(const iterator& other) const { return s != other.s; }
+        constexpr bool operator==(const iterator& other) const { return s == other.s; }
+    };
+    constexpr iterator begin() const { return {mask, rest}; }
+    constexpr iterator end() const { return {mask, 0}; }
+};
+}  // namespace internal_bit
+
+/**
+ * @brief n ビットのうち mask に含まれない位置 i を昇順に、(i, mask | (1 << i)) の組で列挙する 全体で O(n - popcount(mask))
+ * bit DP で 1 つ要素を足す遷移に使う
+ */
+inline constexpr internal_bit::ToggleOneBit add_one(long long mask, long long n) {
+    assert(0 <= n && n <= 62 && 0 <= mask && mask < (1LL << n));
+    return {mask, ((1LL << n) - 1) ^ mask};
+}
+/**
+ * @brief mask に含まれる位置 i を昇順に、(i, mask ^ (1 << i)) の組で列挙する 全体で O(popcount(mask))
+ * bit DP で 1 つ要素を除いた集合から遷移するときに使う
+ */
+inline constexpr internal_bit::ToggleOneBit remove_one(long long mask) {
+    assert(mask >= 0);
+    return {mask, mask};
 }
