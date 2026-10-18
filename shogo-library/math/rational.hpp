@@ -1,5 +1,4 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/24638d870d2ac03d01e1498411ab8aa477ea366f/src/math/rational.hpp
 
 /**
  * @file rational.hpp
@@ -12,6 +11,9 @@
 #include <ostream>
 #include <string>
 #include <utility>
+
+#include "../base/functions.hpp"
+// https://github.com/shogo314/shogo-library/blob/db9a2f114afe8539fdb02e5a44fc654c2297c5fa/src/math/rational.hpp
 
 /**
  * @brief 有理数 (分数)
@@ -40,9 +42,6 @@ class Rational {
         }
         return a;
     }
-    // 切り捨て除算 (b > 0)
-    static constexpr T floor_div(T a, T b) { return a / b - (a % b < 0); }
-
     struct Raw {};
     // すでに既約で q > 0 とわかっている場合
     constexpr Rational(T p, T q, Raw) : p(p), q(q) {}
@@ -57,7 +56,7 @@ class Rational {
             // 整数部分を比べ、同じなら小数部分の逆数を比べる (大小が逆になる)
             int sign = 1;
             while (true) {
-                T x = floor_div(a, b), y = floor_div(c, d);
+                T x = floordiv(a, b), y = floordiv(c, d);
                 if (x != y) return x < y ? -sign : sign;
                 a -= x * b, c -= y * d;
                 if (a == 0 || c == 0) {
@@ -100,11 +99,11 @@ class Rational {
     /**
      * @brief 以下で最大の整数
      */
-    constexpr T floor() const { return floor_div(p, q); }
+    constexpr T floor() const { return floordiv(p, q); }
     /**
      * @brief 以上で最小の整数
      */
-    constexpr T ceil() const { return -floor_div(-p, q); }
+    constexpr T ceil() const { return ceildiv(p, q); }
     /**
      * @brief 整数か
      */

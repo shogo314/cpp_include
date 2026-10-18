@@ -14,7 +14,7 @@
 #include <vector>
 
 #include "traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/24638d870d2ac03d01e1498411ab8aa477ea366f/src/utility/vector_func.hpp
+// https://github.com/shogo314/shogo-library/blob/db9a2f114afe8539fdb02e5a44fc654c2297c5fa/src/utility/vector_func.hpp
 
 template <typename T>
 std::vector<long long> sorted_idx(const std::vector<T>& v, bool reverse = false) {
@@ -188,6 +188,16 @@ std::vector<T> iota(T n) {
     std::vector<T> ret(n);
     std::iota(ret.begin(), ret.end(), 0);
     return ret;
+}
+
+template <typename T, typename U>
+long long hamming_distance(const std::vector<T>& v1, const std::vector<U>& v2) {
+    assert(v1.size() == v2.size());
+    long long res = 0;
+    for (std::size_t i = 0; i < v1.size(); i++) {
+        if (!(v1[i] == v2[i])) res++;
+    }
+    return res;
 }
 
 template <typename T>

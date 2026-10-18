@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/24638d870d2ac03d01e1498411ab8aa477ea366f/src/utility/bit.hpp
+// https://github.com/shogo314/shogo-library/blob/db9a2f114afe8539fdb02e5a44fc654c2297c5fa/src/utility/bit.hpp
 
 /**
  * @file bit.hpp
@@ -134,3 +134,91 @@ BIT_FUNC_EXPAND(bit_floor)
 BIT_FUNC_EXPAND(bit_width)
 
 #endif
+
+/**
+ * @brief 2 つの整数のハミング距離 (ビットが異なる位置の数)
+ */
+inline constexpr long long hamming_distance(long long a, long long b) {
+    assert(a >= 0 && b >= 0);
+    return popcount(a ^ b);
+}
+
+namespace internal_bit {
+// 範囲 for で使う列挙。next で次の値に進み、done になったら終わる
+template <class Next>
+struct BitEnumeration {
+    long long first;
+    bool empty;
+    Next next;  // next(s) は次の値、終わりなら -1
+    struct iterator {
+        long long s;
+        const Next* next;
+        constexpr long long operator*() const { return s; }
+        constexpr iterator& operator++() {
+            s = (*next)(s);
+            return *this;
+        }
+        constexpr bool operator!=(const iterator& other) const { return s != other.s; }
+        constexpr bool operator==(const iterator& other) const { return s == other.s; }
+    };
+    constexpr iterator begin() const { return {empty ? -1 : first, &next}; }
+    constexpr iterator end() const { return {-1, &next}; }
+};
+template <class Next>
+constexpr BitEnumeration<Next> make_bit_enumeration(long long first, bool empty, Next next) {
+    return {first, empty, next};
+}
+}  // namespace internal_bit
+
+/**
+ * @brief mask の部分集合を mask から 0 まで降順に列挙する (0 と mask を含む) 全体で O(2^popcount(mask))
+ */
+inline constexpr auto subsets(long long mask) {
+    assert(mask >= 0);
+    return internal_bit::make_bit_enumeration(mask, false, [mask](long long s) { return s == 0 ? -1 : (s - 1) & mask; });
+}
+/**
+ * @brief n ビットの集合のうち mask を含むものを mask から昇順に列挙する (mask と 2^n - 1 を含む) 全体で O(2^(n - popcount(mask)))
+ */
+inline constexpr auto supersets(long long mask, long long n) {
+    assert(0 <= n && n <= 62 && 0 <= mask && mask < (1LL << n));
+    long long full = (1LL << n) - 1;
+    return internal_bit::make_bit_enumeration(mask, false, [mask, full](long long s) { return s == full ? -1 : (s + 1) | mask; });
+}
+/**
+ * @brief mask の立っているビットの位置を昇順に列挙する 全体で O(popcount(mask))
+ */
+inline constexpr auto bits(long long mask) {
+    assert(mask >= 0);
+    // 内部では残りのビットを持ち、* で最下位ビットの位置を返す
+    struct Bits {
+        long long mask;
+        struct iterator {
+            long long s;
+            constexpr long long operator*() const { return countr_zero(s); }
+            constexpr iterator& operator++() {
+                s &= s - 1;
+                return *this;
+            }
+            constexpr bool operator!=(const iterator& other) const { return s != other.s; }
+            constexpr bool operator==(const iterator& other) const { return s == other.s; }
+        };
+        constexpr iterator begin() const { return {mask}; }
+        constexpr iterator end() const { return {0}; }
+    };
+    return Bits{mask};
+}
+/**
+ * @brief n ビットの集合のうち、ちょうど k 個のビットが立つものを昇順に列挙する (Gosper's hack) 全体で O(C(n, k))
+ * k > n なら何も列挙しない
+ */
+inline constexpr auto combinations_mask(long long n, long long k) {
+    assert(0 <= n && n <= 62 && 0 <= k);
+    long long limit = 1LL << n;
+    return internal_bit::make_bit_enumeration(k > n ? -1 : (1LL << k) - 1, k > n, [limit](long long s) {
+        if (s == 0) return -1LL;  // k = 0 のときは 0 だけ
+        long long c = s & -s, r = s + c;
+        long long t = (((r ^ s) >> 2) / c) | r;
+        return t >= limit ? -1 : t;
+    });
+}

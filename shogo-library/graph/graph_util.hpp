@@ -16,7 +16,7 @@
 
 #include "../data_structures/unionfind.hpp"
 #include "graph.hpp"
-// https://github.com/shogo314/shogo-library/blob/24638d870d2ac03d01e1498411ab8aa477ea366f/src/graph/graph_util.hpp
+// https://github.com/shogo314/shogo-library/blob/db9a2f114afe8539fdb02e5a44fc654c2297c5fa/src/graph/graph_util.hpp
 
 /**
  * @brief 無向グラフについて、二部グラフなら0と1に彩色した結果をひとつ返し、二部グラフでないなら空のvectorを返す。
