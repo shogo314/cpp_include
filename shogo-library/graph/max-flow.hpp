@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/graph/max-flow.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/graph/max-flow.hpp
 
 /**
  * @file max-flow.hpp
@@ -68,7 +68,7 @@ class MaxFlow {
     Cap dfs(int v, int t, Cap up) {
         if (v == t) return up;
         Cap res = 0;
-        for (int& i = iter[v]; i < (int)g[v].size(); i++) {
+        for (int& i = iter[v]; i < static_cast<int>(g[v].size()); i++) {
             InnerEdge& e = g[v][i];
             if (e.cap <= 0 || level[e.to] != level[v] + 1) continue;
             Cap d = dfs(e.to, t, std::min(up - res, e.cap));
@@ -97,8 +97,8 @@ class MaxFlow {
         int from_id = g[from].size();
         int to_id = g[to].size() + (from == to);
         pos.emplace_back(from, from_id);
-        g[from].push_back({(int)to, to_id, cap});
-        g[to].push_back({(int)from, from_id, 0});
+        g[from].push_back({static_cast<int>(to), to_id, cap});
+        g[to].push_back({static_cast<int>(from), from_id, 0});
         return id;
     }
 
@@ -122,7 +122,7 @@ class MaxFlow {
      * @brief 番号 i の辺の情報
      */
     Edge get_edge(long long i) const {
-        assert(0 <= i && i < (long long)pos.size());
+        assert(0 <= i && i < static_cast<long long>(pos.size()));
         const auto& e = g[pos[i].first][pos[i].second];
         const auto& re = g[e.to][e.rev];
         return {pos[i].first, e.to, e.cap + re.cap, re.cap};
@@ -132,7 +132,7 @@ class MaxFlow {
      * ほかの辺の流量は変えないので、流量の保存則が崩れることがある
      */
     void change_edge(long long i, Cap new_cap, Cap new_flow) {
-        assert(0 <= i && i < (long long)pos.size() && 0 <= new_flow && new_flow <= new_cap);
+        assert(0 <= i && i < static_cast<long long>(pos.size()) && 0 <= new_flow && new_flow <= new_cap);
         auto& e = g[pos[i].first][pos[i].second];
         auto& re = g[e.to][e.rev];
         e.cap = new_cap - new_flow;
@@ -143,7 +143,7 @@ class MaxFlow {
      */
     std::vector<Edge> edges() const {
         std::vector<Edge> res;
-        for (long long i = 0; i < (long long)pos.size(); i++) res.push_back(get_edge(i));
+        for (long long i = 0; i < static_cast<long long>(pos.size()); i++) res.push_back(get_edge(i));
         return res;
     }
 

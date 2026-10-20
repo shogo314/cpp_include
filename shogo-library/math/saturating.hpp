@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/math/saturating.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/math/saturating.hpp
 
 /**
  * @file saturating.hpp
@@ -67,6 +67,9 @@ constexpr bool cmp_greater(T t, U u) noexcept {
 #else
 #define SATURATING_FUNC(cond, R) inline constexpr std::enable_if_t<(cond), R>
 #endif
+
+// clang-format は SATURATING_FUNC を戻り値の型と読めず、関数名の前で改行してしまうので整形しない
+// clang-format off
 
 /**
  * @brief x + y を T の範囲に丸める
@@ -145,5 +148,7 @@ SATURATING_FUNC(internal_saturating::integer<R> && internal_saturating::integer<
     return static_cast<R>(x);
 #endif
 }
+
+// clang-format on
 
 #undef SATURATING_FUNC

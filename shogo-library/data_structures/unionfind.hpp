@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/data_structures/unionfind.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/data_structures/unionfind.hpp
 
 /**
  * @file unionfind.hpp
@@ -71,7 +71,7 @@ class UnionFind {
         if (x == y) return {x, false};
         if (-parent_or_size[x] < -parent_or_size[y]) std::swap(x, y);
         parent_or_size[x] += parent_or_size[y];
-        parent_or_size[y] = int(x);
+        parent_or_size[y] = static_cast<int>(x);
         return {x, true};
     }
     /**
@@ -88,7 +88,7 @@ class UnionFind {
     long long leader(long long a) {
         assert(0 <= a && a < _n);
         if (parent_or_size[a] < 0) return a;
-        int x = int(a);
+        int x = static_cast<int>(a);
         while (parent_or_size[x] >= 0) {
             x = parent_or_size[x];
         }

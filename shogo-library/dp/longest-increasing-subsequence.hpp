@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/dp/longest-increasing-subsequence.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/dp/longest-increasing-subsequence.hpp
 
 /**
  * @file longest-increasing-subsequence.hpp
@@ -21,7 +21,7 @@ std::vector<long long> longest_increasing_subsequence_lengths(const std::vector<
     // tail[k] は、長さ k + 1 の増加部分列の末尾として最も小さい値
     std::vector<T> tail;
     std::vector<long long> res(a.size());
-    for (long long i = 0; i < (long long)a.size(); i++) {
+    for (long long i = 0; i < static_cast<long long>(a.size()); i++) {
         auto it = strict ? std::lower_bound(tail.begin(), tail.end(), a[i], comp)
                          : std::upper_bound(tail.begin(), tail.end(), a[i], comp);
         res[i] = it - tail.begin() + 1;
@@ -66,7 +66,7 @@ std::vector<long long> longest_increasing_subsequence_restore(const std::vector<
     // 後ろから、長さが 1 ずつ減り、値が条件を満たす添字を選ぶ
     std::vector<long long> res(k);
     long long last = -1;
-    for (long long i = (long long)a.size() - 1; i >= 0 && k > 0; i--) {
+    for (long long i = static_cast<long long>(a.size()) - 1; i >= 0 && k > 0; i--) {
         if (len[i] != k) continue;
         if (last != -1 && !(strict ? comp(a[i], a[last]) : !comp(a[last], a[i]))) continue;
         res[--k] = i;

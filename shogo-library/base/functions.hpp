@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/base/functions.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/base/functions.hpp
 
 /**
  * @file functions.hpp
@@ -76,9 +76,11 @@ inline constexpr std::enable_if_t<std::is_object_v<T>, T*> midpoint(T* a, T* b) 
 
 /**
  * 要素数を long long で返す (std::ssize の long long 版)
+ * size() を持つ型なら、begin() と end() を持たない自作の型にも使える
  */
 #if __cplusplus >= 202002L
-template <std::ranges::sized_range R>
+template <typename R>
+    requires requires(R& r) { std::ranges::size(r); }
 inline constexpr long long len(R&& r) {
     return static_cast<long long>(std::ranges::size(r));
 }

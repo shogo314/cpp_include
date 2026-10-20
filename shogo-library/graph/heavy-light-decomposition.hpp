@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "tree.hpp"
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/graph/heavy-light-decomposition.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/graph/heavy-light-decomposition.hpp
 
 /**
  * @brief HL 分解 (Heavy-Light Decomposition)
@@ -38,9 +38,9 @@ class HeavyLightDecomposition {
         : n(tree.size()), root(root), par(n, -1), dep(n, 0), sz(n, 1), heavy(n, -1), head(n), in(n), order(n) {
         assert(0 <= root && root < n);
         // 根からの BFS 順で親と深さを決める
-        std::vector<int> bfs = {(int)root};
+        std::vector<int> bfs = {static_cast<int>(root)};
         bfs.reserve(n);
-        for (int i = 0; i < (int)bfs.size(); i++) {
+        for (int i = 0; i < static_cast<int>(bfs.size()); i++) {
             int v = bfs[i];
             for (long long u : tree[v]) {
                 if (u == par[v]) continue;
@@ -50,7 +50,7 @@ class HeavyLightDecomposition {
                 bfs.push_back(u);
             }
         }
-        assert((long long)bfs.size() == n && "HeavyLightDecomposition: not connected");
+        assert(static_cast<long long>(bfs.size()) == n && "HeavyLightDecomposition: not connected");
         // 葉の側から部分木の大きさを求め、最も大きい子を heavy にする
         for (int i = n - 1; i > 0; i--) {
             int v = bfs[i], p = par[v];
@@ -58,7 +58,7 @@ class HeavyLightDecomposition {
             if (heavy[p] == -1 || sz[v] > sz[heavy[p]]) heavy[p] = v;
         }
         // heavy な子を最後に積むと、次に取り出されて index が連続する
-        std::vector<int> st = {(int)root};
+        std::vector<int> st = {static_cast<int>(root)};
         head[root] = root;
         int k = 0;
         while (!st.empty()) {

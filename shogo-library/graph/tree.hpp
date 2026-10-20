@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "graph.hpp"
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/graph/tree.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/graph/tree.hpp
 
 template <typename>
 class RootedTree;
@@ -161,7 +161,7 @@ class RootedTree : private Tree<Cost> {
     template <typename T = long long>
     explicit RootedTree(const std::vector<T>& par_, long long padding = -1) : Tree<Cost>(par_.size() + 1), root(0) {
         static_assert(std::is_integral_v<T>, "RootedTree: par_ must be a vector of integers");
-        for (long long i = 0; i < (long long)par_.size(); i++) {
+        for (long long i = 0; i < static_cast<long long>(par_.size()); i++) {
             this->add_edge(i + 1, par_[i] + padding);
         }
         build();
@@ -226,8 +226,8 @@ class RootedTree : private Tree<Cost> {
             stk.pop();
             euler_tour.emplace_back(u, cnt);
             if (iter[u] == 0) preorder.push_back(u);
-            while (iter[u] < (int)this->g[u].size() && this->g[u][iter[u]].dst == par[u]) iter[u]++;
-            if (iter[u] == (int)this->g[u].size()) {
+            while (iter[u] < static_cast<int>(this->g[u].size()) && this->g[u][iter[u]].dst == par[u]) iter[u]++;
+            if (iter[u] == static_cast<int>(this->g[u].size())) {
                 postorder.push_back(u);
                 sz[u] = 1;
                 height[u] = 0;

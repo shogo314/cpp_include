@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/string/suffix-array.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/string/suffix-array.hpp
 
 /**
  * @file suffix-array.hpp
@@ -111,12 +111,12 @@ inline std::vector<long long> to_long_long(const std::vector<int>& sa) { return 
 template <typename T, std::enable_if_t<std::is_integral_v<T>, std::nullptr_t> = nullptr>
 std::vector<long long> suffix_array(const std::vector<T>& s, long long upper) {
     assert(0 <= upper && upper < INT_MAX);
-    for ([[maybe_unused]] T x : s) assert(0 <= (long long)x && (long long)x <= upper);
+    for ([[maybe_unused]] T x : s) assert(0 <= static_cast<long long>(x) && static_cast<long long>(x) <= upper);
     if constexpr (std::is_same_v<T, int>) {
-        return internal_suffix_array::to_long_long(internal_suffix_array::sa_is(s, (int)upper));
+        return internal_suffix_array::to_long_long(internal_suffix_array::sa_is(s, static_cast<int>(upper)));
     } else {
         std::vector<int> s2(s.begin(), s.end());
-        return internal_suffix_array::to_long_long(internal_suffix_array::sa_is(s2, (int)upper));
+        return internal_suffix_array::to_long_long(internal_suffix_array::sa_is(s2, static_cast<int>(upper)));
     }
 }
 
@@ -147,7 +147,7 @@ std::vector<long long> suffix_array(const std::vector<T>& s) {
 inline std::vector<long long> suffix_array(const std::string& s) {
     int n = s.size();
     std::vector<int> s2(n);
-    for (int i = 0; i < n; i++) s2[i] = (unsigned char)s[i];
+    for (int i = 0; i < n; i++) s2[i] = static_cast<unsigned char>(s[i]);
     return internal_suffix_array::to_long_long(internal_suffix_array::sa_is(s2, 255));
 }
 
@@ -161,7 +161,7 @@ inline std::vector<long long> suffix_array(const std::string& s) {
 template <typename R, typename I>
 std::vector<long long> lcp_array(const R& s, const std::vector<I>& sa) {
     long long n = s.size();
-    assert((long long)sa.size() == n);
+    assert(static_cast<long long>(sa.size()) == n);
     if (n == 0) return {};
     std::vector<long long> rank(n);
     for (long long i = 0; i < n; i++) rank[sa[i]] = i;

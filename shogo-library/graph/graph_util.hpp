@@ -16,7 +16,7 @@
 
 #include "../data_structures/unionfind.hpp"
 #include "graph.hpp"
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/graph/graph_util.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/graph/graph_util.hpp
 
 /**
  * @brief 無向グラフについて、二部グラフなら0と1に彩色した結果をひとつ返し、二部グラフでないなら空のvectorを返す。
@@ -125,7 +125,7 @@ std::vector<long long> topological_sort(const Graph<Cost>& graph) {
         }
         sorted.push_back(cur);
     }
-    if ((long long)sorted.size() < graph.n) return {};
+    if (static_cast<long long>(sorted.size()) < graph.n) return {};
     return sorted;
 }
 
@@ -164,7 +164,7 @@ std::vector<typename Graph<Cost>::Edge> find_cycle_directed(const Graph<Cost>& g
         state[root] = 1;
         while (!st.empty()) {
             long long v = st.back();
-            if (iter[v] == (int)graph[v].size()) {
+            if (iter[v] == static_cast<int>(graph[v].size())) {
                 state[v] = 2;
                 st.pop_back();
                 continue;
@@ -205,7 +205,7 @@ std::vector<typename Graph<Cost>::Edge> find_cycle_undirected(const Graph<Cost>&
         state[root] = 1;
         while (!st.empty()) {
             long long v = st.back();
-            if (iter[v] == (int)graph[v].size()) {
+            if (iter[v] == static_cast<int>(graph[v].size())) {
                 state[v] = 2;
                 st.pop_back();
                 continue;
@@ -253,7 +253,7 @@ std::vector<std::vector<long long>> strongly_connected_components(const Graph<Co
         call.push_back(s);
         while (!call.empty()) {
             long long v = call.back();
-            if (iter[v] < (int)graph[v].size()) {
+            if (iter[v] < static_cast<int>(graph[v].size())) {
                 long long to = graph[v][iter[v]++].dst;
                 if (ord[to] == -1) {
                     ord[to] = low[to] = now++;
@@ -322,7 +322,7 @@ Cost minimum_steiner_tree(const Graph<Cost>& graph, const std::vector<T>& X, Cos
     if (X.empty()) return Cost{};
     for (const auto& x : X) assert(0 <= x && x < graph.n);
     std::vector<std::vector<Cost>> dp(graph.n, std::vector<Cost>(1 << X.size(), inf));
-    for (int p = 0; p < (int)X.size(); p++) dp[X[p]][1 << p] = {};
+    for (int p = 0; p < static_cast<int>(X.size()); p++) dp[X[p]][1 << p] = {};
     for (int i = 0; i < (1 << X.size()); i++) {
         for (int j = i; j > 0; j = (j - 1) & i) {
             for (long long k = 0; k < graph.n; k++) {

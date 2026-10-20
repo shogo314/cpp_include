@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/algebra/monoid.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/algebra/monoid.hpp
 
 /**
  * @file monoid.hpp
@@ -18,6 +18,7 @@
 #include <istream>
 #include <limits>
 #include <numeric>
+#include <optional>
 #include <ostream>
 #include <type_traits>
 #include <utility>
@@ -42,6 +43,67 @@ struct Affine {
     template <class CharT, class Traits>
     friend std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os, const Affine& f) {
         return os << f.a << CharT(' ') << f.b;
+    }
+};
+
+/**
+ * @brief clamp する関数 f(x) = min(max(x, lb), ub)
+ *
+ * monoid::ClampComposite の要素や acted_monoid::ClampMin などの作用素に使う
+ * 例: Clamp<int> f{0, 10}; f(x) は x を [0, 10] に収める。省略すると恒等写像 {型の最小値, 型の最大値}
+ * lb, ub に {} (std::nullopt) を渡すと下限・上限なし (型の最小値・最大値) になる。例: Clamp<int>{0, {}} は chmax 0
+ * lb <= ub でなければならない
+ */
+template <typename T>
+struct Clamp {
+    T lb;  //!< 下限
+    T ub;  //!< 上限
+    /// @brief 恒等写像
+    constexpr Clamp() : lb(std::numeric_limits<T>::lowest()), ub(std::numeric_limits<T>::max()) {}
+    /// @brief 1 つの値からの暗黙の変換を防ぐため、lb と ub は両方渡す
+    constexpr Clamp(std::optional<T> _lb, std::optional<T> _ub)
+        : lb(_lb ? *_lb : std::numeric_limits<T>::lowest()), ub(_ub ? *_ub : std::numeric_limits<T>::max()) {}
+    constexpr T operator()(const T& x) const { return std::min(std::max(x, lb), ub); }
+    friend constexpr bool operator==(const Clamp& f, const Clamp& g) { return f.lb == g.lb && f.ub == g.ub; }
+    friend constexpr bool operator!=(const Clamp& f, const Clamp& g) { return !(f == g); }
+    template <class CharT, class Traits>
+    friend std::basic_istream<CharT, Traits>& operator>>(std::basic_istream<CharT, Traits>& is, Clamp& f) {
+        return is >> f.lb >> f.ub;
+    }
+    template <class CharT, class Traits>
+    friend std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os, const Clamp& f) {
+        return os << f.lb << CharT(' ') << f.ub;
+    }
+};
+
+/**
+ * @brief 足してから clamp する関数 f(x) = min(max(x + add, lb), ub)
+ *
+ * monoid::ClampAddComposite の要素や acted_monoid::ClampAddMin、beats_acted_monoid::ChminChmaxAddSum の作用素に使う
+ * 例: ClampAdd<long long> f{0, 10, 3}; f(x) は x + 3 を [0, 10] に収める。省略すると恒等写像 {型の最小値, 型の最大値, 0}
+ * lb <= ub でなければならない。lb が型の最小値、ub が型の最大値のときは、それぞれ下限・上限がないことを表す
+ * lb, ub に {} (std::nullopt) を渡すと下限・上限なしになる。例: ClampAdd<long long>{{}, {}, 3} は 3 を足す、{{}, 5} は chmin 5
+ */
+template <typename T>
+struct ClampAdd {
+    T lb;   //!< 下限
+    T ub;   //!< 上限
+    T add;  //!< clamp の前に足す値
+    /// @brief 恒等写像
+    constexpr ClampAdd() : lb(std::numeric_limits<T>::lowest()), ub(std::numeric_limits<T>::max()), add(T(0)) {}
+    /// @brief 1 つの値からの暗黙の変換を防ぐため、lb と ub は両方渡す
+    constexpr ClampAdd(std::optional<T> _lb, std::optional<T> _ub, T _add = T(0))
+        : lb(_lb ? *_lb : std::numeric_limits<T>::lowest()), ub(_ub ? *_ub : std::numeric_limits<T>::max()), add(_add) {}
+    constexpr T operator()(const T& x) const { return std::min(std::max(x + add, lb), ub); }
+    friend constexpr bool operator==(const ClampAdd& f, const ClampAdd& g) { return f.lb == g.lb && f.ub == g.ub && f.add == g.add; }
+    friend constexpr bool operator!=(const ClampAdd& f, const ClampAdd& g) { return !(f == g); }
+    template <class CharT, class Traits>
+    friend std::basic_istream<CharT, Traits>& operator>>(std::basic_istream<CharT, Traits>& is, ClampAdd& f) {
+        return is >> f.lb >> f.ub >> f.add;
+    }
+    template <class CharT, class Traits>
+    friend std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os, const ClampAdd& f) {
+        return os << f.lb << CharT(' ') << f.ub << CharT(' ') << f.add;
     }
 };
 
@@ -193,6 +255,35 @@ struct Composite {
     using S = Affine<T>;
     static constexpr S op(const S& f, const S& g) { return {f.a * g.a, f.a * g.b + f.b}; }
     static constexpr S e() { return {T(1), T(0)}; }
+};
+
+/**
+ * @brief clamp する関数 (Clamp) の合成
+ * op(f, g) = f∘g (g を先に適用する)
+ * clamp(clamp(x, a, b), c, d) = clamp(x, clamp(a, c, d), clamp(b, c, d)) なので、合成も Clamp になる
+ */
+template <typename T>
+struct ClampComposite {
+    using S = Clamp<T>;
+    static constexpr S op(const S& f, const S& g) { return {f(g.lb), f(g.ub)}; }
+    static constexpr S e() { return {}; }
+};
+
+/**
+ * @brief 足してから clamp する関数 (ClampAdd) の合成
+ * op(f, g) = f∘g (g を先に適用する)
+ * f(g(x)) = clamp(x + g.add + f.add, f(g.lb), f(g.ub)) なので、合成も ClampAdd になる
+ * 型の最小値・最大値の lb・ub は下限・上限なしとして扱い、足してもあふれないようにする
+ */
+template <typename T>
+struct ClampAddComposite {
+    using S = ClampAdd<T>;
+    static constexpr S op(const S& f, const S& g) {
+        T lb = g.lb == std::numeric_limits<T>::lowest() ? f.lb : f(g.lb);
+        T ub = g.ub == std::numeric_limits<T>::max() ? f.ub : f(g.ub);
+        return {lb, ub, g.add + f.add};
+    }
+    static constexpr S e() { return {}; }
 };
 
 /**

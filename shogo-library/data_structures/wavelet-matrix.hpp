@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/data_structures/wavelet-matrix.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/data_structures/wavelet-matrix.hpp
 
 /**
  * @file wavelet-matrix.hpp
@@ -26,7 +26,7 @@ class BitVector {
     explicit BitVector(int n) : bits(n / 64 + 1), count(n / 64 + 2) {}
     void set(int i) { bits[i >> 6] |= 1ULL << (i & 63); }
     void build() {
-        for (int i = 0; i < int(bits.size()); i++) count[i + 1] = count[i] + __builtin_popcountll(bits[i]);
+        for (int i = 0; i < static_cast<int>(bits.size()); i++) count[i + 1] = count[i] + __builtin_popcountll(bits[i]);
     }
     bool get(int i) const { return bits[i >> 6] >> (i & 63) & 1; }
     // [0, i) の 1 の個数
@@ -100,7 +100,7 @@ class WaveletMatrix {
         vals.erase(std::unique(vals.begin(), vals.end()), vals.end());
         // 圧縮後の番号 0, ..., vals.size() はすべて height ビットで表せるようにする
         height = 1;
-        while ((1LL << height) <= (long long)vals.size()) height++;
+        while ((1LL << height) <= static_cast<long long>(vals.size())) height++;
         std::vector<int> cur(n), nxt(n);
         for (int i = 0; i < n; i++) cur[i] = compressed_lower(v[i]);
         bv.assign(height, internal_wavelet_matrix::BitVector(n));
@@ -170,7 +170,7 @@ class WaveletMatrix {
     long long count(long long l, long long r, const T& x) const {
         assert(0 <= l && l <= r && r <= n);
         int c = compressed_lower(x);
-        if (c == int(vals.size()) || x < vals[c]) return 0;
+        if (c == static_cast<int>(vals.size()) || x < vals[c]) return 0;
         return count_less(l, r, c + 1) - count_less(l, r, c);
     }
     /**
@@ -229,7 +229,7 @@ class WeightedWaveletMatrix : public WaveletMatrix<T> {
     std::vector<std::vector<W>> pre;
 
     void build_sum(const std::vector<W>& w) {
-        assert(int(w.size()) == n);
+        assert(static_cast<int>(w.size()) == n);
         std::vector<int> order(n), nxt(n);  // 各段の列の、元の列での位置
         for (int i = 0; i < n; i++) order[i] = i;
         pre.assign(height + 1, std::vector<W>(n + 1, W(0)));

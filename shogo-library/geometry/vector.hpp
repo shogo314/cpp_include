@@ -20,7 +20,7 @@
 #include <vector>
 
 #include "../utility/traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/geometry/vector.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/geometry/vector.hpp
 
 /**
  * @brief 幾何学としてのベクトル
@@ -510,9 +510,9 @@ double distance_segments(const Vector<T, 2>& p1, const Vector<T, 2>& p2, const V
 template <typename T>
 T polygon_area_doubled(const std::vector<Vector<T, 2>>& polygon) {
     T ret = 0;
-    for (int i = 0; i < (int)polygon.size(); i++) {
+    for (int i = 0; i < static_cast<int>(polygon.size()); i++) {
         int j = i + 1;
-        if (j == (int)polygon.size()) j = 0;
+        if (j == static_cast<int>(polygon.size())) j = 0;
         ret += cross(polygon[i], polygon[j]);
     }
     return ret;
@@ -562,9 +562,9 @@ bool polygon_is_convex(const std::vector<Vector<T, 2>>& polygon) {
 template <typename T>
 int polygon_contains(const std::vector<Vector<T, 2>>& polygon, const Vector<T, 2>& p) {
     bool in = false;
-    for (int i = 0; i < (int)polygon.size(); i++) {
+    for (int i = 0; i < static_cast<int>(polygon.size()); i++) {
         int j = i + 1;
-        if (j == (int)polygon.size()) j = 0;
+        if (j == static_cast<int>(polygon.size())) j = 0;
         Vector<T> v1 = polygon[i] - p, v2 = polygon[j] - p;
         if (v1[1] > v2[1]) std::swap(v1, v2);
         T c = cross(v1, v2);
@@ -588,8 +588,8 @@ template <typename T>
 std::vector<Vector<T, 2>> select_convex(const std::vector<Vector<T, 2>>& points, bool include_straight = false) {
     std::vector<Vector<T, 2>> ret;
     for (auto& p : points) {
-        while ((int)ret.size() >= 2) {
-            T c = cross(ret.back() - ret[(int)ret.size() - 2], p - ret.back());
+        while (static_cast<int>(ret.size()) >= 2) {
+            T c = cross(ret.back() - ret[static_cast<int>(ret.size()) - 2], p - ret.back());
             if (c > 0 || (c == 0 && include_straight)) break;
             ret.pop_back();
         }
@@ -616,7 +616,7 @@ std::vector<Vector<T, 2>> convex_hull(const std::vector<Vector<T, 2>>& _points, 
     std::vector<Vector<T, 2>> tmp = select_convex(points, include_straight);
     // 全点が一直線上にある場合、下側と上側が同じ点列になるので片方だけ使う
     if (ret.size() == points.size() && tmp.size() == points.size()) return ret;
-    for (int i = 1; i < (int)tmp.size() - 1; i++) ret.push_back(tmp[i]);
+    for (int i = 1; i < static_cast<int>(tmp.size()) - 1; i++) ret.push_back(tmp[i]);
     return ret;
 }
 
@@ -697,8 +697,8 @@ ClosestPairSquared<T> closest_point_pair_squared(const std::vector<Vector<T, 2>>
             std::sort(cand.begin(), cand.end(), [&](int i, int j) {
                 return points[sorted_idx[i]][1] < points[sorted_idx[j]][1];
             });
-            for (int i = 0; i < (int)cand.size(); i++) {
-                for (int j = i + 1; j < (int)cand.size(); j++) {
+            for (int i = 0; i < static_cast<int>(cand.size()); i++) {
+                for (int j = i + 1; j < static_cast<int>(cand.size()); j++) {
                     T dx = points[sorted_idx[cand[j]]][0] - points[sorted_idx[cand[i]]][0];
                     T dy = points[sorted_idx[cand[j]]][1] - points[sorted_idx[cand[i]]][1];
                     if (dy * dy >= min_dist_squared[u]) break;

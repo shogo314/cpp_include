@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "prime.hpp"
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/math/divisor-transform.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/math/divisor-transform.hpp
 
 /**
  * @brief 約数のゼータ変換 a[n] <- sum_{d | n} a[d] O(N log log N)
@@ -17,7 +17,7 @@
  */
 template <typename T>
 void divisor_zeta(std::vector<T>& a) {
-    int n = (int)a.size() - 1;
+    int n = static_cast<int>(a.size()) - 1;
     for (long long p : enumerate_primes(n)) {
         for (int i = 1; i <= n / p; i++) a[i * p] += a[i];
     }
@@ -29,7 +29,7 @@ void divisor_zeta(std::vector<T>& a) {
  */
 template <typename T>
 void divisor_mobius(std::vector<T>& a) {
-    int n = (int)a.size() - 1;
+    int n = static_cast<int>(a.size()) - 1;
     for (long long p : enumerate_primes(n)) {
         for (int i = n / p; i >= 1; i--) a[i * p] -= a[i];
     }
@@ -41,7 +41,7 @@ void divisor_mobius(std::vector<T>& a) {
  */
 template <typename T>
 void multiple_zeta(std::vector<T>& a) {
-    int n = (int)a.size() - 1;
+    int n = static_cast<int>(a.size()) - 1;
     for (long long p : enumerate_primes(n)) {
         for (int i = n / p; i >= 1; i--) a[i] += a[i * p];
     }
@@ -53,7 +53,7 @@ void multiple_zeta(std::vector<T>& a) {
  */
 template <typename T>
 void multiple_mobius(std::vector<T>& a) {
-    int n = (int)a.size() - 1;
+    int n = static_cast<int>(a.size()) - 1;
     for (long long p : enumerate_primes(n)) {
         for (int i = 1; i <= n / p; i++) a[i] -= a[i * p];
     }
@@ -68,7 +68,7 @@ std::vector<T> gcd_convolution(std::vector<T> a, std::vector<T> b) {
     assert(a.size() == b.size());
     multiple_zeta(a);
     multiple_zeta(b);
-    for (int i = 1; i < (int)a.size(); i++) a[i] *= b[i];
+    for (int i = 1; i < static_cast<int>(a.size()); i++) a[i] *= b[i];
     multiple_mobius(a);
     if (!a.empty()) a[0] = T();
     return a;
@@ -83,7 +83,7 @@ std::vector<T> lcm_convolution(std::vector<T> a, std::vector<T> b) {
     assert(a.size() == b.size());
     divisor_zeta(a);
     divisor_zeta(b);
-    for (int i = 1; i < (int)a.size(); i++) a[i] *= b[i];
+    for (int i = 1; i < static_cast<int>(a.size()); i++) a[i] *= b[i];
     divisor_mobius(a);
     if (!a.empty()) a[0] = T();
     return a;

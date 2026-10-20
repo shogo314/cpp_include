@@ -11,7 +11,7 @@
 
 #include "../algebra/group.hpp"
 #include "unionfind.hpp"
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/data_structures/potentialized-unionfind.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/data_structures/potentialized-unionfind.hpp
 
 /**
  * @brief ポテンシャル付きUnionFind
@@ -49,7 +49,7 @@ class PotentializedUnionFind {
         assert(0 <= a && a < _n);
         if (parent_or_size[a] < 0) return a;
         std::stack<int> stk;
-        stk.push(int(a));
+        stk.push(static_cast<int>(a));
         while (parent_or_size[stk.top()] >= 0) {
             stk.push(parent_or_size[stk.top()]);
         }
@@ -83,7 +83,7 @@ class PotentializedUnionFind {
             w = inv(w);
         }
         parent_or_size[x] += parent_or_size[y];
-        parent_or_size[y] = int(x);
+        parent_or_size[y] = static_cast<int>(x);
         diff_weight[y] = w;
         return {x, true};
     }

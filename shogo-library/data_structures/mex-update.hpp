@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/data_structures/mex-update.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/data_structures/mex-update.hpp
 
 /**
  * @file mex-update.hpp
@@ -33,25 +33,25 @@ class MexUpdate {
         if constexpr (std::is_signed_v<value_type>) {
             if (x < 0) return false;
         }
-        return (unsigned long long)x <= (unsigned long long)n;
+        return static_cast<unsigned long long>(x) <= static_cast<unsigned long long>(n);
     }
 
    public:
     MexUpdate() = default;
     explicit MexUpdate(long long n) : n(n), v(n, e) {
         assert(n > 0);
-        assert((unsigned long long)n + 1 < (unsigned long long)e);
+        assert(static_cast<unsigned long long>(n) + 1 < static_cast<unsigned long long>(e));
         std::set<int>::iterator hint = s.end();
         for (long long i = n; i >= 0; --i) {
-            hint = s.emplace_hint(hint, int(i));
+            hint = s.emplace_hint(hint, static_cast<int>(i));
         }
     }
     explicit MexUpdate(const std::vector<value_type>& init) : n(init.size()), v(init) {
         assert(n > 0);
-        assert((unsigned long long)n + 1 < (unsigned long long)e);
+        assert(static_cast<unsigned long long>(n) + 1 < static_cast<unsigned long long>(e));
         std::set<int>::iterator hint = s.end();
         for (long long i = n; i >= 0; --i) {
-            hint = s.emplace_hint(hint, int(i));
+            hint = s.emplace_hint(hint, static_cast<int>(i));
         }
         for (const auto& i : init) {
             if (in_range(i)) {

@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/dp/knapsack.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/dp/knapsack.hpp
 
 /**
  * @file knapsack.hpp
@@ -21,21 +21,21 @@
 namespace internal_knapsack {
 inline void check(const std::vector<long long>& v, const std::vector<long long>& w, long long W) {
     assert(v.size() == w.size() && W >= 0);
-    for (int i = 0; i < (int)v.size(); i++) assert(v[i] >= 0 && w[i] >= 0);
+    for (int i = 0; i < static_cast<int>(v.size()); i++) assert(v[i] >= 0 && w[i] >= 0);
 }
 
 // 各アルゴリズムの計算量の見積もり (大きすぎるものは inf)
-inline long double cost_by_weight(int n, long long W) { return (long double)(n + 1) * ((long double)W + 1); }
-inline long double cost_by_value(int n, long double value_sum) { return (long double)(n + 1) * (value_sum + 1); }
+inline long double cost_by_weight(int n, long long W) { return static_cast<long double>(n + 1) * (static_cast<long double>(W) + 1); }
+inline long double cost_by_value(int n, long double value_sum) { return static_cast<long double>(n + 1) * (value_sum + 1); }
 inline long double cost_meet_in_the_middle(int n) {
     if (n > 80) return std::numeric_limits<long double>::infinity();
-    return (long double)(n + 1) * (long double)(1ULL << ((n + 1) / 2));
+    return static_cast<long double>(n + 1) * static_cast<long double>(1ULL << ((n + 1) / 2));
 }
 
 // 個数制限付きの品物を、個数 1, 2, 4, ..., 残り の組に分けて 0/1 の品物にする
 inline void binary_split(const std::vector<long long>& v, const std::vector<long long>& w, const std::vector<long long>& m,
                          long long W, std::vector<long long>& v2, std::vector<long long>& w2) {
-    for (int i = 0; i < (int)v.size(); i++) {
+    for (int i = 0; i < static_cast<int>(v.size()); i++) {
         long long c = m[i];
         // W を超える個数は使えない
         if (w[i] > 0) c = std::min(c, W / w[i]);
@@ -56,7 +56,7 @@ inline long long knapsack_by_weight(const std::vector<long long>& v, const std::
     internal_knapsack::check(v, w, W);
     // dp[j] は重さの和が j 以下のときの価値の和の最大値
     std::vector<long long> dp(W + 1, 0);
-    for (int i = 0; i < (int)v.size(); i++) {
+    for (int i = 0; i < static_cast<int>(v.size()); i++) {
         if (w[i] > W) continue;
         for (long long j = W; j >= w[i]; j--) dp[j] = std::max(dp[j], dp[j - w[i]] + v[i]);
     }
@@ -74,7 +74,7 @@ inline long long knapsack_by_value(const std::vector<long long>& v, const std::v
     const long long INF = std::numeric_limits<long long>::max();
     std::vector<long long> dp(value_sum + 1, INF);
     dp[0] = 0;
-    for (int i = 0; i < (int)v.size(); i++) {
+    for (int i = 0; i < static_cast<int>(v.size()); i++) {
         if (w[i] > W) continue;
         for (long long s = value_sum; s >= v[i]; s--) {
             long long prev = dp[s - v[i]];
@@ -109,7 +109,7 @@ inline long long knapsack_meet_in_the_middle(const std::vector<long long>& v, co
     };
     auto a = enumerate(0, n / 2), b = enumerate(n / 2, n);
     // b の価値を、重さがそれ以下のものの最大値に置き換える
-    for (int i = 1; i < (int)b.size(); i++) b[i].second = std::max(b[i].second, b[i - 1].second);
+    for (int i = 1; i < static_cast<int>(b.size()); i++) b[i].second = std::max(b[i].second, b[i - 1].second);
     long long res = 0;
     int j = b.size() - 1;
     for (auto [x, y] : a) {
@@ -141,9 +141,9 @@ inline long long knapsack(const std::vector<long long>& v, const std::vector<lon
  */
 inline long long unbounded_knapsack(const std::vector<long long>& v, const std::vector<long long>& w, long long W) {
     internal_knapsack::check(v, w, W);
-    for (int i = 0; i < (int)v.size(); i++) assert((w[i] > 0 || v[i] == 0) && "unbounded_knapsack: infinite value");
+    for (int i = 0; i < static_cast<int>(v.size()); i++) assert((w[i] > 0 || v[i] == 0) && "unbounded_knapsack: infinite value");
     std::vector<long long> dp(W + 1, 0);
-    for (int i = 0; i < (int)v.size(); i++) {
+    for (int i = 0; i < static_cast<int>(v.size()); i++) {
         if (w[i] == 0 || w[i] > W) continue;
         for (long long j = w[i]; j <= W; j++) dp[j] = std::max(dp[j], dp[j - w[i]] + v[i]);
     }
@@ -160,7 +160,7 @@ inline long long bounded_knapsack_by_weight(const std::vector<long long>& v, con
     assert(m.size() == v.size());
     std::vector<long long> dp(W + 1, 0), cur;
     std::deque<std::pair<long long, long long>> dq;  // (t, dp[r + t w] - t v) で、値が減少する順
-    for (int i = 0; i < (int)v.size(); i++) {
+    for (int i = 0; i < static_cast<int>(v.size()); i++) {
         assert(m[i] >= 0);
         if (w[i] == 0) {
             for (auto& x : dp) x += v[i] * m[i];
@@ -172,7 +172,7 @@ inline long long bounded_knapsack_by_weight(const std::vector<long long>& v, con
             cur.clear();
             for (long long j = r; j <= W; j += w[i]) cur.push_back(dp[j]);
             dq.clear();
-            for (long long k = 0; k < (long long)cur.size(); k++) {
+            for (long long k = 0; k < static_cast<long long>(cur.size()); k++) {
                 long long val = cur[k] - k * v[i];
                 while (!dq.empty() && dq.back().second <= val) dq.pop_back();
                 dq.emplace_back(k, val);
@@ -216,11 +216,11 @@ inline long long bounded_knapsack(const std::vector<long long>& v, const std::ve
             pieces++;
             rest -= std::min(k, rest);
         }
-        value_sum += (long double)v[i] * c;
+        value_sum += static_cast<long double>(v[i]) * c;
     }
     long double cw = cost_by_weight(n, W);
-    long double cv = pieces > 1e9 ? std::numeric_limits<long double>::infinity() : cost_by_value((int)pieces, value_sum);
-    long double cm = pieces > 80 ? std::numeric_limits<long double>::infinity() : cost_meet_in_the_middle((int)pieces);
+    long double cv = pieces > 1e9 ? std::numeric_limits<long double>::infinity() : cost_by_value(static_cast<int>(pieces), value_sum);
+    long double cm = pieces > 80 ? std::numeric_limits<long double>::infinity() : cost_meet_in_the_middle(static_cast<int>(pieces));
     if (cw <= cv && cw <= cm) return bounded_knapsack_by_weight(v, w, m, W);
     std::vector<long long> v2, w2;
     binary_split(v, w, m, W, v2, w2);

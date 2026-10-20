@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/data_structures/persistent-array.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/data_structures/persistent-array.hpp
 
 /**
  * @file persistent-array.hpp
@@ -32,11 +32,11 @@ class PersistentArray {
         std::vector<T> leaf;
         int make_leaf(const T& x) {
             leaf.push_back(x);
-            return int(leaf.size()) - 1;
+            return static_cast<int>(leaf.size()) - 1;
         }
         int make_node(int l, int r) {
             child.push_back({l, r});
-            return int(child.size()) - 1;
+            return static_cast<int>(child.size()) - 1;
         }
     };
 

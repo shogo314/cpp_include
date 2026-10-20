@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "tree.hpp"
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/graph/centroid-decomposition.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/graph/centroid-decomposition.hpp
 
 /**
  * @brief 重心分解
@@ -50,7 +50,7 @@ class CentroidDecomposition {
             // s を含む成分を BFS で列挙する (取り除いた頂点は lev が決まっている)
             bfs.assign(1, s);
             bfs_par[s] = -1;
-            for (int i = 0; i < (int)bfs.size(); i++) {
+            for (int i = 0; i < static_cast<int>(bfs.size()); i++) {
                 int v = bfs[i];
                 for (long long u : tree[v]) {
                     if (u == bfs_par[v] || lev[u] != -1) continue;
@@ -83,7 +83,7 @@ class CentroidDecomposition {
                 if (lev[u] == -1) st.emplace_back(u, c);
             }
         }
-        assert((long long)ord.size() == n && "CentroidDecomposition: not connected");
+        assert(static_cast<long long>(ord.size()) == n && "CentroidDecomposition: not connected");
     }
 
     /**
@@ -130,7 +130,7 @@ class CentroidDecomposition {
             // c の先の部分木を、親をたどらないように BFS する
             std::vector<std::pair<long long, Cost>> sub = {{e.dst, e.cost}};
             std::vector<long long> from = {c};
-            for (int i = 0; i < (int)sub.size(); i++) {
+            for (int i = 0; i < static_cast<int>(sub.size()); i++) {
                 auto [v, d] = sub[i];
                 for (const auto& f : tree[v]) {
                     if (f.dst == from[i] || lev[f.dst] <= lev[c]) continue;

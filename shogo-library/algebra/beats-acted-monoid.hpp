@@ -1,5 +1,4 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/algebra/beats-acted-monoid.hpp
 
 /**
  * @file beats-acted-monoid.hpp
@@ -13,6 +12,9 @@
 #include <algorithm>
 #include <limits>
 #include <utility>
+
+#include "monoid.hpp"
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/algebra/beats-acted-monoid.hpp
 
 namespace beats_acted_monoid {
 
@@ -32,7 +34,7 @@ struct ChminSum {
 
     struct S {
         T sum;
-        T max1, max2;      // 最大値、2番目の最大値 (なければ lowest)
+        T max1, max2;       // 最大値、2番目の最大値 (なければ lowest)
         long long max_cnt;  // 最大値の個数
         constexpr S() : sum(0), max1(lowest), max2(lowest), max_cnt(0) {}
         constexpr S(const T& x) : sum(x), max1(x), max2(lowest), max_cnt(1) {}
@@ -89,7 +91,7 @@ struct ChmaxSum {
 
     struct S {
         T sum;
-        T min1, min2;      // 最小値、2番目の最小値 (なければ highest)
+        T min1, min2;       // 最小値、2番目の最小値 (なければ highest)
         long long min_cnt;  // 最小値の個数
         constexpr S() : sum(0), min1(highest), min2(highest), min_cnt(0) {}
         constexpr S(const T& x) : sum(x), min1(x), min2(highest), min_cnt(1) {}
@@ -133,7 +135,7 @@ struct ChmaxSum {
 /**
  * @brief 区間 chmin・chmax・加算・代入、区間和・最大値・最小値
  *
- * 作用素 F{lb, ub, add} は x <- clamp(x + add, lb, ub) を表す (lb <= ub)
+ * 作用素 F = ClampAdd<T>{lb, ub, add} は x <- clamp(x + add, lb, ub) を表す (lb <= ub)
  * chmin(b), chmax(b), add(b), update(b) で作る
  * S(x) で値 x の1要素から作り、sum, max1, min1 で区間和・最大値・最小値を取得する
  * 空の区間では max1 = numeric_limits<T>::lowest(), min1 = numeric_limits<T>::max()
@@ -147,15 +149,13 @@ struct ChminChmaxAddSum {
 
     struct S {
         T sum;
-        T max1, max2;  // 最大値、2番目の最大値 (なければ lowest)
-        T min1, min2;  // 最小値、2番目の最小値 (なければ highest)
+        T max1, max2;                // 最大値、2番目の最大値 (なければ lowest)
+        T min1, min2;                // 最小値、2番目の最小値 (なければ highest)
         long long max_cnt, min_cnt;  // 最大値・最小値の個数
         constexpr S() : sum(0), max1(lowest), max2(lowest), min1(highest), min2(highest), max_cnt(0), min_cnt(0) {}
         constexpr S(const T& x) : sum(x), max1(x), max2(lowest), min1(x), min2(highest), max_cnt(1), min_cnt(1) {}
     };
-    struct F {
-        T lb, ub, add;
-    };
+    using F = ClampAdd<T>;
 
     static constexpr F chmin(const T& b) { return {lowest, b, T(0)}; }
     static constexpr F chmax(const T& b) { return {b, highest, T(0)}; }
@@ -239,11 +239,7 @@ struct ChminChmaxAddSum {
         return {false, res};
     }
     // g を適用した後に f を適用する
-    static constexpr F composition(const F& f, const F& g) {
-        T lb = g.lb == lowest ? f.lb : std::clamp(g.lb + f.add, f.lb, f.ub);
-        T ub = g.ub == highest ? f.ub : std::clamp(g.ub + f.add, f.lb, f.ub);
-        return {lb, ub, g.add + f.add};
-    }
+    static constexpr F composition(const F& f, const F& g) { return monoid::ClampAddComposite<T>::op(f, g); }
     static constexpr F id() { return {lowest, highest, T(0)}; }
 };
 

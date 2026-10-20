@@ -15,7 +15,7 @@
 #include <vector>
 
 #include "../utility/traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/data_structures/convex-hull-trick.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/data_structures/convex-hull-trick.hpp
 
 /**
  * @brief 追加される傾きが単調とは限らない場合のConvex Hull Trick
@@ -68,7 +68,7 @@ class LiChaoTree {
     explicit LiChaoTree(const std::vector<T>& xs) : n(xs.size()), xs(xs) {
         assert(!xs.empty());
         sz = 1, height = 0;
-        while (sz < (long long)xs.size()) {
+        while (sz < static_cast<long long>(xs.size())) {
             sz <<= 1;
             height++;
         }

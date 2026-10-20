@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/graph/min-cost-flow.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/graph/min-cost-flow.hpp
 
 /**
  * @file min-cost-flow.hpp
@@ -71,7 +71,7 @@ class MinCostFlow {
             if (vis[v]) continue;
             vis[v] = true;
             if (v == t) break;
-            for (int i = 0; i < (int)g[v].size(); i++) {
+            for (int i = 0; i < static_cast<int>(g[v].size()); i++) {
                 const auto& e = g[v][i];
                 if (vis[e.to] || e.cap == 0) continue;
                 Cost c = e.cost - dual[e.to] + dual[v];
@@ -107,8 +107,8 @@ class MinCostFlow {
         int from_id = g[from].size();
         int to_id = g[to].size() + (from == to);
         pos.emplace_back(from, from_id);
-        g[from].push_back({(int)to, to_id, cap, cost});
-        g[to].push_back({(int)from, from_id, 0, -cost});
+        g[from].push_back({static_cast<int>(to), to_id, cap, cost});
+        g[to].push_back({static_cast<int>(from), from_id, 0, -cost});
         return id;
     }
 
@@ -157,7 +157,7 @@ class MinCostFlow {
      * @brief 番号 i の辺の情報
      */
     Edge get_edge(long long i) const {
-        assert(0 <= i && i < (long long)pos.size());
+        assert(0 <= i && i < static_cast<long long>(pos.size()));
         const auto& e = g[pos[i].first][pos[i].second];
         const auto& re = g[e.to][e.rev];
         return {pos[i].first, e.to, e.cap + re.cap, re.cap, e.cost};
@@ -167,7 +167,7 @@ class MinCostFlow {
      */
     std::vector<Edge> edges() const {
         std::vector<Edge> res;
-        for (long long i = 0; i < (long long)pos.size(); i++) res.push_back(get_edge(i));
+        for (long long i = 0; i < static_cast<long long>(pos.size()); i++) res.push_back(get_edge(i));
         return res;
     }
 };

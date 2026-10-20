@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "../algebra/monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/data_structures/dynamic-segtree.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/data_structures/dynamic-segtree.hpp
 
 /**
  * @brief 動的セグメント木
@@ -43,7 +43,7 @@ class DynamicSegTree {
         val.push_back(e());
         left.push_back(-1);
         right.push_back(-1);
-        return int(val.size()) - 1;
+        return static_cast<int>(val.size()) - 1;
     }
 
     class DynamicSegTreeReference {

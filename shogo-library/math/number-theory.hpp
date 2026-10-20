@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "modular-arithmetic.hpp"
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/math/number-theory.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/math/number-theory.hpp
 
 /**
  * @brief 2式の連立合同式を、mが互いに素になるように変形する
@@ -55,7 +55,7 @@ struct CRTResult {
 inline std::optional<CRTResult> crt(const std::vector<long long>& r, const std::vector<long long>& m) {
     assert(r.size() == m.size());
     if (r.size() == 0) return CRTResult{0, 1};
-    int n = (int)r.size();
+    int n = static_cast<int>(r.size());
     long long m_lcm = m[0];
     long long ans = (r[0] % m[0] + m[0]) % m[0];
     for (int i = 1; i < n; i++) {
@@ -79,7 +79,7 @@ inline std::optional<CRTResult> crt(const std::vector<long long>& r, const std::
 inline std::optional<CRTResult> crt(const std::vector<long long>& r, const std::vector<long long>& m, long long MOD) {
     assert(r.size() == m.size());
     if (r.size() == 0) return CRTResult{0, 1};
-    int n = (int)r.size();
+    int n = static_cast<int>(r.size());
     std::vector<long long> r2 = r, m2 = m;
     // mを互いに素にする
     for (int i = 1; i < n; i++) {

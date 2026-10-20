@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "../math/fps.hpp"
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/dp/subset-sum-count.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/dp/subset-sum-count.hpp
 
 /**
  * @brief 和が s になる部分集合 (各要素は 1 回まで) の個数を、s = 0, 1, ..., S について求める (DP) O(N S)
@@ -72,7 +72,7 @@ std::vector<mint> subset_sum_count_fps(const std::vector<long long>& a, long lon
     }
     FPS<mint> g = exp(f, t + 1);
     std::vector<mint> res(t + 1);
-    for (int s = 0; s <= t && s < (int)g.size(); s++) res[s] = g[s] * zero_factor;
+    for (int s = 0; s <= t && s < static_cast<int>(g.size()); s++) res[s] = g[s] * zero_factor;
     return res;
 }
 
@@ -85,7 +85,7 @@ std::vector<mint> subset_sum_count_fps(const std::vector<long long>& a, long lon
 template <typename mint>
 std::vector<mint> subset_sum_count(const std::vector<long long>& a, long long S) {
     // 実測では、DP は N S あたり約 0.2 ns、exp は S log S あたり約 100 ns なので、exp を 500 倍と見積もる
-    double dp_cost = (double)a.size() * (S + 1);
+    double dp_cost = static_cast<double>(a.size()) * (S + 1);
     double fps_cost = 500.0 * (S + 1) * std::log2(S + 2);
     if (dp_cost <= fps_cost) return subset_sum_count_dp<mint>(a, S);
     return subset_sum_count_fps<mint>(a, S);

@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/math/floor-sum.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/math/floor-sum.hpp
 
 /**
  * @file floor-sum.hpp
@@ -46,12 +46,12 @@ inline long long floor_sum(long long n, long long m, long long a, long long b) {
     unsigned long long res = 0;
     if (a < 0) {
         long long a2 = a % m + m;
-        res -= (unsigned long long)n * (n - 1) / 2 * ((a2 - a) / m);
+        res -= static_cast<unsigned long long>(n) * (n - 1) / 2 * ((a2 - a) / m);
         a = a2;
     }
     if (b < 0) {
         long long b2 = b % m + m;
-        res -= (unsigned long long)n * ((b2 - b) / m);
+        res -= static_cast<unsigned long long>(n) * ((b2 - b) / m);
         b = b2;
     }
     return res + internal_floor_sum::floor_sum_unsigned(n, m, a, b);

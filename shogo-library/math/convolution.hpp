@@ -11,7 +11,7 @@
 
 #include "modint.hpp"
 #include "modular-arithmetic.hpp"
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/math/convolution.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/math/convolution.hpp
 
 /**
  * @brief 畳み込み
@@ -67,7 +67,7 @@ inline int get_fft_size(int N, int M) {
 template <class mint>
 void trans(std::vector<mint>& v, bool inv = false) {
     if (v.empty()) return;
-    int N = (int)v.size();
+    int N = static_cast<int>(v.size());
     int MOD = v[0].mod();
     int PR = calc_primitive_root(MOD);
     static bool first = true;
@@ -123,7 +123,7 @@ static const mint2 imod01 = 187290749;  // imod1 / MOD0;
 template <class T>
 std::vector<T> naive(const std::vector<T>& A, const std::vector<T>& B) {
     if (A.empty() || B.empty()) return {};
-    int N = (int)A.size(), M = (int)B.size();
+    int N = static_cast<int>(A.size()), M = static_cast<int>(B.size());
     std::vector<T> res(N + M - 1);
     for (int i = 0; i < N; ++i)
         for (int j = 0; j < M; ++j)
@@ -141,7 +141,7 @@ std::vector<T> naive(const std::vector<T>& A, const std::vector<T>& B) {
 template <class mint>
 std::vector<mint> convolution(const std::vector<mint>& A, const std::vector<mint>& B) {
     if (A.empty() || B.empty()) return {};
-    int N = (int)A.size(), M = (int)B.size();
+    int N = static_cast<int>(A.size()), M = static_cast<int>(B.size());
     if (std::min(N, M) < 30) return internal_convolution::naive(A, B);
     int MOD = A[0].mod();
     int size_fft = internal_convolution::get_fft_size(N, M);
@@ -196,7 +196,7 @@ std::vector<mint> convolution(const std::vector<mint>& A, const std::vector<mint
  */
 inline std::vector<long long> convolution_ll(const std::vector<long long>& A, const std::vector<long long>& B) {
     if (A.empty() || B.empty()) return {};
-    int N = (int)A.size(), M = (int)B.size();
+    int N = static_cast<int>(A.size()), M = static_cast<int>(B.size());
     if (std::min(N, M) < 30) return internal_convolution::naive(A, B);
     int size_fft = internal_convolution::get_fft_size(N, M);
     std::vector<internal_convolution::mint0> a0(size_fft, 0), b0(size_fft, 0), c0(size_fft, 0);
@@ -221,13 +221,13 @@ inline std::vector<long long> convolution_ll(const std::vector<long long>& A, co
     }
     internal_convolution::trans(c0, true), internal_convolution::trans(c1, true), internal_convolution::trans(c2, true);
     static const long long mod0 = internal_convolution::MOD0, mod01 = mod0 * internal_convolution::MOD1;
-    static const __int128_t mod012 = (__int128_t)mod01 * internal_convolution::MOD2;
+    static const __int128_t mod012 = static_cast<__int128_t>(mod01) * internal_convolution::MOD2;
     std::vector<long long> res(N + M - 1);
     for (int i = 0; i < N + M - 1; ++i) {
         int y0 = c0[i].val();
         int y1 = (internal_convolution::imod0 * (c1[i] - y0)).val();
         int y2 = (internal_convolution::imod01 * (c2[i] - y0) - internal_convolution::imod1 * y1).val();
-        __int128_t tmp = (__int128_t)mod01 * y2 + (__int128_t)mod0 * y1 + y0;
+        __int128_t tmp = static_cast<__int128_t>(mod01) * y2 + static_cast<__int128_t>(mod0) * y1 + y0;
         if (tmp < (mod012 >> 1))
             res[i] = tmp;
         else

@@ -10,7 +10,7 @@
 
 #include "graph.hpp"
 #include "graph_util.hpp"
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/graph/two-sat.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/graph/two-sat.hpp
 
 /**
  * @brief 2-SAT
@@ -64,7 +64,7 @@ class TwoSat {
         auto groups = strongly_connected_components(graph);
         // 成分のトポロジカル順での番号
         std::vector<int> id(2 * n);
-        for (int k = 0; k < (int)groups.size(); k++) {
+        for (int k = 0; k < static_cast<int>(groups.size()); k++) {
             for (long long v : groups[k]) id[v] = k;
         }
         for (long long i = 0; i < n; i++) {

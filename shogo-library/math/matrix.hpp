@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/math/matrix.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/math/matrix.hpp
 
 /**
  * @file matrix.hpp
@@ -11,6 +11,7 @@
 #include <cmath>
 #include <cstddef>
 #include <initializer_list>
+#include <optional>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -348,7 +349,7 @@ class Matrix {
      */
     [[nodiscard]]
     friend std::vector<T> operator*(const Matrix& A, const std::vector<T>& B) {
-        assert(A.m == (long long)B.size());
+        assert(A.m == static_cast<long long>(B.size()));
         std::vector<T> ret(A.n, OperatorProperty::zero());
         for (long long i = 0; i < A.n; i++) {
             for (long long j = 0; j < A.m; j++) {
@@ -366,7 +367,7 @@ class Matrix {
      */
     [[nodiscard]]
     friend std::vector<T> operator*(const std::vector<T>& A, const Matrix& B) {
-        assert((long long)A.size() == B.n);
+        assert(static_cast<long long>(A.size()) == B.n);
         std::vector<T> ret(B.m, OperatorProperty::zero());
         for (long long i = 0; i < B.n; i++) {
             for (long long j = 0; j < B.m; j++) {
@@ -443,6 +444,109 @@ class Matrix {
                 for (long long j = 0; j < n; j++) ret[i][j] = A[i][n + j];
             return ret;
         }
+    }
+
+    /**
+     * @brief 連立一次方程式 Ax = b の解
+     * 解全体は x + c_0 basis[0] + c_1 basis[1] + ... (c_i は任意)
+     */
+    struct Solution {
+        std::vector<T> x;                   //!< 解の 1 つ (特殊解)
+        std::vector<std::vector<T>> basis;  //!< Ax = 0 の解空間の基底
+    };
+
+    /**
+     * @brief 簡約化した行列 (行基本変形で、各行の主成分を 1 にし、主成分のある列の他の成分を 0 にしたもの) と、各行の主成分の列
+     * 主成分の列の個数がランク。0 だけの行は下にまとまる
+     * @note 割り算を使うので、要素は体 (modint など) であること。浮動小数点型は誤差を考えないので使えない
+     */
+    [[nodiscard]]
+    std::pair<Matrix, std::vector<long long>> reduced_row_echelon() const {
+        Matrix A = *this;
+        std::vector<long long> pivots = reduce(A.v, m);
+        return {A, pivots};
+    }
+    /**
+     * @brief ランク O(nm min(n, m))
+     */
+    [[nodiscard]]
+    long long rank() const {
+        auto A = v;
+        return reduce(A, m).size();
+    }
+    /**
+     * @brief Ax = 0 の解空間の基底 (長さ m のベクトルを m - rank 個) O(nm min(n, m))
+     */
+    [[nodiscard]]
+    std::vector<std::vector<T>> kernel() const {
+        auto A = v;
+        std::vector<long long> pivots = reduce(A, m);
+        return kernel_from_reduced(A, pivots);
+    }
+    /**
+     * @brief 連立一次方程式 Ax = b を解く。解がなければ std::nullopt O(nm min(n, m))
+     */
+    [[nodiscard]]
+    std::optional<Solution> solve(const std::vector<T>& b) const {
+        assert(static_cast<long long>(b.size()) == n);
+        // 拡大係数行列 [A | b] を、A の列だけで簡約化する
+        std::vector<std::vector<T>> A(n);
+        for (long long i = 0; i < n; i++) {
+            A[i] = v[i];
+            A[i].push_back(b[i]);
+        }
+        std::vector<long long> pivots = reduce(A, m);
+        const long long r = pivots.size();
+        // 左側が 0 になった行の右辺が 0 でなければ解なし
+        for (long long i = r; i < n; i++) {
+            if (A[i][m] != OperatorProperty::zero()) return std::nullopt;
+        }
+        Solution sol;
+        sol.x.assign(m, OperatorProperty::zero());
+        for (long long i = 0; i < r; i++) sol.x[pivots[i]] = A[i][m];
+        sol.basis = kernel_from_reduced(A, pivots);
+        return sol;
+    }
+
+   private:
+    // A の左から cols 列を使って簡約化し、各行の主成分の列を返す (列が cols より多い部分も一緒に変形する)
+    static std::vector<long long> reduce(std::vector<std::vector<T>>& A, long long cols) {
+        const long long rows = A.size();
+        std::vector<long long> pivots;
+        for (long long c = 0, r = 0; c < cols && r < rows; c++) {
+            long long p = r;
+            while (p < rows && A[p][c] == OperatorProperty::zero()) p++;
+            if (p == rows) continue;
+            std::swap(A[r], A[p]);
+            const long long w = A[r].size();
+            T scale = OperatorProperty::inv(A[r][c]);
+            for (long long k = c; k < w; k++) A[r][k] = OperatorProperty::mul(A[r][k], scale);
+            for (long long i = 0; i < rows; i++) {
+                if (i == r || A[i][c] == OperatorProperty::zero()) continue;
+                T f = A[i][c];
+                for (long long k = c; k < w; k++) {
+                    A[i][k] = OperatorProperty::add(A[i][k], OperatorProperty::neg(OperatorProperty::mul(f, A[r][k])));
+                }
+            }
+            pivots.push_back(c);
+            r++;
+        }
+        return pivots;
+    }
+    // 簡約化した A (左から m 列) から、Ax = 0 の解空間の基底を作る
+    std::vector<std::vector<T>> kernel_from_reduced(const std::vector<std::vector<T>>& A, const std::vector<long long>& pivots) const {
+        std::vector<bool> is_pivot(m, false);
+        for (long long c : pivots) is_pivot[c] = true;
+        std::vector<std::vector<T>> res;
+        // 主成分のない列 (自由変数) f ごとに、x_f = 1、他の自由変数は 0 とした解
+        for (long long f = 0; f < m; f++) {
+            if (is_pivot[f]) continue;
+            std::vector<T> x(m, OperatorProperty::zero());
+            x[f] = OperatorProperty::one();
+            for (long long i = 0; i < static_cast<long long>(pivots.size()); i++) x[pivots[i]] = OperatorProperty::neg(A[i][f]);
+            res.push_back(x);
+        }
+        return res;
     }
 
    private:

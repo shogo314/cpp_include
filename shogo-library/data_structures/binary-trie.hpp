@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/data_structures/binary-trie.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/data_structures/binary-trie.hpp
 
 /**
  * @file binary-trie.hpp
@@ -31,7 +31,7 @@ class BinaryTrie {
         // 子の状態がvalidかどうか
         // 0: xx, 1: xo, 2: ox, 3: oo
         int state_children() const {
-            return ((bool)children[1] << 1) | (bool)children[0];
+            return (static_cast<bool>(children[1]) << 1) | static_cast<bool>(children[0]);
         }
         // xorの値を子ノードに伝播する
         void affect_xor() {
@@ -142,7 +142,7 @@ class BinaryTrie {
             NodePtr& z_ptr = cur_ptr->children[0];
             NodePtr& o_ptr = cur_ptr->children[1];
             assert(state > 0);
-            if (state == 1 || (state == 3 && n < (long long)z_ptr->subcnt)) {
+            if (state == 1 || (state == 3 && n < static_cast<long long>(z_ptr->subcnt))) {
                 cur_ptr = z_ptr;
             } else {
                 n -= (state & 1 ? z_ptr->subcnt : 0);

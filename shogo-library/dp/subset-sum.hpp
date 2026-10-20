@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/dp/subset-sum.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/dp/subset-sum.hpp
 
 /**
  * @file subset-sum.hpp
@@ -39,7 +39,7 @@ inline std::vector<unsigned long long> build(const std::vector<long long>& a, lo
     std::vector<unsigned long long> bits(S / 64 + 1);
     bits[0] = 1;
     if (from) from->assign(S + 1, -1);
-    for (int i = 0; i < (int)a.size(); i++) {
+    for (int i = 0; i < static_cast<int>(a.size()); i++) {
         assert(a[i] >= 0);
         if (a[i] == 0 || a[i] > S) continue;
         if (from)
@@ -101,10 +101,10 @@ inline MitmResult meet_in_the_middle(const std::vector<long long>& a, long long 
     }
     return res;
 }
-inline long double cost_bitset(int n, long long S) { return (long double)(n + 1) * ((long double)S / 64 + 1); }
+inline long double cost_bitset(int n, long long S) { return static_cast<long double>(n + 1) * (static_cast<long double>(S) / 64 + 1); }
 inline long double cost_meet_in_the_middle(int n) {
     if (n > 120) return std::numeric_limits<long double>::infinity();
-    return 4 * (long double)(1ULL << ((n + 1) / 2));
+    return 4 * static_cast<long double>(1ULL << ((n + 1) / 2));
 }
 }  // namespace internal_subset_sum
 

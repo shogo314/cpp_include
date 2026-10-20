@@ -11,7 +11,7 @@
 
 #include "persistent-array.hpp"
 #include "unionfind.hpp"
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/data_structures/persistent-unionfind.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/data_structures/persistent-unionfind.hpp
 
 /**
  * @brief 永続UnionFind
@@ -44,7 +44,7 @@ class PersistentUnionFind {
         if (x == y) return *this;
         int sx = parent_or_size[x], sy = parent_or_size[y];
         if (-sx < -sy) std::swap(x, y);
-        return PersistentUnionFind(_n, parent_or_size.set(x, sx + sy).set(y, int(x)));
+        return PersistentUnionFind(_n, parent_or_size.set(x, sx + sy).set(y, static_cast<int>(x)));
     }
     /**
      * @brief 頂点a,bが連結かどうか

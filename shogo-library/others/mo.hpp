@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/others/mo.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/others/mo.hpp
 
 /**
  * @file mo.hpp
@@ -42,7 +42,7 @@ class Mo {
        const DELETE_LEFT& delete_left) : _n(n), lri(), _e(e), _add_left(add_left), _delete_left(delete_left), _add_right(add_left), _delete_right(delete_left) {}
     void query(long long l, long long r) {
         assert(0 <= l && l <= r && r <= _n);
-        lri.push_back({l, r, (long long)lri.size()});
+        lri.push_back({l, r, static_cast<long long>(lri.size())});
     }
     template <typename T, class F>
     std::vector<T> solve(const F& f) {

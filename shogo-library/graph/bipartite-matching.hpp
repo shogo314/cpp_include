@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/graph/bipartite-matching.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/graph/bipartite-matching.hpp
 
 /**
  * @file bipartite-matching.hpp
@@ -90,7 +90,7 @@ class BipartiteMatching {
                 st.assign(1, s);
                 while (!st.empty()) {
                     int u = st.back();
-                    if (iter[u] == (int)g[u].size()) {
+                    if (iter[u] == static_cast<int>(g[u].size())) {
                         // u からは増加路がないので、このフェーズでは使わない
                         dist[u] = -1;
                         st.pop_back();

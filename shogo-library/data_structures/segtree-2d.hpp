@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "../algebra/monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/data_structures/segtree-2d.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/data_structures/segtree-2d.hpp
 
 /**
  * @brief 2次元セグメント木 (更新・取得する座標を先読みして圧縮する)
@@ -42,7 +42,7 @@ class SegTree2D {
     }
 
     S updated_y(long long kx, long long ky, int child_y_idx, bool child_y_right, const S& child_val) {
-        if (!child_y_right && child_y_idx + 1 < (int)y_indices[kx].size() && y_indices[kx][child_y_idx + 1] == ky * 2 + 1) {
+        if (!child_y_right && child_y_idx + 1 < static_cast<int>(y_indices[kx].size()) && y_indices[kx][child_y_idx + 1] == ky * 2 + 1) {
             return op(child_val, data_compressed[kx][child_y_idx + 1]);
         }
         if (child_y_right && child_y_idx - 1 >= 0 && y_indices[kx][child_y_idx - 1] == ky * 2) {
@@ -146,7 +146,7 @@ class SegTree2D {
             y += sz_y;
             std::vector<int> y_indices_tmp;
             for (int i = 0; i <= height_y; ++i) {
-                y_indices_tmp.push_back(int(y));
+                y_indices_tmp.push_back(static_cast<int>(y));
                 y >>= 1;
             }
             for (long long x : x_indices_tmp) {
@@ -169,8 +169,8 @@ class SegTree2D {
             ry += sz_y;
             std::vector<int> y_indices_tmp;
             while (ly < ry) {
-                if (ly & 1) y_indices_tmp.push_back(int(ly++));
-                if (ry & 1) y_indices_tmp.push_back(int(--ry));
+                if (ly & 1) y_indices_tmp.push_back(static_cast<int>(ly++));
+                if (ry & 1) y_indices_tmp.push_back(static_cast<int>(--ry));
                 ly >>= 1;
                 ry >>= 1;
             }

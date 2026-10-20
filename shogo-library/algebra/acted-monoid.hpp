@@ -24,7 +24,7 @@
 #include <utility>
 
 #include "monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/b591e1ab6db09d0025e385b1bb5f4d8982cc4d1f/src/algebra/acted-monoid.hpp
+// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/algebra/acted-monoid.hpp
 
 namespace internal_acted_monoid {
 template <typename A, typename = void>
@@ -162,6 +162,80 @@ struct ChmaxMax : monoid::Max<T> {
     static constexpr S mapping(const F& f, const S& x) { return std::max(f, x); }
     static constexpr F composition(const F& f, const F& g) { return std::max(f, g); }
     static constexpr F id() { return std::numeric_limits<F>::lowest(); }
+};
+
+/**
+ * @brief 区間 clamp x <- min(max(x, lb), ub) (Clamp)、区間最小値
+ * clamp は単調非減少なので、最小値に適用すればよい
+ */
+template <typename T>
+struct ClampMin : monoid::Min<T> {
+    using S = T;
+    using F = Clamp<T>;
+    static constexpr S mapping(const F& f, const S& x) { return f(x); }
+    static constexpr F composition(const F& f, const F& g) { return monoid::ClampComposite<T>::op(f, g); }
+    static constexpr F id() { return {}; }
+};
+
+/**
+ * @brief 区間 clamp x <- min(max(x, lb), ub) (Clamp)、区間最大値
+ */
+template <typename T>
+struct ClampMax : monoid::Max<T> {
+    using S = T;
+    using F = Clamp<T>;
+    static constexpr S mapping(const F& f, const S& x) { return f(x); }
+    static constexpr F composition(const F& f, const F& g) { return monoid::ClampComposite<T>::op(f, g); }
+    static constexpr F id() { return {}; }
+};
+
+/**
+ * @brief 区間 clamp x <- min(max(x, lb), ub) (Clamp)、区間最小値と最大値の組 {min, max} (monoid::MinMax)
+ */
+template <typename T>
+struct ClampMinMax : monoid::MinMax<T> {
+    using S = std::pair<T, T>;
+    using F = Clamp<T>;
+    static constexpr S mapping(const F& f, const S& x) { return {f(x.first), f(x.second)}; }
+    static constexpr F composition(const F& f, const F& g) { return monoid::ClampComposite<T>::op(f, g); }
+    static constexpr F id() { return {}; }
+};
+
+/**
+ * @brief 区間 加算と clamp x <- min(max(x + add, lb), ub) (ClampAdd)、区間最小値
+ * 区間加算・chmin・chmax・代入をまとめて扱える。単調非減少なので、最小値に適用すればよい
+ */
+template <typename T>
+struct ClampAddMin : monoid::Min<T> {
+    using S = T;
+    using F = ClampAdd<T>;
+    static constexpr S mapping(const F& f, const S& x) { return f(x); }
+    static constexpr F composition(const F& f, const F& g) { return monoid::ClampAddComposite<T>::op(f, g); }
+    static constexpr F id() { return {}; }
+};
+
+/**
+ * @brief 区間 加算と clamp x <- min(max(x + add, lb), ub) (ClampAdd)、区間最大値
+ */
+template <typename T>
+struct ClampAddMax : monoid::Max<T> {
+    using S = T;
+    using F = ClampAdd<T>;
+    static constexpr S mapping(const F& f, const S& x) { return f(x); }
+    static constexpr F composition(const F& f, const F& g) { return monoid::ClampAddComposite<T>::op(f, g); }
+    static constexpr F id() { return {}; }
+};
+
+/**
+ * @brief 区間 加算と clamp x <- min(max(x + add, lb), ub) (ClampAdd)、区間最小値と最大値の組 {min, max} (monoid::MinMax)
+ */
+template <typename T>
+struct ClampAddMinMax : monoid::MinMax<T> {
+    using S = std::pair<T, T>;
+    using F = ClampAdd<T>;
+    static constexpr S mapping(const F& f, const S& x) { return {f(x.first), f(x.second)}; }
+    static constexpr F composition(const F& f, const F& g) { return monoid::ClampAddComposite<T>::op(f, g); }
+    static constexpr F id() { return {}; }
 };
 
 /**
