@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/93de89301cdeac655ce53761092d9556752fd185/src/data_structures/counter-segtree.hpp
+// https://github.com/shogo314/shogo-library/blob/6326ed0de9725c66d835297239e902b9eb0cdfc3/src/data_structures/counter-segtree.hpp
 
 /**
  * @file counter-segtree.hpp

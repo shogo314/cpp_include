@@ -2,7 +2,7 @@
 
 /**
  * @file prime.hpp
- * @brief 素数 (素数判定、素因数分解、約数列挙、篩)
+ * @brief 素数 (素数判定、素因数分解、約数列挙、篩、原始根)
  */
 
 #include <algorithm>
@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "modular-arithmetic.hpp"
-// https://github.com/shogo314/shogo-library/blob/93de89301cdeac655ce53761092d9556752fd185/src/math/prime.hpp
+// https://github.com/shogo314/shogo-library/blob/6326ed0de9725c66d835297239e902b9eb0cdfc3/src/math/prime.hpp
 
 namespace internal_prime {
 
@@ -147,6 +147,36 @@ inline long long totient(long long n) {
     long long res = n;
     for (auto [p, e] : factorize(n)) res = res / p * (p - 1);
     return res;
+}
+
+/**
+ * @brief m (>= 1) を法とする最小の原始根 (なければ -1)
+ * 原始根があるのは m = 1, 2, 4, p^k, 2p^k (p は奇素数) のとき。m = 1 なら 0 を返す
+ * 素因数分解を使うので、m が 10^18 程度でも速い
+ */
+inline long long primitive_root(long long m) {
+    assert(m >= 1);
+    if (m == 1) return 0;
+    if (m == 2) return 1;
+    if (m == 4) return 3;
+    auto fm = factorize(m);
+    // m = p^k か 2 p^k (p は奇素数) か
+    if (fm.size() > 2 || (fm.size() == 2 && !(fm[0].first == 2 && fm[0].second == 1)) || (fm.size() == 1 && fm[0].first == 2)) return -1;
+    long long phi = m;
+    for (auto [p, e] : fm) phi = phi / p * (p - 1);
+    auto fphi = factorize(phi);
+    // g の位数が φ(m) であること: φ(m) のどの素因数 q についても g^(φ(m)/q) が 1 でない
+    for (long long g = 2;; g++) {
+        if (std::gcd(g, m) != 1) continue;
+        bool ok = true;
+        for (auto [q, e] : fphi) {
+            if (modpow(g, phi / q, m) == 1) {
+                ok = false;
+                break;
+            }
+        }
+        if (ok) return g;
+    }
 }
 
 /**

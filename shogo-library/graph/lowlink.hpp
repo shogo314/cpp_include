@@ -11,7 +11,7 @@
 
 #include "graph.hpp"
 #include "tree.hpp"
-// https://github.com/shogo314/shogo-library/blob/93de89301cdeac655ce53761092d9556752fd185/src/graph/lowlink.hpp
+// https://github.com/shogo314/shogo-library/blob/6326ed0de9725c66d835297239e902b9eb0cdfc3/src/graph/lowlink.hpp
 
 /**
  * @brief 無向グラフの lowlink を求め、関節点・橋・二重辺連結成分・二重頂点連結成分を求める

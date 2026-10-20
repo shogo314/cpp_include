@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/93de89301cdeac655ce53761092d9556752fd185/src/utility/repr.hpp
+// https://github.com/shogo314/shogo-library/blob/6326ed0de9725c66d835297239e902b9eb0cdfc3/src/utility/repr.hpp
 
 namespace internal_repr {
 

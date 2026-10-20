@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "suffix-array.hpp"
-// https://github.com/shogo314/shogo-library/blob/93de89301cdeac655ce53761092d9556752fd185/src/string/longest-common-substring.hpp
+// https://github.com/shogo314/shogo-library/blob/6326ed0de9725c66d835297239e902b9eb0cdfc3/src/string/longest-common-substring.hpp
 
 /**
  * @brief s と t の最長共通部分文字列 (連続する部分列) を 1 つ求める O((n + m) log(n + m))

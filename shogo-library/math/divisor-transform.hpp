@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "prime.hpp"
-// https://github.com/shogo314/shogo-library/blob/93de89301cdeac655ce53761092d9556752fd185/src/math/divisor-transform.hpp
+// https://github.com/shogo314/shogo-library/blob/6326ed0de9725c66d835297239e902b9eb0cdfc3/src/math/divisor-transform.hpp
 
 /**
  * @brief 約数のゼータ変換 a[n] <- sum_{d | n} a[d] O(N log log N)
