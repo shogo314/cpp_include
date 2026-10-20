@@ -11,10 +11,11 @@
 #include <string>
 #include <string_view>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "../utility/traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/string/rolling-hash.hpp
+// https://github.com/shogo314/shogo-library/blob/5923a8f8c364ef7144ec85fa5ef4504a9e4f5c62/src/string/rolling-hash.hpp
 
 struct RHString;
 
@@ -45,6 +46,20 @@ class RollingHash {
     void expand(long long n) {
         while (static_cast<long long>(power.size()) <= n) power.push_back(mul(power.back(), base));
     }
+    // base の逆元の累乗を n 乗まで用意する (RHString の端を削るときだけ使う)
+    void expand_inv(long long n) {
+        if (inv_power.empty()) {
+            // MOD は素数なので base^(MOD - 2) が逆元
+            unsigned long long inv = 1, b = base, e = MOD - 2;
+            for (; e > 0; e >>= 1, b = mul(b, b))
+                if (e & 1) inv = mul(inv, b);
+            inv_base = inv;
+            inv_power = {1};
+        }
+        while (static_cast<long long>(inv_power.size()) <= n) inv_power.push_back(mul(inv_power.back(), inv_base));
+    }
+    unsigned long long inv_base = 0;
+    std::vector<unsigned long long> inv_power;  // base の逆元の累乗
 
    public:
     /**
@@ -189,6 +204,42 @@ struct RHString {
     }
     bool empty() const {
         return sz == 0;
+    }
+    /**
+     * @brief 先頭の t を取り除く (先頭が t であること。ハッシュからは確かめられないので、違うと値が壊れる) O(1) (累乗の表を伸ばす分を除く)
+     * t は RHString のほか、RHString を作れるもの (文字・文字列など) でもよい
+     */
+    void remove_prefix(const RHString& t) {
+        assert(&rh == &t.rh && t.sz <= sz);
+        // s = t + u から u: hash1(u) = hash1(s) - hash1(t) B^|u|、hash2(u) = (hash2(s) - hash2(t)) B^-|t|
+        const long long u = sz - t.sz;
+        rh.expand(u);
+        rh.expand_inv(t.sz);
+        hash1 = rh.add(hash1, RollingHash::MOD - rh.mul(t.hash1, rh.power[u]));
+        hash2 = rh.mul(rh.add(hash2, RollingHash::MOD - t.hash2), rh.inv_power[t.sz]);
+        sz = u;
+    }
+    /**
+     * @brief 末尾の t を取り除く (末尾が t であること。ハッシュからは確かめられないので、違うと値が壊れる) O(1) (累乗の表を伸ばす分を除く)
+     * t は RHString のほか、RHString を作れるもの (文字・文字列など) でもよい
+     */
+    void remove_suffix(const RHString& t) {
+        assert(&rh == &t.rh && t.sz <= sz);
+        // s = u + t から u: hash1(u) = (hash1(s) - hash1(t)) B^-|t|、hash2(u) = hash2(s) - hash2(t) B^|u|
+        const long long u = sz - t.sz;
+        rh.expand(u);
+        rh.expand_inv(t.sz);
+        hash1 = rh.mul(rh.add(hash1, RollingHash::MOD - t.hash1), rh.inv_power[t.sz]);
+        hash2 = rh.add(hash2, RollingHash::MOD - rh.mul(t.hash2, rh.power[u]));
+        sz = u;
+    }
+    template <class T, ENABLE_IF_T(!std::is_same_v<std::decay_t<T>, RHString>)>
+    void remove_prefix(T&& x) {
+        remove_prefix(RHString(rh, std::forward<T>(x)));
+    }
+    template <class T, ENABLE_IF_T(!std::is_same_v<std::decay_t<T>, RHString>)>
+    void remove_suffix(T&& x) {
+        remove_suffix(RHString(rh, std::forward<T>(x)));
     }
     RHString& operator+=(const RHString& o) {
         assert(&rh == &o.rh);

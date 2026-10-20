@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/base/io.hpp
+// https://github.com/shogo314/shogo-library/blob/5923a8f8c364ef7144ec85fa5ef4504a9e4f5c62/src/base/io.hpp
 /**
  * @file io.hpp
  * @brief 空白区切り出力、iostreamのオーバーロード

@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "../algebra/monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/data_structures/persistent-segtree.hpp
+// https://github.com/shogo314/shogo-library/blob/5923a8f8c364ef7144ec85fa5ef4504a9e4f5c62/src/data_structures/persistent-segtree.hpp
 
 /**
  * @brief 永続セグメント木

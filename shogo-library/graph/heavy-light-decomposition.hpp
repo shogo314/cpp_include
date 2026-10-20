@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "tree.hpp"
-// https://github.com/shogo314/shogo-library/blob/4897960d828446e1fcee244e3d3e67eb3e7f8064/src/graph/heavy-light-decomposition.hpp
+// https://github.com/shogo314/shogo-library/blob/5923a8f8c364ef7144ec85fa5ef4504a9e4f5c62/src/graph/heavy-light-decomposition.hpp
 
 /**
  * @brief HL 分解 (Heavy-Light Decomposition)
