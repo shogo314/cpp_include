@@ -6,10 +6,11 @@
  */
 
 #include <cassert>
+#include <type_traits>
 #include <vector>
 
 #include "sqrt.hpp"
-// https://github.com/shogo314/shogo-library/blob/6326ed0de9725c66d835297239e902b9eb0cdfc3/src/math/prime-counting.hpp
+// https://github.com/shogo314/shogo-library/blob/02a0f569963e9e49fb42cc2b5e9e3cb802c9d9f5/src/math/prime-counting.hpp
 
 /**
  * @brief すべての v = floor(n / k) について、v 以下の素数 p の g(p) の和を求めた表 (Lucy DP)
@@ -90,4 +91,57 @@ inline long long prime_count(long long n) {
     assert(n >= 0);
     if (n < 2) return 0;
     return prime_count_table(n)(n);
+}
+
+/**
+ * @brief 乗法的関数 f の和 f(1) + f(2) + ... + f(n) (min_25 篩の後半) O(n^(3/4) / log n) 程度
+ *
+ * prime_sum(v) は v 以下の素数 p の f(p) の和。floor(n / k) のとる値 v ごとに 1 回ずつ呼んで表にする。PrimeSumTable を組み合わせて作る
+ * f_pe(p, e) は f(p^e) (p は sqrt(n) 以下の素数、e >= 1)。f(1) = 1 とする
+ * 例: オイラーの φ なら φ(p) = p - 1 なので、素数の和の表 s と個数の表 c から prime_sum(v) = s(v) - c(v)、f_pe(p, e) = p^e - p^(e-1)
+ * @pre n >= 0
+ */
+template <typename PrimeSum, typename F>
+auto multiplicative_sum(long long n, PrimeSum prime_sum, F f_pe) {
+    using T = std::decay_t<decltype(prime_sum(n))>;
+    assert(n >= 0);
+    if (n == 0) return T(0);
+    const long long sq = sqrtll(n);
+    std::vector<long long> primes;
+    std::vector<bool> composite(sq + 1, false);
+    for (long long p = 2; p <= sq; p++) {
+        if (composite[p]) continue;
+        primes.push_back(p);
+        for (long long q = p * p; q <= sq; q += p) composite[q] = true;
+    }
+    // below[j]: primes の先頭 j 個の f(p) の和
+    std::vector<T> below(primes.size() + 1, T(0));
+    for (size_t j = 0; j < primes.size(); j++) below[j + 1] = below[j] + f_pe(primes[j], 1);
+    // prime_sum を floor(n / k) のとる値ごとに 1 回だけ呼んで表にする (v <= sq は v - 1 番目、それより大きい n / k は sq + k - 1 番目)
+    std::vector<T> table(2 * sq + 1);
+    for (long long v = 1; v <= sq; v++) table[v - 1] = prime_sum(v);
+    for (long long k = 1; n / k > sq; k++) table[sq + k - 1] = prime_sum(n / k);
+    auto at = [&](long long x) -> const T& { return x <= sq ? table[x - 1] : table[sq + n / x - 1]; };
+    // 2 以上 x 以下で、最小素因数が primes[j] 以上の i の f(i) の和
+    auto rec = [&](auto self, long long x, size_t j) -> T {
+        // primes[j] 以上 (primes を使い切ったなら、primes のどれよりも大きい) の素数が x 以下にない
+        if (j < primes.size() ? primes[j] > x : !primes.empty() && primes.back() >= x) return T(0);
+        // 素数の分
+        T res = at(x) - below[j];
+        // 合成数の分: 最小素因数 p で p^e で割り切れて p^(e+1) で割り切れないものを、p^e と残りの積として数える
+        for (size_t k = j; k < primes.size() && primes[k] * primes[k] <= x; k++) {
+            const long long p = primes[k];
+            if (p > x / (p * p)) {
+                // p^3 > x なら e = 1 だけで、残り x / p (< p^2) は p より大きい素数か 1 なので、再帰せずに求める
+                res += f_pe(p, 1) * (at(x / p) - below[k + 1]) + f_pe(p, 2);
+                continue;
+            }
+            long long pe = p;
+            for (long long e = 1; pe <= x / p; e++, pe *= p) {
+                res += f_pe(p, e) * self(self, x / pe, k + 1) + f_pe(p, e + 1);
+            }
+        }
+        return res;
+    };
+    return rec(rec, n, 0) + T(1);
 }

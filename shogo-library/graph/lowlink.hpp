@@ -11,7 +11,7 @@
 
 #include "graph.hpp"
 #include "tree.hpp"
-// https://github.com/shogo314/shogo-library/blob/6326ed0de9725c66d835297239e902b9eb0cdfc3/src/graph/lowlink.hpp
+// https://github.com/shogo314/shogo-library/blob/02a0f569963e9e49fb42cc2b5e9e3cb802c9d9f5/src/graph/lowlink.hpp
 
 /**
  * @brief 無向グラフの lowlink を求め、関節点・橋・二重辺連結成分・二重頂点連結成分を求める
@@ -26,7 +26,7 @@
  *
  * @tparam Cost 辺のコストの型
  */
-template <typename Cost = int>
+template <typename Cost = long long>
 class LowLink {
     long long n;
     std::vector<bool> art, bridge;

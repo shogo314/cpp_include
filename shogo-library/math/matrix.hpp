@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/6326ed0de9725c66d835297239e902b9eb0cdfc3/src/math/matrix.hpp
+// https://github.com/shogo314/shogo-library/blob/02a0f569963e9e49fb42cc2b5e9e3cb802c9d9f5/src/math/matrix.hpp
 
 /**
  * @file matrix.hpp
@@ -9,7 +9,11 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#if __cplusplus >= 202002L
+#include <concepts>
+#endif
 #include <cstddef>
+#include <cstdint>
 #include <initializer_list>
 #include <optional>
 #include <string>
@@ -29,6 +33,28 @@ struct OperatorPropertyDefault {
     constexpr static T inv(const T& a) { return T(1) / a; }
 };
 }  // namespace matrix
+
+namespace internal_matrix {
+// 法が 2^31 未満の modint (mod() と val() を持つ型) か
+#if __cplusplus >= 202002L
+template <class T>
+concept modint_like = requires(const T& x) {
+    { T::mod() } -> std::convertible_to<std::uint32_t>;
+    { x.val() } -> std::convertible_to<std::uint32_t>;
+};
+template <class T>
+inline constexpr bool is_modint_like_v = modint_like<T>;
+#else
+template <class T, class = void>
+struct is_modint_like : std::false_type {};
+template <class T>
+struct is_modint_like<T, std::void_t<decltype(static_cast<std::uint32_t>(T::mod())),
+                                     decltype(static_cast<std::uint32_t>(std::declval<const T&>().val()))>>
+    : std::true_type {};
+template <class T>
+inline constexpr bool is_modint_like_v = is_modint_like<T>::value;
+#endif
+}  // namespace internal_matrix
 
 /**
  * @brief 行列
@@ -304,6 +330,49 @@ class Matrix {
     Matrix& operator*=(const Matrix& B) {
         assert(m == B.n);
         const long long p = B.m;
+        if constexpr (std::is_same_v<OperatorProperty, matrix::OperatorPropertyDefault<T>> &&
+                      internal_matrix::is_modint_like_v<T>) {
+            // 積を 64 ビットのまま足し、あふれる前にだけ mod を取る
+            // 法が 2^30 程度までなら 4 行ずつまとめて足し、acc の読み書きを減らす
+            const std::uint64_t mod = T::mod();
+            const std::uint64_t lim = UINT64_MAX / ((mod - 1) * (mod - 1) + 1) - 1;
+            std::vector<std::uint32_t> b(m * p);
+            for (long long k = 0; k < m; k++)
+                for (long long j = 0; j < p; j++) b[k * p + j] = B[k][j].val();
+            std::vector<std::uint64_t> acc(p);
+            for (long long i = 0; i < n; i++) {
+                std::fill(acc.begin(), acc.end(), 0);
+                std::uint64_t cnt = 0;
+                long long k = 0;
+                if (lim >= 4) {
+                    for (; k + 4 <= m; k += 4) {
+                        if (cnt + 4 > lim) {
+                            cnt = 0;
+                            for (long long j = 0; j < p; j++) acc[j] %= mod;
+                        }
+                        cnt += 4;
+                        const auto& r = (*this)[i];
+                        const std::uint64_t a0 = r[k].val(), a1 = r[k + 1].val(), a2 = r[k + 2].val(), a3 = r[k + 3].val();
+                        const std::uint32_t *b0 = b.data() + k * p, *b1 = b0 + p, *b2 = b1 + p, *b3 = b2 + p;
+                        for (long long j = 0; j < p; j++) acc[j] += a0 * b0[j] + a1 * b1[j] + a2 * b2[j] + a3 * b3[j];
+                    }
+                }
+                for (; k < m; k++) {
+                    if (cnt + 1 > lim) {
+                        cnt = 0;
+                        for (long long j = 0; j < p; j++) acc[j] %= mod;
+                    }
+                    cnt++;
+                    const std::uint64_t a0 = (*this)[i][k].val();
+                    const std::uint32_t* b0 = b.data() + k * p;
+                    for (long long j = 0; j < p; j++) acc[j] += a0 * b0[j];
+                }
+                v[i].resize(p);
+                for (long long j = 0; j < p; j++) v[i][j] = T(acc[j] % mod);
+            }
+            m = p;
+            return (*this);
+        }
         Matrix C(n, p);
         for (long long i = 0; i < n; i++) {
             for (long long k = 0; k < m; k++) {
@@ -396,6 +465,120 @@ class Matrix {
             auto A = this->v;
             return forward_elimination(A);
         }
+    }
+
+    /**
+     * @brief 行列式を mod で割った余り (mod は素数でなくてよい) O(n^2 (n + log mod))
+     * @note 要素は整数型であること。割り算の代わりに、2 つの行で互除法のように引き合って 0 を作る
+     */
+    [[nodiscard]]
+    long long det_mod(long long mod) const {
+        assert(n == m);
+        assert(1 <= mod && mod <= (1LL << 31));
+        std::vector<std::vector<long long>> a(n, std::vector<long long>(n));
+        for (long long i = 0; i < n; i++)
+            for (long long j = 0; j < n; j++) a[i][j] = ((static_cast<long long>(this->v[i][j]) % mod) + mod) % mod;
+        long long res = 1 % mod;
+        for (long long i = 0; i < n; i++) {
+            for (long long j = i + 1; j < n; j++) {
+                // a[j][i] が 0 になるまで、行 i から行 j の q 倍を引いて入れ替える
+                while (a[j][i] != 0) {
+                    const long long q = a[i][i] / a[j][i];
+                    if (q != 0) {
+                        for (long long k = i; k < n; k++) a[i][k] = ((a[i][k] - q * a[j][k]) % mod + mod) % mod;
+                    }
+                    std::swap(a[i], a[j]);
+                    res = (mod - res) % mod;
+                }
+            }
+            res = res * a[i][i] % mod;
+            if (res == 0) return 0;
+        }
+        return res;
+    }
+
+    /**
+     * @brief 特性多項式 det(xI - A) の係数 (低次から n + 1 個、最高次は 1) O(n^3)
+     * @note 割り算を使うので、要素は体 (modint など) であること
+     *
+     * 相似変換で上ヘッセンベルク行列 (i > j + 1 で 0) にしてから、左上の k × k の特性多項式を k の小さい方から求める
+     */
+    [[nodiscard]]
+    std::vector<T> characteristic_polynomial() const {
+        assert(n == m);
+        using P = OperatorProperty;
+        auto sub = [](const T& a, const T& b) { return P::add(a, P::neg(b)); };
+        auto H = this->v;
+        for (long long j = 0; j + 2 < n; j++) {
+            long long piv = j + 1;
+            while (piv < n && H[piv][j] == P::zero()) piv++;
+            if (piv == n) continue;
+            if (piv != j + 1) {
+                std::swap(H[piv], H[j + 1]);
+                for (long long i = 0; i < n; i++) std::swap(H[i][piv], H[i][j + 1]);
+            }
+            const T iv = P::inv(H[j + 1][j]);
+            for (long long k = j + 2; k < n; k++) {
+                const T c = P::mul(H[k][j], iv);
+                if (c == P::zero()) continue;
+                // 行 k から行 j + 1 の c 倍を引き、列 j + 1 に列 k の c 倍を足す (相似変換)
+                for (long long l = 0; l < n; l++) H[k][l] = sub(H[k][l], P::mul(c, H[j + 1][l]));
+                for (long long l = 0; l < n; l++) H[l][j + 1] = P::add(H[l][j + 1], P::mul(c, H[l][k]));
+            }
+        }
+        // p[k]: 左上の k × k の特性多項式
+        // p[k + 1] = (x - H[k][k]) p[k] - Σ_{i < k} (H[i + 1][i] ... H[k][k - 1]) H[i][k] p[i]
+        std::vector<std::vector<T>> p(n + 1);
+        p[0] = {P::one()};
+        for (long long k = 0; k < n; k++) {
+            std::vector<T> q(k + 2, P::zero());
+            for (long long d = 0; d <= k; d++) {
+                q[d + 1] = P::add(q[d + 1], p[k][d]);
+                q[d] = sub(q[d], P::mul(H[k][k], p[k][d]));
+            }
+            T prod = P::one();
+            for (long long i = k - 1; i >= 0; i--) {
+                prod = P::mul(prod, H[i + 1][i]);
+                if (prod == P::zero()) break;
+                const T c = P::mul(prod, H[i][k]);
+                for (long long d = 0; d <= i; d++) q[d] = sub(q[d], P::mul(c, p[i][d]));
+            }
+            p[k + 1] = std::move(q);
+        }
+        return p[n];
+    }
+
+    /**
+     * @brief パーマネント Σ_σ Π_i a[i][σ(i)] (Ryser の公式) O(2^n n)
+     * @return パーマネント
+     * @note 割り算を使わないので、要素は可換環 (long long や modint など) でよい。
+     *       0 と 1 の行列なら、二部グラフの完全マッチングの個数になる
+     *
+     * perm(A) = Σ_{S ⊆ 列} (-1)^{n - |S|} Π_i Σ_{j ∈ S} a[i][j] を、S をグレイコードの順に動かして各行の和を O(n) で更新する
+     */
+    [[nodiscard]]
+    T permanent() const {
+        assert(n == m);
+        assert(n < 63);
+        std::vector<T> row(n, OperatorProperty::zero());  // 各行の、S に入っている列の和
+        T res = OperatorProperty::zero();
+        long long size = 0;  // |S|
+        for (long long k = 1; k < (1LL << n); k++) {
+            // グレイコードで k - 1 番目から k 番目に移るとき、k の最下位ビットの位置の列が出入りする
+            long long j = 0;
+            while (!(k >> j & 1)) j++;
+            bool added = (k ^ (k >> 1)) >> j & 1;
+            size += added ? 1 : -1;
+            T prod = OperatorProperty::one();
+            for (long long i = 0; i < n; i++) {
+                row[i] = OperatorProperty::add(row[i], added ? this->v[i][j] : OperatorProperty::neg(this->v[i][j]));
+                prod = OperatorProperty::mul(prod, row[i]);
+            }
+            res = OperatorProperty::add(res, (n - size) % 2 == 0 ? prod : OperatorProperty::neg(prod));
+        }
+        // S が空のときの項は、n == 0 なら 1、そうでなければ 0
+        if (n == 0) res = OperatorProperty::one();
+        return res;
     }
 
     /**
@@ -635,3 +818,11 @@ class Matrix {
         return d;
     }
 };
+
+/**
+ * @brief 行のリストから作るときの推論ガイド。要素の型は各行の value_type にする
+ *
+ * Matrix(std::vector<std::vector<int>>) は Matrix<int>、Matrix(std::vector<std::string>) は Matrix<char>
+ */
+template <typename Iterable>
+Matrix(const std::vector<Iterable>&) -> Matrix<typename Iterable::value_type>;

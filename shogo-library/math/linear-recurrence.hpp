@@ -5,11 +5,68 @@
  * @brief 線形漸化式 (Bostan-Mori による第 k 項、Berlekamp-Massey による漸化式の復元)
  */
 
+#include <algorithm>
 #include <cassert>
+#include <utility>
 #include <vector>
 
 #include "convolution.hpp"
-// https://github.com/shogo314/shogo-library/blob/6326ed0de9725c66d835297239e902b9eb0cdfc3/src/math/linear-recurrence.hpp
+// https://github.com/shogo314/shogo-library/blob/02a0f569963e9e49fb42cc2b5e9e3cb802c9d9f5/src/math/linear-recurrence.hpp
+
+namespace internal_linear_recurrence {
+
+/**
+ * @brief bostan_mori を NTT した値のまま進める版 (法が NTT に向く素数のとき)
+ * 長さ 2N で変換すると、butterfly の結果はビット反転した順に並び、位置 2i と 2i+1 は点 w と -w での値になる。
+ * そこで Q(-x) は隣どうしを入れ替えるだけで得られ、偶数次・奇数次の部分の値 (長さ N の変換) も
+ * (F(w) + F(-w)) / 2、(F(w) - F(-w)) / (2w) で求まる。次の段の長さ 2N の変換は、
+ * 残りの半分 (点 w ω_{2N} での値) だけを逆変換と変換 1 回ずつで作る。1 段あたりの NTT は長さ 2N を 2 回分ほどになる
+ */
+template <typename mint>
+mint bostan_mori_ntt(std::vector<mint> P, std::vector<mint> Q, long long k, int h) {
+    using namespace internal_convolution;
+    static const FFTInfo<mint> info;
+    const int N = 1 << h;
+    // half_iw[i] = 1 / (2w) (w は長さ 2N の位置 2i の点 ω_{2N}^{rev[i]})、tw[i] = ω_{2N}^i / N
+    const mint inv2 = mint(2).inv();
+    std::vector<int> rev(N);
+    for (int i = 1; i < N; i++) rev[i] = (rev[i >> 1] >> 1) | ((i & 1) << (h - 1));
+    std::vector<mint> pw(N), half_iw(N), tw(N);
+    pw[0] = 1, tw[0] = mint(N).inv();
+    for (int i = 1; i < N; i++) {
+        pw[i] = pw[i - 1] * info.iroot[h + 1];
+        tw[i] = tw[i - 1] * info.root[h + 1];
+    }
+    for (int i = 0; i < N; i++) half_iw[i] = pw[rev[i]] * inv2;
+    P.resize(2 * N), Q.resize(2 * N);
+    butterfly(P), butterfly(Q);
+    // 長さ N の変換 f から、長さ 2N の変換 (前半は f のまま) を作る
+    auto extend = [&](std::vector<mint>& f) {
+        std::vector<mint> g(f.begin(), f.begin() + N);
+        butterfly_inv(g);
+        for (int i = 0; i < N; i++) g[i] *= tw[i];
+        butterfly(g);
+        std::copy(g.begin(), g.end(), f.begin() + N);
+    };
+    while (true) {
+        for (int i = 0; i < N; i++) {
+            const mint p0 = P[2 * i], p1 = P[2 * i + 1], q0 = Q[2 * i], q1 = Q[2 * i + 1];
+            // U = P(x) Q(-x) の w, -w での値は p0 q1, p1 q0。V = Q(x) Q(-x) はどちらも q0 q1
+            const mint u0 = p0 * q1, u1 = p1 * q0;
+            P[i] = (k & 1) ? (u0 - u1) * half_iw[i] : (u0 + u1) * inv2;
+            Q[i] = q0 * q1;
+        }
+        k >>= 1;
+        if (k == 0) break;
+        extend(P), extend(Q);
+    }
+    // 定数項は長さ N の変換の値の和の 1/N なので、比は和の比になる
+    mint p = 0, q = 0;
+    for (int i = 0; i < N; i++) p += P[i], q += Q[i];
+    return p / q;
+}
+
+}  // namespace internal_linear_recurrence
 
 /**
  * @brief [x^k] P(x) / Q(x) (Q[0] != 0) を Bostan-Mori 法で求める O(d log d log k) (d は P, Q の長さ)
@@ -18,6 +75,14 @@
 template <typename mint>
 mint bostan_mori(std::vector<mint> P, std::vector<mint> Q, long long k) {
     assert(!Q.empty() && Q[0] != 0 && k >= 0);
+    if constexpr (internal_convolution::ntt_candidate<mint>()) {
+        const int n = static_cast<int>(std::max(P.size(), Q.size()));
+        if (k > 0 && n > 60) {
+            int h = 0;
+            while ((1 << h) < n) h++;
+            if (internal_convolution::ntt_friendly<mint>(2 << h)) return internal_linear_recurrence::bostan_mori_ntt(std::move(P), std::move(Q), k, h);
+        }
+    }
     while (k > 0 && !P.empty()) {
         std::vector<mint> Qm = Q;
         for (size_t i = 1; i < Qm.size(); i += 2) Qm[i] = -Qm[i];

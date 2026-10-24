@@ -20,7 +20,7 @@
 #include <vector>
 
 #include "../utility/traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/6326ed0de9725c66d835297239e902b9eb0cdfc3/src/geometry/vector.hpp
+// https://github.com/shogo314/shogo-library/blob/02a0f569963e9e49fb42cc2b5e9e3cb802c9d9f5/src/geometry/vector.hpp
 
 /**
  * @brief 幾何学としてのベクトル
@@ -40,10 +40,11 @@ struct Vector {
     /**
      * @brief 可変長引数によるコンストラクタ
      *
+     * 各成分を T に変換して入れる (Vector(1, 2.5) のように型が混ざっても縮小変換の警告を出さない)
      * @tparam Args
      */
     template <typename... Args>
-    constexpr Vector(Args... args) noexcept : v{args...} {}
+    constexpr Vector(Args... args) noexcept : v{static_cast<T>(args)...} {}
 
     /**
      * @brief i番目の成分を返す
@@ -320,6 +321,15 @@ struct Vector {
         return std::sqrt(squared_norm());
     }
 };
+
+/**
+ * @brief 成分から作るときの推論ガイド。型は成分の共通の型、次元は成分の個数にする
+ *
+ * Vector(2LL, 3LL) は Vector<long long, 2>、Vector(1, 2, 3) は Vector<int, 3>、Vector(0.0, 0.0) は Vector<double, 2>
+ * (これがないと、テンプレート引数の省略時の値から Vector<double, 2> になってしまう)
+ */
+template <typename T, typename... U, ENABLE_IF_T(std::is_scalar_v<T> && (std::is_scalar_v<U> && ...))>
+Vector(T, U...) -> Vector<std::common_type_t<T, U...>, 1 + sizeof...(U)>;
 
 /**
  * @brief 二次元ベクトルどうしの外積(平行四辺形の符号付き面積)
@@ -729,6 +739,105 @@ template <typename T>
 ClosestPair closest_point_pair(const std::vector<Vector<T, 2>>& points) {
     auto [d2, i, j] = closest_point_pair_squared(points);
     return {std::sqrt(static_cast<double>(d2)), i, j};
+}
+
+/**
+ * @brief farthest_point_pair_squared の戻り値
+ */
+template <typename T>
+struct FarthestPairSquared {
+    T squared_dist;  //!< 最遠点対の距離の2乗
+    long long i, j;  //!< 最遠点対の添字
+};
+/**
+ * @brief farthest_point_pair の戻り値
+ */
+struct FarthestPair {
+    double dist;     //!< 最遠点対の距離
+    long long i, j;  //!< 最遠点対の添字
+};
+
+/**
+ * @brief 最遠点対 (凸包を作り、回転キャリパー法で対蹠点の組を調べる) O(n log n)
+ *
+ * 整数型でも使える。座標の差の2乗の和の2倍が T に収まる必要がある
+ * @tparam T 座標の型
+ * @param points 頂点リスト (2個以上)
+ * @return FarthestPairSquared<T> 最遠点対の距離の2乗と添字 (i != j)
+ */
+template <typename T>
+FarthestPairSquared<T> farthest_point_pair_squared(const std::vector<Vector<T, 2>>& points) {
+    const int n = static_cast<int>(points.size());
+    assert(n >= 2);
+    // 凸包の頂点を、もとの添字に戻せるようにしておく
+    std::vector<std::pair<Vector<T, 2>, int>> sorted(n);
+    for (int i = 0; i < n; i++) sorted[i] = {points[i], i};
+    std::sort(sorted.begin(), sorted.end());
+    auto index_of = [&](const Vector<T, 2>& p) {
+        return std::lower_bound(sorted.begin(), sorted.end(), std::make_pair(p, -1))->second;
+    };
+    std::vector<Vector<T, 2>> hull = convex_hull(points);
+    const int k = static_cast<int>(hull.size());
+    if (k == 1) return {T(0), sorted[0].second, sorted[1].second};  // すべて同じ点
+    FarthestPairSquared<T> res{T(0), -1, -1};
+    auto update = [&](int a, int b) {
+        T d = (hull[a] - hull[b]).squared_norm();
+        if (res.i == -1 || d > res.squared_dist) res = {d, a, b};
+    };
+    if (k == 2) {
+        update(0, 1);
+    } else {
+        // 辺 i→i+1 に対して、最も遠い頂点 j を反時計回りに進めていく
+        int j = 1;
+        for (int i = 0; i < k; i++) {
+            int ni = i + 1 == k ? 0 : i + 1;
+            while (true) {
+                int nj = j + 1 == k ? 0 : j + 1;
+                if (cross(hull[ni] - hull[i], hull[nj] - hull[j]) > 0)
+                    j = nj;
+                else
+                    break;
+            }
+            update(i, j);
+            update(ni, j);
+        }
+    }
+    return {res.squared_dist, index_of(hull[res.i]), index_of(hull[res.j])};
+}
+
+/**
+ * @brief 最遠点対
+ *
+ * @tparam T 座標の型
+ * @param points 頂点リスト (2個以上)
+ * @return FarthestPair 最遠点対の距離と添字
+ */
+template <typename T>
+FarthestPair farthest_point_pair(const std::vector<Vector<T, 2>>& points) {
+    auto [d2, i, j] = farthest_point_pair_squared(points);
+    return {std::sqrt(static_cast<double>(d2)), i, j};
+}
+
+/**
+ * @brief 凸多角形を直線 p1p2 で切り、直線の左側 (p1 から p2 を見て左) の部分を返す。浮動小数点型限定
+ *
+ * @tparam T 座標の型
+ * @param polygon 凸多角形の頂点の座標 (反時計回り)
+ * @return std::vector<Vector<T, 2>> 左側の凸多角形の頂点 (反時計回り)。直線上の頂点も含む。左側に何もなければ空
+ */
+template <typename T>
+std::vector<Vector<T, 2>> convex_cut(const std::vector<Vector<T, 2>>& polygon, const Vector<T, 2>& p1, const Vector<T, 2>& p2) {
+    static_assert(std::is_floating_point_v<T>, "convex_cut: T must be a floating point type");
+    std::vector<Vector<T, 2>> res;
+    const int n = static_cast<int>(polygon.size());
+    for (int i = 0; i < n; i++) {
+        const Vector<T, 2>&a = polygon[i], &b = polygon[i + 1 == n ? 0 : i + 1];
+        T ca = cross(p2 - p1, a - p1), cb = cross(p2 - p1, b - p1);
+        if (ca >= 0) res.push_back(a);
+        // 辺 ab が直線をまたぐなら、交点を入れる
+        if ((ca > 0 && cb < 0) || (ca < 0 && cb > 0)) res.push_back(a + (b - a) * (ca / (ca - cb)));
+    }
+    return res;
 }
 /**
  * @deprecated closest_point_pair_squared を使うこと(綴りの誤りを直して改名した)

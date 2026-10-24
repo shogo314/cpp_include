@@ -2,7 +2,7 @@
 
 /**
  * @file sliding-window-aggregation.hpp
- * @brief Sliding Window Aggregation (モノイドを乗せたキュー) とスライド最小値
+ * @brief Sliding Window Aggregation (モノイドを乗せたキューと両端キュー) とスライド最小値
  */
 
 #include <cassert>
@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "../algebra/monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/6326ed0de9725c66d835297239e902b9eb0cdfc3/src/data_structures/sliding-window-aggregation.hpp
+// https://github.com/shogo314/shogo-library/blob/02a0f569963e9e49fb42cc2b5e9e3cb802c9d9f5/src/data_structures/sliding-window-aggregation.hpp
 
 /**
  * @brief Sliding Window Aggregation (モノイドを乗せたキュー)
@@ -100,6 +100,117 @@ class SlidingWindowAggregation {
 
 template <typename M>
 SlidingWindowAggregation(M) -> SlidingWindowAggregation<M>;
+
+/**
+ * @brief モノイドを乗せた両端キュー
+ *
+ * 先頭と末尾への追加・削除、全体の積を償却 O(1) で行う。モノイドは可換でなくてもよい
+ * 前半と後半を 2 つのスタックで持ち、空の側から取り出すときは、もう一方を半分に分けて作り直す
+ * 例:
+ * DequeAggregation<monoid::Reverse<monoid::Composite<mint>>> dq;  // 先頭から順に適用
+ * dq.push_front(f); dq.push_back(g); dq.pop_front(); dq.prod();
+ *
+ * @tparam M モノイド (algebra/monoid.hpp)
+ */
+template <typename M>
+class DequeAggregation {
+   public:
+    using S = typename M::S;
+
+   private:
+    M m;
+    // front_vals は末尾が両端キューの先頭、back_vals は末尾が両端キューの末尾
+    // front_prod[i] は front_vals[i], front_vals[i - 1], ..., front_vals[0] の積、back_prod[i] は back_vals[0], ..., back_vals[i] の積
+    std::vector<S> front_vals, front_prod, back_vals, back_prod;
+
+    S op(const S& x, const S& y) const { return m.op(x, y); }
+    void push_front_stack(const S& x) {
+        front_prod.push_back(front_vals.empty() ? x : op(x, front_prod.back()));
+        front_vals.push_back(x);
+    }
+    void push_back_stack(const S& x) {
+        back_prod.push_back(back_vals.empty() ? x : op(back_prod.back(), x));
+        back_vals.push_back(x);
+    }
+    // 両端キューの順に並べた列 v の先頭 k 個を前半、残りを後半にする
+    void rebuild(const std::vector<S>& v, size_t k) {
+        front_vals.clear(), front_prod.clear(), back_vals.clear(), back_prod.clear();
+        for (size_t i = k; i-- > 0;) push_front_stack(v[i]);
+        for (size_t i = k; i < v.size(); i++) push_back_stack(v[i]);
+    }
+    std::vector<S> to_vector() const {
+        std::vector<S> v(front_vals.rbegin(), front_vals.rend());
+        v.insert(v.end(), back_vals.begin(), back_vals.end());
+        return v;
+    }
+
+   public:
+    explicit DequeAggregation(M m = M()) : m(std::move(m)) {}
+    /**
+     * @brief 要素数
+     */
+    long long size() const { return front_vals.size() + back_vals.size(); }
+    bool empty() const { return size() == 0; }
+    /**
+     * @brief 先頭に x を追加する O(1)
+     */
+    void push_front(const S& x) { push_front_stack(x); }
+    /**
+     * @brief 末尾に x を追加する O(1)
+     */
+    void push_back(const S& x) { push_back_stack(x); }
+    /**
+     * @brief 先頭の要素を削除する 償却 O(1)
+     */
+    void pop_front() {
+        assert(!empty());
+        if (front_vals.empty()) {
+            auto v = to_vector();
+            rebuild(v, (v.size() + 1) / 2);
+        }
+        front_vals.pop_back(), front_prod.pop_back();
+    }
+    /**
+     * @brief 末尾の要素を削除する 償却 O(1)
+     */
+    void pop_back() {
+        assert(!empty());
+        if (back_vals.empty()) {
+            auto v = to_vector();
+            rebuild(v, v.size() / 2);
+        }
+        back_vals.pop_back(), back_prod.pop_back();
+    }
+    /**
+     * @brief 先頭の要素 O(1)
+     */
+    const S& front() const {
+        assert(!empty());
+        return front_vals.empty() ? back_vals.front() : front_vals.back();
+    }
+    /**
+     * @brief 末尾の要素 O(1)
+     */
+    const S& back() const {
+        assert(!empty());
+        return back_vals.empty() ? front_vals.front() : back_vals.back();
+    }
+    /**
+     * @brief 先頭から末尾までの積 (空なら単位元) O(1)
+     */
+    S prod() const {
+        if (front_vals.empty()) return back_vals.empty() ? m.e() : back_prod.back();
+        if (back_vals.empty()) return front_prod.back();
+        return op(front_prod.back(), back_prod.back());
+    }
+    /**
+     * @brief すべての要素を削除する
+     */
+    void clear() { front_vals.clear(), front_prod.clear(), back_vals.clear(), back_prod.clear(); }
+};
+
+template <typename M>
+DequeAggregation(M) -> DequeAggregation<M>;
 
 /**
  * @brief 長さ k の各区間 [i, i + k) の最小値を並べたもの (長さ n - k + 1) O(n)

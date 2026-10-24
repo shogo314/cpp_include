@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/6326ed0de9725c66d835297239e902b9eb0cdfc3/src/math/bitwise-transform.hpp
+// https://github.com/shogo314/shogo-library/blob/02a0f569963e9e49fb42cc2b5e9e3cb802c9d9f5/src/math/bitwise-transform.hpp
 
 /**
  * @file bitwise-transform.hpp
@@ -145,38 +145,59 @@ std::vector<T> xor_convolution(std::vector<T> a, std::vector<T> b) {
     return a;
 }
 
-/**
- * @brief 部分集合畳み込み c[k] = sum_{i | j = k, i & j = 0} a[i] b[j] O(N log^2 N)
- * a と b は同じ長さ N で、N は 2 の累乗。メモリは O(N log N)
- */
+namespace internal_bitwise_transform {
+// ランク付きゼータ変換。f[s * w + k] (w = n + 1) は、要素数 k の部分集合 T ⊆ s についての a[T] の和
 template <typename T>
-std::vector<T> subset_convolution(const std::vector<T>& a, const std::vector<T>& b) {
-    int len = a.size();
-    assert(a.size() == b.size() && internal_bitwise_transform::is_power_of_two(len));
-    int n = 0;
-    while ((1 << n) < len) n++;
-    int w = n + 1;
-    // f[s * w + k] は、要素数 k の集合だけを残したものの値 (ランク付きゼータ変換)
-    std::vector<T> fa(static_cast<long long>(len) * w), fb(static_cast<long long>(len) * w);
-    for (int s = 0; s < len; s++) {
-        int k = __builtin_popcount(s);
-        fa[static_cast<long long>(s) * w + k] = a[s];
-        fb[static_cast<long long>(s) * w + k] = b[s];
-    }
+std::vector<T> ranked_zeta(const std::vector<T>& a, int n) {
+    const int len = 1 << n, w = n + 1;
+    std::vector<T> f(static_cast<long long>(len) * w);
+    for (int s = 0; s < len; s++) f[static_cast<long long>(s) * w + __builtin_popcount(s)] = a[s];
     for (int bit = 1; bit < len; bit <<= 1) {
         for (int s = 0; s < len; s++) {
             if (!(s & bit)) continue;
-            T* x = &fa[static_cast<long long>(s) * w];
-            T* y = &fb[static_cast<long long>(s) * w];
-            const T* px = &fa[static_cast<long long>(s ^ bit) * w];
-            const T* py = &fb[static_cast<long long>(s ^ bit) * w];
-            for (int k = 0; k < w; k++) {
-                x[k] += px[k];
-                y[k] += py[k];
-            }
+            T* x = &f[static_cast<long long>(s) * w];
+            const T* px = &f[static_cast<long long>(s ^ bit) * w];
+            for (int k = 0; k < w; k++) x[k] += px[k];
         }
     }
-    // 集合ごとに、要素数についての多項式として掛ける
+    return f;
+}
+// ranked_zeta の逆変換をして、各 s について要素数 popcount(s) の値を取り出す
+template <typename T>
+std::vector<T> ranked_mobius(std::vector<T> f, int n) {
+    const int len = 1 << n, w = n + 1;
+    for (int bit = 1; bit < len; bit <<= 1) {
+        for (int s = 0; s < len; s++) {
+            if (!(s & bit)) continue;
+            T* x = &f[static_cast<long long>(s) * w];
+            const T* px = &f[static_cast<long long>(s ^ bit) * w];
+            for (int k = 0; k < w; k++) x[k] -= px[k];
+        }
+    }
+    std::vector<T> c(len);
+    for (int s = 0; s < len; s++) c[s] = f[static_cast<long long>(s) * w + __builtin_popcount(s)];
+    return c;
+}
+inline int log2_exact(long long len) {
+    assert(is_power_of_two(len));
+    int n = 0;
+    while ((1LL << n) < len) n++;
+    return n;
+}
+}  // namespace internal_bitwise_transform
+
+/**
+ * @brief 部分集合畳み込み c[k] = sum_{i | j = k, i & j = 0} a[i] b[j] O(N log^2 N)
+ * ランク付きゼータ変換をして、集合ごとに要素数についての多項式として掛け、ランク付きメビウス変換で戻す
+ * @note a と b の長さは同じ 2 のべき
+ */
+template <typename T>
+std::vector<T> subset_convolution(const std::vector<T>& a, const std::vector<T>& b) {
+    using namespace internal_bitwise_transform;
+    assert(a.size() == b.size());
+    const int n = log2_exact(a.size()), len = 1 << n, w = n + 1;
+    auto fa = ranked_zeta(a, n);
+    const auto fb = ranked_zeta(b, n);
     std::vector<T> tmp(w);
     for (int s = 0; s < len; s++) {
         T* x = &fa[static_cast<long long>(s) * w];
@@ -188,15 +209,61 @@ std::vector<T> subset_convolution(const std::vector<T>& a, const std::vector<T>&
         }
         for (int k = 0; k < w; k++) x[k] = tmp[k];
     }
-    for (int bit = 1; bit < len; bit <<= 1) {
-        for (int s = 0; s < len; s++) {
-            if (!(s & bit)) continue;
-            T* x = &fa[static_cast<long long>(s) * w];
-            const T* px = &fa[static_cast<long long>(s ^ bit) * w];
-            for (int k = 0; k < w; k++) x[k] -= px[k];
+    return ranked_mobius(std::move(fa), n);
+}
+
+/**
+ * @brief 集合冪級数の exp: Σ_m a^m / m! (積は部分集合畳み込み) O(N log^2 N)
+ * ランク付きゼータ変換をして、集合ごとに要素数についての多項式 p の exp を q' = p' q から求め、ランク付きメビウス変換で戻す
+ * @note a[0] = 0。長さは 2 のべき。要素は体 (割り算を使う)
+ */
+template <typename T>
+std::vector<T> set_power_series_exp(const std::vector<T>& a) {
+    using namespace internal_bitwise_transform;
+    const int n = log2_exact(a.size()), len = 1 << n, w = n + 1;
+    assert(a[0] == T(0));
+    auto f = ranked_zeta(a, n);
+    std::vector<T> inv(w + 1), q(w), ip(w);
+    for (int k = 1; k <= w; k++) inv[k] = T(1) / T(k);
+    for (int s = 0; s < len; s++) {
+        T* p = &f[static_cast<long long>(s) * w];
+        // q[k] = (1 / k) Σ_{i=1}^{k} i p[i] q[k-i]
+        for (int i = 1; i < w; i++) ip[i] = T(i) * p[i];
+        q[0] = T(1);
+        for (int k = 1; k < w; k++) {
+            T sum = T();
+            for (int i = 1; i <= k; i++) sum += ip[i] * q[k - i];
+            q[k] = sum * inv[k];
         }
+        for (int k = 0; k < w; k++) p[k] = q[k];
     }
-    std::vector<T> c(len);
-    for (int s = 0; s < len; s++) c[s] = fa[static_cast<long long>(s) * w + __builtin_popcount(s)];
-    return c;
+    return ranked_mobius(std::move(f), n);
+}
+
+/**
+ * @brief 集合冪級数の log (exp の逆) O(N log^2 N)
+ * 集合ごとに要素数についての多項式 p の log を p q' = p' から求める
+ * @note a[0] = 1。長さは 2 のべき。要素は体 (割り算を使う)
+ */
+template <typename T>
+std::vector<T> set_power_series_log(const std::vector<T>& a) {
+    using namespace internal_bitwise_transform;
+    const int n = log2_exact(a.size()), len = 1 << n, w = n + 1;
+    assert(a[0] == T(1));
+    auto f = ranked_zeta(a, n);
+    std::vector<T> inv(w + 1), q(w), iq(w);
+    for (int k = 1; k <= w; k++) inv[k] = T(1) / T(k);
+    for (int s = 0; s < len; s++) {
+        T* p = &f[static_cast<long long>(s) * w];
+        // p[0] = 1 なので、k q[k] = k p[k] - Σ_{i=1}^{k-1} i q[i] p[k-i]
+        q[0] = T();
+        for (int k = 1; k < w; k++) {
+            T sum = T(k) * p[k];
+            for (int i = 1; i < k; i++) sum -= iq[i] * p[k - i];
+            q[k] = sum * inv[k];
+            iq[k] = T(k) * q[k];
+        }
+        for (int k = 0; k < w; k++) p[k] = q[k];
+    }
+    return ranked_mobius(std::move(f), n);
 }

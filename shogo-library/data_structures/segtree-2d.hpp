@@ -7,15 +7,17 @@
 
 #include <algorithm>
 #include <cassert>
-#include <tuple>
+#include <iterator>
 #include <utility>
 #include <vector>
 
 #include "../algebra/monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/6326ed0de9725c66d835297239e902b9eb0cdfc3/src/data_structures/segtree-2d.hpp
+// https://github.com/shogo314/shogo-library/blob/02a0f569963e9e49fb42cc2b5e9e3cb802c9d9f5/src/data_structures/segtree-2d.hpp
 
 /**
- * @brief 2次元セグメント木 (更新・取得する座標を先読みして圧縮する)
+ * @brief 2次元セグメント木 (更新する点を先読みする領域木)
+ *
+ * x 座標のセグメント木の各ノードに、その部分木にある点の y 座標の列と、その上のセグメント木を持たせる。
  *
  * @tparam M 可換モノイド (algebra/monoid.hpp)
  */
@@ -29,234 +31,135 @@ class SegTree2D {
     S op(const S& a, const S& b) const { return m.op(a, b); }
     S e() const { return m.e(); }
 
-    long long h, w, sz_x, sz_y;
-    int height_x, height_y;
-    std::vector<std::vector<int>> y_indices;  // 各 x のノードが持つ y のノード番号 (メモリを抑えるため int で持つ)
-    std::vector<std::vector<S>> data_compressed;
+    int n;                                  // x 座標の種類数
+    std::vector<long long> xs, ys;          // 圧縮した座標
+    std::vector<std::vector<int>> node_ys;  // 各ノードにある点の y の番号 (昇順)
+    std::vector<std::vector<S>> data;       // 各ノードの y のセグメント木 (大きさは 2 * node_ys[k].size())
 
-    S get_y(long long kx, long long ky) {
-        ky += sz_y;
-        auto it = std::lower_bound(y_indices[kx].begin(), y_indices[kx].end(), ky);
-        if (it == y_indices[kx].end() || *it != ky) return e();
-        return data_compressed[kx][it - y_indices[kx].begin()];
+    // ノード k の y の番号 yi の位置。なければ -1
+    int find_y(int k, int yi) const {
+        auto it = std::lower_bound(node_ys[k].begin(), node_ys[k].end(), yi);
+        if (it == node_ys[k].end() || *it != yi) return -1;
+        return static_cast<int>(it - node_ys[k].begin());
     }
-
-    S updated_y(long long kx, long long ky, int child_y_idx, bool child_y_right, const S& child_val) {
-        if (!child_y_right && child_y_idx + 1 < static_cast<int>(y_indices[kx].size()) && y_indices[kx][child_y_idx + 1] == ky * 2 + 1) {
-            return op(child_val, data_compressed[kx][child_y_idx + 1]);
-        }
-        if (child_y_right && child_y_idx - 1 >= 0 && y_indices[kx][child_y_idx - 1] == ky * 2) {
-            return op(data_compressed[kx][child_y_idx - 1], child_val);
-        }
-        return child_val;
+    S get_node(int k, int yi) const {
+        int p = find_y(k, yi);
+        if (p == -1) return e();
+        return data[k][node_ys[k].size() + p];
     }
-
-    void update_tree_y(long long kx, long long ky, const S& val) {
-        ky += sz_y;
-        int y_idx = std::lower_bound(y_indices[kx].begin(), y_indices[kx].end(), ky) - y_indices[kx].begin();
-        S tmp_val = val;
-        data_compressed[kx][y_idx] = tmp_val;
-        for (int i = 1; i <= height_y; i++) {
-            int child_y_idx = y_idx;
-            y_idx = std::lower_bound(y_indices[kx].begin(), y_indices[kx].begin() + child_y_idx, ky >> i) - y_indices[kx].begin();
-            tmp_val = data_compressed[kx][y_idx] = updated_y(kx, ky >> i, child_y_idx, ky >> (i - 1) & 1, tmp_val);
-        }
+    int x_index(long long x) const {
+        auto it = std::lower_bound(xs.begin(), xs.end(), x);
+        assert(it != xs.end() && *it == x);
+        return static_cast<int>(it - xs.begin());
     }
-
-    S updated_x(long long kx, long long ky, bool child_x_right, const S& child_val) {
-        if (!child_x_right) {
-            return op(child_val, get_y(kx * 2 + 1, ky));
-        } else {
-            return op(get_y(kx * 2, ky), child_val);
-        }
+    int y_index(long long y) const {
+        auto it = std::lower_bound(ys.begin(), ys.end(), y);
+        assert(it != ys.end() && *it == y);
+        return static_cast<int>(it - ys.begin());
     }
-
-    void update_tree_x(long long kx, long long ky, const S& val) {
-        kx += sz_x;
-        S tmp_val = val;
-        update_tree_y(kx, ky, tmp_val);
-        for (int i = 1; i <= height_x; i++) {
-            tmp_val = updated_x(kx >> i, ky, kx >> (i - 1) & 1, tmp_val);
-            update_tree_y(kx >> i, ky, tmp_val);
+    S prod_node(int k, int ly, int ry) const {
+        const auto& v = node_ys[k];
+        int len = static_cast<int>(v.size());
+        int l = static_cast<int>(std::lower_bound(v.begin(), v.end(), ly) - v.begin()) + len;
+        int r = static_cast<int>(std::lower_bound(v.begin(), v.end(), ry) - v.begin()) + len;
+        S sml = e(), smr = e();
+        while (l < r) {
+            if (l & 1) sml = op(sml, data[k][l++]);
+            if (r & 1) smr = op(data[k][--r], smr);
+            l >>= 1;
+            r >>= 1;
         }
-    }
-
-    S prod_y(long long kx, long long ly, long long ry) {
-        S left_prod = e(), right_prod = e();
-        ly += sz_y;
-        ry += sz_y;
-        auto itr = y_indices[kx].end();
-        while (ly < ry) {
-            if (ry & 1) {
-                --ry;
-                itr = std::lower_bound(y_indices[kx].begin(), itr, ry);
-                right_prod = op(data_compressed[kx][itr - y_indices[kx].begin()], right_prod);
-            }
-            if (ly & 1) {
-                itr = std::lower_bound(y_indices[kx].begin(), itr, ly);
-                left_prod = op(left_prod, data_compressed[kx][itr - y_indices[kx].begin()]);
-                ++ly;
-            }
-            ly >>= 1;
-            ry >>= 1;
-        }
-        return op(left_prod, right_prod);
-    }
-
-    S prod_x(long long lx, long long rx, long long ly, long long ry) {
-        S left_prod = e(), right_prod = e();
-        lx += sz_x;
-        rx += sz_x;
-        while (lx < rx) {
-            if (lx & 1) {
-                left_prod = op(left_prod, prod_y(lx++, ly, ry));
-            }
-            if (rx & 1) {
-                right_prod = op(prod_y(--rx, ly, ry), right_prod);
-            }
-            lx >>= 1;
-            rx >>= 1;
-        }
-        return op(left_prod, right_prod);
-    }
-
-    void construct_data(const std::vector<std::tuple<long long, long long>>& set_query_indices, const std::vector<std::tuple<long long, long long, long long, long long>>& prod_query_indices) {
-        sz_x = 1;
-        height_x = 0;
-        while (sz_x < h) {
-            sz_x <<= 1;
-            ++height_x;
-        }
-        sz_y = 1;
-        height_y = 0;
-        while (sz_y < w) {
-            sz_y <<= 1;
-            ++height_y;
-        }
-        data_compressed.resize(sz_x * 2);
-        y_indices.resize(sz_x * 2);
-
-        for (auto [x, y] : set_query_indices) {
-            x += sz_x;
-            std::vector<long long> x_indices_tmp;
-            for (int i = 0; i <= height_x; ++i) {
-                x_indices_tmp.push_back(x);
-                x >>= 1;
-            }
-            y += sz_y;
-            std::vector<int> y_indices_tmp;
-            for (int i = 0; i <= height_y; ++i) {
-                y_indices_tmp.push_back(static_cast<int>(y));
-                y >>= 1;
-            }
-            for (long long x : x_indices_tmp) {
-                for (int y : y_indices_tmp) {
-                    y_indices[x].push_back(y);
-                }
-            }
-        }
-        for (auto [lx, rx, ly, ry] : prod_query_indices) {
-            std::vector<long long> x_indices_tmp;
-            lx += sz_x;
-            rx += sz_x;
-            while (lx < rx) {
-                if (lx & 1) x_indices_tmp.push_back(lx++);
-                if (rx & 1) x_indices_tmp.push_back(--rx);
-                lx >>= 1;
-                rx >>= 1;
-            }
-            ly += sz_y;
-            ry += sz_y;
-            std::vector<int> y_indices_tmp;
-            while (ly < ry) {
-                if (ly & 1) y_indices_tmp.push_back(static_cast<int>(ly++));
-                if (ry & 1) y_indices_tmp.push_back(static_cast<int>(--ry));
-                ly >>= 1;
-                ry >>= 1;
-            }
-            for (long long x : x_indices_tmp) {
-                for (int y : y_indices_tmp) {
-                    y_indices[x].push_back(y);
-                }
-            }
-        }
-
-        for (long long x = 1; x < sz_x * 2; x++) {
-            std::sort(y_indices[x].begin(), y_indices[x].end());
-            y_indices[x].erase(std::unique(y_indices[x].begin(), y_indices[x].end()), y_indices[x].end());
-        }
-        for (long long i = 1; i < sz_x * 2; ++i) {
-            data_compressed[i].assign(y_indices[i].size(), e());
-        }
+        return op(sml, smr);
     }
 
    public:
-    SegTree2D() = default;
+    SegTree2D() : SegTree2D(std::vector<std::pair<long long, long long>>()) {}
     /**
      * @brief コンストラクタ
      *
-     * @param h x座標の範囲 [0, h)
-     * @param w y座標の範囲 [0, w)
-     * @param set_query_indices set/apply する座標 (x, y) の列
-     * @param prod_query_indices prod する範囲 (lx, rx, ly, ry) の列
+     * @param points set/apply する点 (x, y) の列 (重複してよい)
      * @param m モノイド
      */
-    explicit SegTree2D(long long h, long long w, const std::vector<std::tuple<long long, long long>>& set_query_indices, const std::vector<std::tuple<long long, long long, long long, long long>>& prod_query_indices, M m = M())
-        : m(std::move(m)), h(h), w(w) {
-        construct_data(set_query_indices, prod_query_indices);
+    explicit SegTree2D(const std::vector<std::pair<long long, long long>>& points, M m = M()) : m(std::move(m)) {
+        for (auto [x, y] : points) {
+            xs.push_back(x);
+            ys.push_back(y);
+        }
+        std::sort(xs.begin(), xs.end());
+        xs.erase(std::unique(xs.begin(), xs.end()), xs.end());
+        std::sort(ys.begin(), ys.end());
+        ys.erase(std::unique(ys.begin(), ys.end()), ys.end());
+        n = static_cast<int>(xs.size());
+        node_ys.resize(2 * n);
+        for (auto [x, y] : points) node_ys[n + x_index(x)].push_back(y_index(y));
+        for (int k = n; k < 2 * n; k++) {
+            std::sort(node_ys[k].begin(), node_ys[k].end());
+            node_ys[k].erase(std::unique(node_ys[k].begin(), node_ys[k].end()), node_ys[k].end());
+        }
+        for (int k = n - 1; k >= 1; k--) {
+            const auto &a = node_ys[2 * k], &b = node_ys[2 * k + 1];
+            std::set_union(a.begin(), a.end(), b.begin(), b.end(), std::back_inserter(node_ys[k]));
+        }
+        data.resize(2 * n);
+        for (int k = 1; k < 2 * n; k++) data[k].assign(2 * node_ys[k].size(), e());
     }
 
     /**
-     * @brief 指定された要素の値を返す
-     * @param kx x座標
-     * @param ky y座標
-     * @return 要素の値
+     * @brief 指定された点の値を返す (渡していない点なら単位元)
      */
-    S get(long long kx, long long ky) {
-        assert(0 <= kx && kx < h && 0 <= ky && ky < w);
-        kx += sz_x;
-        return get_y(kx, ky);
+    S get(long long x, long long y) const {
+        auto ix = std::lower_bound(xs.begin(), xs.end(), x);
+        auto iy = std::lower_bound(ys.begin(), ys.end(), y);
+        if (ix == xs.end() || *ix != x || iy == ys.end() || *iy != y) return e();
+        return get_node(n + static_cast<int>(ix - xs.begin()), static_cast<int>(iy - ys.begin()));
     }
 
     /**
-     * @brief 指定された要素の値をxに更新する
-     * @param kx x座標
-     * @param ky y座標
-     * @param x 代入する値
+     * @brief 指定された点の値を v に更新する (コンストラクタで渡した点のみ)
      */
-    void set(long long kx, long long ky, const S& x) {
-        assert(0 <= kx && kx < h && 0 <= ky && ky < w);
-        update_tree_x(kx, ky, x);
+    void set(long long x, long long y, const S& v) {
+        int yi = y_index(y);
+        for (int k = n + x_index(x); k >= 1; k >>= 1) {
+            int len = static_cast<int>(node_ys[k].size());
+            int p = find_y(k, yi) + len;
+            data[k][p] = k >= n ? v : op(get_node(2 * k, yi), get_node(2 * k + 1, yi));
+            for (p >>= 1; p >= 1; p >>= 1) data[k][p] = op(data[k][2 * p], data[k][2 * p + 1]);
+        }
     }
 
     /**
-     * @brief 指定された要素の値にxを作用させる
-     *
-     * @param kx x座標
-     * @param ky y座標
-     * @param x 作用素
+     * @brief 指定された点の値に v を作用させる (コンストラクタで渡した点のみ)
      */
-    void apply(long long kx, long long ky, const S& x) {
-        set(kx, ky, op(get(kx, ky), x));
+    void apply(long long x, long long y, const S& v) {
+        int yi = y_index(y);
+        // 可換なので、祖先の値にそのまま v を掛ければよい
+        for (int k = n + x_index(x); k >= 1; k >>= 1) {
+            for (int p = find_y(k, yi) + static_cast<int>(node_ys[k].size()); p >= 1; p >>= 1) data[k][p] = op(data[k][p], v);
+        }
     }
 
     /**
-     * @brief [lx, rx)x[ly, ry)の範囲の要素の総積を返す
-     *
-     * @param lx x座標の半開区間の開始
-     * @param rx x座標の半開区間の終端
-     * @param ly y座標の半開区間の開始
-     * @param ry y座標の半開区間の終端
+     * @brief [lx, rx) x [ly, ry) にある点の値の総積を返す
      */
-    S prod(long long lx, long long rx, long long ly, long long ry) {
-        assert(0 <= lx && lx <= rx && rx <= h);
-        assert(0 <= ly && ly <= ry && ry <= w);
-        return prod_x(lx, rx, ly, ry);
+    S prod(long long lx, long long rx, long long ly, long long ry) const {
+        assert(lx <= rx && ly <= ry);
+        int l = static_cast<int>(std::lower_bound(xs.begin(), xs.end(), lx) - xs.begin()) + n;
+        int r = static_cast<int>(std::lower_bound(xs.begin(), xs.end(), rx) - xs.begin()) + n;
+        int lyi = static_cast<int>(std::lower_bound(ys.begin(), ys.end(), ly) - ys.begin());
+        int ryi = static_cast<int>(std::lower_bound(ys.begin(), ys.end(), ry) - ys.begin());
+        S res = e();
+        while (l < r) {
+            if (l & 1) res = op(res, prod_node(l++, lyi, ryi));
+            if (r & 1) res = op(res, prod_node(--r, lyi, ryi));
+            l >>= 1;
+            r >>= 1;
+        }
+        return res;
     }
 };
 
 template <typename M>
-SegTree2D(long long, long long, std::vector<std::tuple<long long, long long>>, std::vector<std::tuple<long long, long long, long long, long long>>, M) -> SegTree2D<M>;
+SegTree2D(std::vector<std::pair<long long, long long>>, M) -> SegTree2D<M>;
 
 /**
  * @brief RangeMaxQuery

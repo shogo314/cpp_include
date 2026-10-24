@@ -7,13 +7,15 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <initializer_list>
 #include <numeric>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include "modular-arithmetic.hpp"
-// https://github.com/shogo314/shogo-library/blob/6326ed0de9725c66d835297239e902b9eb0cdfc3/src/math/prime.hpp
+// https://github.com/shogo314/shogo-library/blob/02a0f569963e9e49fb42cc2b5e9e3cb802c9d9f5/src/math/prime.hpp
 
 namespace internal_prime {
 
@@ -177,6 +179,97 @@ inline long long primitive_root(long long m) {
         }
         if (ok) return g;
     }
+}
+
+/**
+ * @brief 素数 p について x^k ≡ a (mod p) となる x を 1 つ返す (なければ -1)。0^0 = 1 とする
+ *
+ * g = gcd(k, p - 1) として g 乗根 z を求め、x = z^(k/g の逆数 mod (p-1)/g) とする
+ * g 乗根は、g の素因数 q ごとに、位数 q^s の部分群の中で Pohlig-Hellman 法 (q の部分は baby-step giant-step) を使って直す
+ * O(Σ_q (s sqrt(q) + log^2 p)) に p - 1 の素因数分解を足したもの
+ */
+inline long long kth_root_mod(long long k, long long a, long long p) {
+    assert(k >= 0 && p >= 2);
+    a %= p;
+    if (a < 0) a += p;
+    if (k == 0) return a == 1 % p ? 1 : -1;
+    if (a == 0) return 0;
+    const long long m = p - 1, g = std::gcd(k, m);
+    if (modpow(a, m / g, p) != 1) return -1;
+    long long z = a;  // 素因数を 1 つずつ処理し、最後に z^g = a となるようにする
+    for (auto [q, e] : factorize(g)) {
+        long long s = 0, t = m, qe = 1;
+        while (t % q == 0) t /= q, s++;
+        for (long long i = 0; i < e; i++) qe *= q;
+        // x1 = z^r (r q^e ≡ 1 mod t) とすると x1^(q^e) = z h (h は位数 q^s の部分群 H の元)
+        const long long r = t == 1 ? 0 : modinv(qe % t, t);
+        const long long x1 = modpow(z, r, p);
+        const long long target = modmul(z, modinv(modpow(x1, qe, p), p), p);  // h^(-1)、H の元で q^e 乗になっている
+        // H の生成元 c = w^t (w は q 乗非剰余)
+        long long w = 2;
+        while (modpow(w, m / q, p) == 1) w++;
+        const long long c = modpow(w, t, p);
+        // target = c^d となる d を q 進で 1 桁ずつ求める (Pohlig-Hellman)
+        long long zeta = c;  // 位数 q の元 c^(q^(s-1))
+        for (long long i = 0; i + 1 < s; i++) zeta = modpow(zeta, q, p);
+        const long long B = std::sqrt(static_cast<double>(q)) + 1;
+        std::unordered_map<long long, long long> baby;  // zeta^j -> j (j < B)
+        for (long long j = 0, x = 1; j < B; j++, x = modmul(x, zeta, p)) baby.emplace(x, j);
+        const long long giant = modinv(modpow(zeta, B, p), p);
+        auto log_zeta = [&](long long y) {
+            for (long long i = 0; i <= q / B + 1; i++, y = modmul(y, giant, p)) {
+                auto it = baby.find(y);
+                if (it != baby.end()) return i * B + it->second;
+            }
+            assert(false);
+            return -1LL;
+        };
+        long long d = 0, qi = 1;
+        const long long cinv = modinv(c, p);
+        for (long long i = 0; i < s; i++, qi *= q) {
+            // (target c^(-d))^(q^(s-1-i)) = zeta^(d の i 桁目)
+            long long y = modmul(target, modpow(cinv, d, p), p);
+            for (long long j = 0; j + 1 + i < s; j++) y = modpow(y, q, p);
+            d += log_zeta(y) * qi;
+        }
+        // d は q^e の倍数になっている
+        z = modmul(x1, modpow(c, d / qe, p), p);
+    }
+    const long long mg = m / g;
+    const long long inv = mg == 1 ? 0 : modinv((k / g) % mg, mg);
+    return modpow(z, inv, p);
+}
+
+/**
+ * @brief テトレーション a↑↑b (a を b 個重ねたべき乗 a^a^...^a、a↑↑0 = 1) を m で割った余り。0^0 = 1 とする
+ *
+ * x >= log2(m) なら a^x ≡ a^(x mod φ(m) + φ(m)) (mod m) を使い、m を φ(m) に置き換えて再帰する。m は O(log m) 回で 1 になる
+ * 途中の値は「本当の値が m 未満ならそのまま、m 以上なら (値 mod m) + m」で持ち、本当の値が m 以上かを失わないようにする
+ * O(log m × (factorize(m) + log m))
+ * @pre m <= 2 × 10^9
+ */
+inline long long tetration_mod(long long a, long long b, long long m) {
+    // 途中の値は 2m 未満なので、その積があふれないように m を制限する
+    assert(a >= 0 && b >= 0 && 1 <= m && m <= 2000000000);
+    // x を上の形に直す
+    auto clamp = [](long long x, long long mod) { return x < mod ? x : x % mod + mod; };
+    // a↑↑b を上の形で返す
+    auto rec = [&](auto self, long long b, long long mod) -> long long {
+        if (b == 0) return clamp(1, mod);
+        // 0↑↑b は b が偶数なら 1、奇数なら 0
+        if (a == 0) return clamp(b % 2 == 0 ? 1 : 0, mod);
+        // a >= 1 なら a↑↑b >= 1
+        if (a == 1 || mod == 1) return clamp(1, mod);
+        const long long e = self(self, b - 1, totient(mod));
+        // a^e を上の形で求める (a >= 1、e >= 1)
+        long long res = 1, base = clamp(a, mod);
+        for (long long k = e; k > 0; k >>= 1) {
+            if (k & 1) res = clamp(res * base, mod);
+            if (k > 1) base = clamp(base * base, mod);
+        }
+        return res;
+    };
+    return rec(rec, b, m) % m;
 }
 
 /**

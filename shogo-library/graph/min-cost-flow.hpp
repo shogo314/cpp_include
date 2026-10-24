@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/6326ed0de9725c66d835297239e902b9eb0cdfc3/src/graph/min-cost-flow.hpp
+// https://github.com/shogo314/shogo-library/blob/02a0f569963e9e49fb42cc2b5e9e3cb802c9d9f5/src/graph/min-cost-flow.hpp
 
 /**
  * @file min-cost-flow.hpp
@@ -24,10 +24,10 @@
  * mcf.add_edge(0, 1, 5, 3);
  * auto [f, c] = mcf.flow(s, t, limit);
  *
- * @tparam Cap 容量の型
- * @tparam Cost コストの型。コストの総和が収まること
+ * @tparam Cap 容量の型 省略したら long long
+ * @tparam Cost コストの型。コストの総和が収まること 省略したら long long
  */
-template <typename Cap, typename Cost>
+template <typename Cap = long long, typename Cost = long long>
 class MinCostFlow {
    public:
     /**

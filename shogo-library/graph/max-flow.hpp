@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/6326ed0de9725c66d835297239e902b9eb0cdfc3/src/graph/max-flow.hpp
+// https://github.com/shogo314/shogo-library/blob/02a0f569963e9e49fb42cc2b5e9e3cb802c9d9f5/src/graph/max-flow.hpp
 
 /**
  * @file max-flow.hpp
@@ -22,9 +22,9 @@
  * mf.add_edge(0, 1, 5);
  * long long f = mf.flow(s, t);
  *
- * @tparam Cap 容量の型
+ * @tparam Cap 容量の型 省略したら long long
  */
-template <typename Cap>
+template <typename Cap = long long>
 class MaxFlow {
    public:
     /**

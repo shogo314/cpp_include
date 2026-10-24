@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "graph.hpp"
-// https://github.com/shogo314/shogo-library/blob/6326ed0de9725c66d835297239e902b9eb0cdfc3/src/graph/tree.hpp
+// https://github.com/shogo314/shogo-library/blob/02a0f569963e9e49fb42cc2b5e9e3cb802c9d9f5/src/graph/tree.hpp
 
 template <typename>
 class RootedTree;
@@ -23,11 +23,11 @@ class DoublingClimbTree;
 /**
  * @brief 根なし木
  *
- * @tparam Cost = int 辺の重み
+ * @tparam Cost = long long 辺の重み
  *
  * Graph<Cost>を継承し、すべて無向辺で表す
  */
-template <typename Cost = int>
+template <typename Cost = long long>
 struct Tree : private Graph<Cost> {
     // Graph<Cost>* g = new Tree<Cost>(); ができてしまうと、delete時にメモリリークが発生
     // 回避するためprivate継承にして、メンバをすべてusing宣言
@@ -41,8 +41,6 @@ struct Tree : private Graph<Cost> {
     using Graph<Cost>::add_directed_edge;
     using Graph<Cost>::operator[];
     using Graph<Cost>::edges;
-    using Graph<Cost>::shortest_path;
-    using ShortestPath = typename Graph<Cost>::ShortestPath;
 
     /**
      * @brief コンストラクタ
@@ -52,26 +50,20 @@ struct Tree : private Graph<Cost> {
     explicit Tree(long long n = 0) : Graph<Cost>(n) {}
 
     /**
+     * @brief Graph として見る
+     *
+     * Graph を受け取る関数 (shortest_path など) に渡すときに使う
+     * @return const Graph<Cost>& この木を表すグラフ
+     */
+    const Graph<Cost>& graph() const { return *this; }
+
+    /**
      * @brief 辺の情報を標準入力から受け取って追加する
      * @param padding  = -1 頂点番号を入力からいくつずらすか
      * @param weighted = false 辺の重みが入力されるか
      */
     void read(long long padding = -1, bool weighted = false) {
         Graph<Cost>::read(this->n - 1, padding, weighted, false);
-    }
-
-    /**
-     * @brief 木の直径
-     *
-     * @param weighted = true 重み付きか
-     * @return std::vector<Edge> 直径を構成する辺のリスト
-     */
-    std::vector<Edge> diameter(bool weighted = true) const {
-        std::vector<Cost> dist = shortest_path(0, weighted).dist;
-        long long u = std::max_element(dist.begin(), dist.end()) - dist.begin();
-        auto sp = shortest_path(u, weighted);
-        long long v = std::max_element(sp.dist.begin(), sp.dist.end()) - sp.dist.begin();
-        return sp.path(v);
     }
 
     /**
@@ -122,9 +114,9 @@ struct Tree : private Graph<Cost> {
 /**
  * @brief 根付き木
  *
- * @tparam Cost = int 辺のコスト
+ * @tparam Cost = long long 辺のコスト
  */
-template <typename Cost = int>
+template <typename Cost = long long>
 class RootedTree : private Tree<Cost> {
    public:
     using Edge = typename Tree<Cost>::Edge;
@@ -134,8 +126,7 @@ class RootedTree : private Tree<Cost> {
     using Tree<Cost>::g;
     using Tree<Cost>::operator[];
     using Tree<Cost>::edges;
-    using Tree<Cost>::shortest_path;
-    using ShortestPath = typename Tree<Cost>::ShortestPath;
+    using Tree<Cost>::graph;
 
     long long root;                                           //!< 根
     std::vector<Edge> par;                                    //!< 親へ向かう辺
@@ -257,9 +248,9 @@ class RootedTree : private Tree<Cost> {
 /**
  * @brief 親頂点ダブリング済み根付き木
  *
- * @tparam Cost = int 辺の重み(注: hopでは根の重みは考えない)
+ * @tparam Cost = long long 辺の重み(注: hopでは根の重みは考えない)
  */
-template <typename Cost = int>
+template <typename Cost = long long>
 class DoublingClimbTree : private RootedTree<Cost> {
    public:
     using Edge = typename RootedTree<Cost>::Edge;
@@ -269,8 +260,7 @@ class DoublingClimbTree : private RootedTree<Cost> {
     using RootedTree<Cost>::g;
     using RootedTree<Cost>::operator[];
     using RootedTree<Cost>::edges;
-    using RootedTree<Cost>::shortest_path;
-    using ShortestPath = typename RootedTree<Cost>::ShortestPath;
+    using RootedTree<Cost>::graph;
     using RootedTree<Cost>::root;
     using RootedTree<Cost>::par;
     using RootedTree<Cost>::child;

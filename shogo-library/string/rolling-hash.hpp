@@ -15,9 +15,10 @@
 #include <vector>
 
 #include "../utility/traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/6326ed0de9725c66d835297239e902b9eb0cdfc3/src/string/rolling-hash.hpp
+// https://github.com/shogo314/shogo-library/blob/02a0f569963e9e49fb42cc2b5e9e3cb802c9d9f5/src/string/rolling-hash.hpp
 
 struct RHString;
+class RollingHash2D;
 
 /**
  * @brief ローリングハッシュ
@@ -143,6 +144,7 @@ class RollingHash {
     }
 
     friend RHString;
+    friend RollingHash2D;
 };
 
 /**
@@ -329,3 +331,87 @@ struct RHString {
     }
     friend bool operator!=(const RHString& t1, const RHString& t2) { return !(t1 == t2); }
 };
+
+/**
+ * @brief 2 次元のローリングハッシュ
+ *
+ * 行方向と列方向で別の基数を使い、表の左上からの累積ハッシュで長方形のハッシュを O(1) で求める
+ * H[i][j] = Σ_{a < i, b < j} v[a][b] base1^(i-1-a) base2^(j-1-b)
+ */
+class RollingHash2D {
+    using ull = unsigned long long;
+    RollingHash rh1, rh2;  // 行方向 (上下) と列方向 (左右)
+
+    static ull add(ull a, ull b) { return RollingHash::add(a, b); }
+    static ull sub(ull a, ull b) { return RollingHash::add(a, RollingHash::MOD - b); }
+    static ull mul(ull a, ull b) { return RollingHash::mul(a, b); }
+
+   public:
+    /**
+     * @brief コンストラクタ
+     *
+     * @param base1 行方向の基数 省略するとランダム
+     * @param base2 列方向の基数 省略するとランダム
+     */
+    explicit RollingHash2D(unsigned int base1 = 0, unsigned int base2 = 0) : rh1(base1), rh2(base2) {}
+
+    /**
+     * @brief 表 (std::vector<std::string> や std::vector<std::vector<T>>) の累積ハッシュ O(HW)
+     *
+     * @return std::vector<std::vector<unsigned long long>> (H + 1) 行 (W + 1) 列の表。[i][j] は左上 i 行 j 列のハッシュ
+     */
+    template <typename Grid>
+    std::vector<std::vector<ull>> build(const Grid& grid) {
+        using std::size;
+        const long long h = size(grid), w = h == 0 ? 0 : size(grid[0]);
+        std::vector<std::vector<ull>> res(h + 1, std::vector<ull>(w + 1, 0));
+        const ull b1 = rh1.base, b2 = rh2.base, b12 = mul(b1, b2);
+        for (long long i = 0; i < h; i++) {
+            assert(static_cast<long long>(size(grid[i])) == w);
+            for (long long j = 0; j < w; j++) {
+                ull v = add(mul(res[i][j + 1], b1), mul(res[i + 1][j], b2));
+                res[i + 1][j + 1] = add(sub(v, mul(res[i][j], b12)), RollingHash::to_value(grid[i][j]));
+            }
+        }
+        return res;
+    }
+
+    /**
+     * @brief 行 [i1, i2)、列 [j1, j2) の長方形のハッシュ O(1) (初回は長さ分)
+     */
+    ull query(const std::vector<std::vector<ull>>& hash, long long i1, long long j1, long long i2, long long j2) {
+        assert(0 <= i1 && i1 <= i2 && i2 < static_cast<long long>(hash.size()));
+        assert(0 <= j1 && j1 <= j2 && j2 < static_cast<long long>(hash[0].size()));
+        rh1.expand(i2 - i1);
+        rh2.expand(j2 - j1);
+        ull p1 = rh1.power[i2 - i1], p2 = rh2.power[j2 - j1];
+        ull res = sub(hash[i2][j2], mul(hash[i1][j2], p1));
+        res = sub(res, mul(hash[i2][j1], p2));
+        return add(res, mul(mul(hash[i1][j1], p1), p2));
+    }
+};
+
+/**
+ * @brief 表 text の中で、表 pattern と一致する部分の左上の位置 (行, 列) をすべて求める O(HW + hw)
+ *
+ * 2 次元のローリングハッシュで比べる。行の昇順、同じ行なら列の昇順に並べる
+ * pattern は 1 行 1 列以上であること
+ */
+template <typename Grid1, typename Grid2>
+std::vector<std::pair<long long, long long>> pattern_match_2d(const Grid1& text, const Grid2& pattern) {
+    using std::size;
+    const long long h = size(text), w = h == 0 ? 0 : size(text[0]);
+    const long long ph = size(pattern), pw = ph == 0 ? 0 : size(pattern[0]);
+    assert(ph > 0 && pw > 0);
+    std::vector<std::pair<long long, long long>> res;
+    if (ph > h || pw > w) return res;
+    RollingHash2D rh;
+    auto th = rh.build(text), pht = rh.build(pattern);
+    unsigned long long target = rh.query(pht, 0, 0, ph, pw);
+    for (long long i = 0; i + ph <= h; i++) {
+        for (long long j = 0; j + pw <= w; j++) {
+            if (rh.query(th, i, j, i + ph, j + pw) == target) res.emplace_back(i, j);
+        }
+    }
+    return res;
+}
