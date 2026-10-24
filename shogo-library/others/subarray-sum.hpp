@@ -1,5 +1,4 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/02a0f569963e9e49fb42cc2b5e9e3cb802c9d9f5/src/others/subarray-sum.hpp
 
 /**
  * @file subarray-sum.hpp
@@ -10,6 +9,9 @@
 #include <type_traits>
 #include <vector>
 
+#include "../utility/two-pointers.hpp"
+// https://github.com/shogo314/shogo-library/blob/b94a98acb19db49fa99249c824311583b1eb13e3/src/others/subarray-sum.hpp
+
 namespace internal_subarray_sum {
 // i < j かつ p[j] - p[i] <= k となる組 (i, j) の個数
 // p が広義単調増加なら尺取り法で O(n)、そうでなければマージソートで O(n log n) (再帰を使わない)
@@ -18,11 +20,9 @@ long long count_pairs_at_most(std::vector<T> p, T k) {
     const int n = p.size();
     long long res = 0;
     if (std::is_sorted(p.begin(), p.end())) {
-        // j ごとに、i < j かつ p[i] >= p[j] - k となる最小の i (なければ j。j が増えると i も増える)
-        for (int i = 0, j = 0; j < n; j++) {
-            while (i < j && p[i] < p[j] - k) i++;
-            res += j - i;
-        }
+        // i ごとに、p[j] - p[i] <= k となる j は [i, r[i]) (p が単調なので、i を増やしても条件は崩れない)
+        const auto r = two_pointers(n, [&](long long i, long long j) { return p[j] - p[i] <= k; });
+        for (int i = 0; i < n; i++) res += std::max(r[i] - i - 1, 0LL);
         return res;
     }
     std::vector<T> buf(n);
