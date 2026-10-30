@@ -13,7 +13,7 @@
 
 #include "graph.hpp"
 #include "shortest-path.hpp"
-// https://github.com/shogo314/shogo-library/blob/b94a98acb19db49fa99249c824311583b1eb13e3/src/graph/chinese-postman.hpp
+// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/graph/chinese-postman.hpp
 
 /**
  * @brief 無向グラフで、すべての辺を 1 回以上通って始点に戻る閉路の長さの最小値 (中国人郵便配達問題)

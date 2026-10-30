@@ -5,12 +5,13 @@
  * @brief 最小全域有向木
  */
 
+#include <cassert>
 #include <optional>
 #include <utility>
 #include <vector>
 
 #include "graph.hpp"
-// https://github.com/shogo314/shogo-library/blob/b94a98acb19db49fa99249c824311583b1eb13e3/src/graph/minimum-arborescence.hpp
+// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/graph/minimum-arborescence.hpp
 
 namespace internal_minimum_arborescence {
 
@@ -117,6 +118,7 @@ template <typename Cost = long long>
 std::optional<MinimumArborescence<Cost>> minimum_arborescence(const Graph<Cost>& graph, long long root) {
     using Edge = typename Graph<Cost>::Edge;
     const long long n = graph.n;
+    assert(0 <= root && root < n);
     std::vector<Edge> es;
     for (long long v = 0; v < n; v++) {
         for (const auto& e : graph[v]) es.push_back(e);

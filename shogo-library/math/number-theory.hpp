@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "modular-arithmetic.hpp"
-// https://github.com/shogo314/shogo-library/blob/b94a98acb19db49fa99249c824311583b1eb13e3/src/math/number-theory.hpp
+// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/math/number-theory.hpp
 
 /**
  * @brief 2式の連立合同式を、mが互いに素になるように変形する
@@ -78,7 +78,7 @@ inline std::optional<CRTResult> crt(const std::vector<long long>& r, const std::
  */
 inline std::optional<CRTResult> crt(const std::vector<long long>& r, const std::vector<long long>& m, long long MOD) {
     assert(r.size() == m.size());
-    if (r.size() == 0) return CRTResult{0, 1};
+    if (r.size() == 0) return CRTResult{0, 1 % MOD};
     int n = static_cast<int>(r.size());
     std::vector<long long> r2 = r, m2 = m;
     // mを互いに素にする

@@ -6,11 +6,12 @@
  */
 
 #include <cassert>
+#include <optional>
 #include <vector>
 
 #include "graph.hpp"
 #include "graph_util.hpp"
-// https://github.com/shogo314/shogo-library/blob/b94a98acb19db49fa99249c824311583b1eb13e3/src/graph/two-sat.hpp
+// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/graph/two-sat.hpp
 
 /**
  * @brief 2-SAT
@@ -21,17 +22,16 @@
  * 例:
  * TwoSat ts(n);
  * ts.add_clause(0, true, 1, false);  // x_0 または (not x_1)
- * if (ts.satisfiable()) auto ans = ts.answer();
+ * if (auto ans = ts.solve()) { ... }
  */
 class TwoSat {
     long long n;
     // 頂点 i は「x_i = true」、頂点 n + i は「x_i = false」を表す
     Graph<int> graph;
-    std::vector<bool> ans;
     long long literal(long long i, bool f) const { return f ? i : n + i; }
 
    public:
-    explicit TwoSat(long long n = 0) : n(n), graph(2 * n), ans(n) {}
+    explicit TwoSat(long long n = 0) : n(n), graph(2 * n) {}
 
     long long size() const { return n; }
 
@@ -58,24 +58,22 @@ class TwoSat {
     void add_nand(long long i, bool f, long long j, bool g) { add_clause(i, !f, j, !g); }
 
     /**
-     * @brief すべての条件を満たす割り当てがあるか。あれば answer() で 1 つ得られる
+     * @brief すべての条件を満たす割り当てを 1 つ求める
+     * @return std::optional<std::vector<bool>> 割り当て。満たす割り当てがなければ std::nullopt
      */
-    bool satisfiable() {
+    std::optional<std::vector<bool>> solve() const {
         auto groups = strongly_connected_components(graph);
         // 成分のトポロジカル順での番号
         std::vector<int> id(2 * n);
         for (int k = 0; k < static_cast<int>(groups.size()); k++) {
             for (long long v : groups[k]) id[v] = k;
         }
+        std::vector<bool> ans(n);
         for (long long i = 0; i < n; i++) {
-            if (id[i] == id[n + i]) return false;
+            if (id[i] == id[n + i]) return std::nullopt;
             // トポロジカル順で後ろにある方を真にする
             ans[i] = id[i] > id[n + i];
         }
-        return true;
+        return ans;
     }
-    /**
-     * @brief 直前の satisfiable() が true のとき、条件を満たす割り当て
-     */
-    const std::vector<bool>& answer() const { return ans; }
 };

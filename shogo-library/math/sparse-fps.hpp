@@ -13,7 +13,7 @@
 #include "combinatorics.hpp"
 #include "fps.hpp"
 #include "modular-arithmetic.hpp"
-// https://github.com/shogo314/shogo-library/blob/b94a98acb19db49fa99249c824311583b1eb13e3/src/math/sparse-fps.hpp
+// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/math/sparse-fps.hpp
 
 namespace internal_sparse_fps {
 // f の 0 でない項 (次数, 係数) を、次数 min_deg 以上のものだけ集める
@@ -135,17 +135,18 @@ FPS<mint> sparse_pow(const FPS<mint>& f, long long e, long long n) {
 }
 
 /**
- * @brief sqrt f の先頭 n 項 (g^2 = f)。平方根がなければ std::nullopt
- * 最初の 0 でない項 f_d x^d は、d が偶数で f_d が平方剰余であること。法は素数であること
+ * @brief sqrt f (g^2 = f となる g) の先頭 n 項。法は素数であること
+ * f = 0 なら 0。最初の 0 でない項 f_d x^d の d が奇数か、f_d が平方非剰余なら平方根はなく std::nullopt (n によらない)
  */
 template <typename mint>
 std::optional<FPS<mint>> sparse_sqrt(const FPS<mint>& f, long long n) {
     long long d = 0;
     while (d < static_cast<long long>(f.size()) && f[d] == 0) d++;
-    if (d == static_cast<long long>(f.size()) || d / 2 >= n) return FPS<mint>(n);
+    if (d == static_cast<long long>(f.size())) return FPS<mint>(n);
     if (d % 2 == 1) return std::nullopt;
     long long r = sqrt_mod(f[d].val(), mint::mod());
     if (r == -1) return std::nullopt;
+    if (d / 2 >= n) return FPS<mint>(n);
     FPS<mint> g = internal_sparse_fps::pow_nonzero_constant(f >> d, mint(2).inv(), mint(r), n - d / 2);
     g <<= d / 2;
     g.resize(n);

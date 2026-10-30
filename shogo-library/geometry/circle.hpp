@@ -15,7 +15,7 @@
 #include <vector>
 
 #include "vector.hpp"
-// https://github.com/shogo314/shogo-library/blob/b94a98acb19db49fa99249c824311583b1eb13e3/src/geometry/circle.hpp
+// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/geometry/circle.hpp
 
 /**
  * @brief 円
@@ -55,14 +55,14 @@ constexpr int circle_relation(const Circle<T>& c1, const Circle<T>& c2) {
 }
 
 /**
- * @brief 三角形 abc の内接円。浮動小数点型限定
+ * @brief 三角形 abc の内接円。浮動小数点型限定。3点が一直線上にあってはならない
  */
 template <typename T>
 Circle<T> incircle(const Vector<T, 2>& a, const Vector<T, 2>& b, const Vector<T, 2>& c) {
     static_assert(std::is_floating_point_v<T>, "incircle: T must be a floating point type");
+    assert(cross(b - a, c - a) != 0 && "incircle: collinear points");
     T la = (b - c).abs(), lb = (c - a).abs(), lc = (a - b).abs();
     T s = la + lb + lc;
-    assert(s > 0);
     // 中心は、各頂点を向かい合う辺の長さで重み付けした平均
     return Circle<T>((a * la + b * lb + c * lc) / s, std::abs(cross(b - a, c - a)) / s);
 }
@@ -83,7 +83,7 @@ Circle<T> circumcircle(const Vector<T, 2>& a, const Vector<T, 2>& b, const Vecto
 }
 
 /**
- * @brief 円 c と直線 p1p2 の交点 (0〜2個、座標の昇順)。浮動小数点型限定
+ * @brief 円 c と直線 p1p2 の交点 (0〜2個、座標の昇順)。浮動小数点型限定。p1 != p2 であること
  * @param eps 接する (交点が1個) とみなす、中心と直線の距離と半径の差
  */
 template <typename T>
@@ -102,7 +102,9 @@ std::vector<Vector<T, 2>> circle_line_intersection(const Circle<T>& c, const Vec
 }
 
 /**
- * @brief 2つの円の交点 (0〜2個、座標の昇順)。浮動小数点型限定。中心が同じなら空を返す
+ * @brief 2つの円の交点 (0〜2個、座標の昇順)。浮動小数点型限定
+ *
+ * 同心で半径が違うなら空を返す。同じ円 (中心間の距離と半径の差がともに eps 以下) は交点が無数にあるので assert で落とす
  * @param eps 接する (交点が1個) とみなす、中心間の距離と半径の和・差の差
  */
 template <typename T>
@@ -110,7 +112,10 @@ std::vector<Vector<T, 2>> circle_circle_intersection(const Circle<T>& c1, const 
     static_assert(std::is_floating_point_v<T>, "circle_circle_intersection: T must be a floating point type");
     Vector<T, 2> v = c2.c - c1.c;
     T d = v.abs();
-    if (d <= eps) return {};
+    if (d <= eps) {
+        assert(std::abs(c1.r - c2.r) > eps && "circle_circle_intersection: same circles");
+        return {};
+    }
     T s = c1.r + c2.r, t = std::abs(c1.r - c2.r);
     if (d > s + eps || d < t - eps) return {};
     // c1 の中心から、2つの交点を結ぶ線分の中点までの距離
@@ -148,8 +153,9 @@ std::vector<Vector<T, 2>> tangent_points(const Circle<T>& c, const Vector<T, 2>&
 }
 
 /**
- * @brief 2つの円の共通接線 (0〜4本)。浮動小数点型限定。中心が同じなら空を返す
+ * @brief 2つの円の共通接線 (0〜4本)。浮動小数点型限定
  *
+ * 同心で半径が違うなら空を返す。同じ円 (中心間の距離と半径の差がともに eps 以下) は接線が無数にあるので assert で落とす。
  * 各接線を (c1 との接点, c2 との接点) の組で返し、c1 との接点の座標の昇順に並べる。
  * 2つの円が接する点での接線は、2つの接点が同じ点になる (接線は中心を結ぶ直線に垂直)
  * @param eps 接する (その種類の接線が1本) とみなす、中心間の距離と半径の和・差の差
@@ -159,7 +165,10 @@ std::vector<std::pair<Vector<T, 2>, Vector<T, 2>>> common_tangents(const Circle<
     static_assert(std::is_floating_point_v<T>, "common_tangents: T must be a floating point type");
     Vector<T, 2> d = c2.c - c1.c;
     T d2 = d.squared_norm(), dist = std::sqrt(d2);
-    if (dist <= eps) return {};
+    if (dist <= eps) {
+        assert(std::abs(c1.r - c2.r) > eps && "common_tangents: same circles");
+        return {};
+    }
     std::vector<std::pair<Vector<T, 2>, Vector<T, 2>>> res;
     // 共通外接線は c2 の半径を r2、共通内接線は -r2 として同じ式で求める
     for (T r2 : {c2.r, -c2.r}) {

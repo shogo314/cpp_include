@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/b94a98acb19db49fa99249c824311583b1eb13e3/src/utility/container_func.hpp
+// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/utility/container_func.hpp
 
 #define METHOD_EXPAND(func)                                        \
     template <typename T, ENABLE_IF_T(has_##func##_v<T>)>          \
@@ -45,9 +45,8 @@ inline constexpr C reversed(C t) {
 
 METHOD_EXPAND(sorted)
 template <class C, ENABLE_IF_T(!has_sorted_v<C>)>
-inline constexpr C sorted(C t, bool reverse = false) {
+inline constexpr C sorted(C t) {
     std::sort(t.begin(), t.end());
-    if (reverse) std::reverse(t.begin(), t.end());
     return t;
 }
 template <class C, class F, ENABLE_IF_T(!has_sorted_v<C> && std::is_invocable_r_v<bool, F, mem_value_type<C>, mem_value_type<C>>)>
@@ -57,9 +56,8 @@ inline constexpr C sorted(C t, F f) {
 }
 
 template <class C>
-inline constexpr void sort(C& t, bool reverse = false) {
+inline constexpr void sort(C& t) {
     std::sort(t.begin(), t.end());
-    if (reverse) std::reverse(t.begin(), t.end());
 }
 template <class C, class F, ENABLE_IF_T(std::is_invocable_r_v<bool, F, mem_value_type<C>, mem_value_type<C>>)>
 inline constexpr void sort(C& t, F f) {

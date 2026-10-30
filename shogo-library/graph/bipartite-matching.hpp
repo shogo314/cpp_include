@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/b94a98acb19db49fa99249c824311583b1eb13e3/src/graph/bipartite-matching.hpp
+// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/graph/bipartite-matching.hpp
 
 /**
  * @file bipartite-matching.hpp
@@ -123,11 +123,17 @@ class BipartiteMatching {
     /**
      * @brief 左側の頂点 u とマッチした右側の頂点 (なければ -1)。solve() の後で使う
      */
-    long long left_match(long long u) const { return match_l[u]; }
+    long long left_match(long long u) const {
+        assert(0 <= u && u < l);
+        return match_l[u];
+    }
     /**
      * @brief 右側の頂点 v とマッチした左側の頂点 (なければ -1)。solve() の後で使う
      */
-    long long right_match(long long v) const { return match_r[v]; }
+    long long right_match(long long v) const {
+        assert(0 <= v && v < r);
+        return match_r[v];
+    }
     /**
      * @brief マッチングの辺 (左側の頂点, 右側の頂点) のリスト (左側の頂点の昇順)。solve() の後で使う
      */

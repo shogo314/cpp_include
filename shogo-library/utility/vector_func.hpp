@@ -9,21 +9,51 @@
 #include <cassert>
 #include <cmath>
 #include <cstddef>
+#include <functional>
 #include <numeric>
 #include <type_traits>
 #include <vector>
 
 #include "traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/b94a98acb19db49fa99249c824311583b1eb13e3/src/utility/vector_func.hpp
+// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/utility/vector_func.hpp
 
-template <typename T>
-std::vector<long long> sorted_idx(const std::vector<T>& v, bool reverse = false) {
+/**
+ * @brief 値を comp の順に安定ソートしたときの添字の並び (APL の grade up)
+ */
+template <typename T, typename F = std::less<>>
+std::vector<long long> argsort(const std::vector<T>& v, F comp = F()) {
     std::vector<long long> ret(v.size());
     std::iota(ret.begin(), ret.end(), 0LL);
-    std::sort(ret.begin(), ret.end(), [&](long long i, long long j) {
-        return v[i] < v[j];
+    std::stable_sort(ret.begin(), ret.end(), [&](long long i, long long j) {
+        return comp(v[i], v[j]);
     });
-    if (reverse) std::reverse(ret.begin(), ret.end());
+    return ret;
+}
+
+/**
+ * @brief 各要素の順位 (comp の順で v[i] より前に来る要素の個数)。同率は同じ順位で、次の順位は飛ばす
+ */
+template <typename T, typename F = std::less<>>
+std::vector<long long> rank(const std::vector<T>& v, F comp = F()) {
+    const long long n = v.size();
+    std::vector<long long> p = argsort(v, comp), ret(n);
+    for (long long i = 0; i < n; i++) {
+        ret[p[i]] = i > 0 && !comp(v[p[i - 1]], v[p[i]]) ? ret[p[i - 1]] : i;
+    }
+    return ret;
+}
+
+/**
+ * @brief {v[idx[0]], v[idx[1]], ...} (Uiua の select)
+ */
+template <typename T, typename I, ENABLE_IF_T(std::is_integral_v<I>)>
+std::vector<T> select(const std::vector<T>& v, const std::vector<I>& idx) {
+    std::vector<T> ret;
+    ret.reserve(idx.size());
+    for (I i : idx) {
+        assert(0 <= static_cast<long long>(i) && static_cast<long long>(i) < static_cast<long long>(v.size()));
+        ret.push_back(v[i]);
+    }
     return ret;
 }
 
@@ -146,9 +176,10 @@ inline std::vector<T>& operator|=(std::vector<T>& v1, const std::vector<U>& v2) 
 
 template <typename T, typename U, ENABLE_IF_T(std::is_integral_v<U>)>
 inline std::vector<T>& operator|=(std::vector<T>& v, const U& u) {
+    if constexpr (std::is_signed_v<U>) assert(u >= 0);
     std::vector<T> w(v);
     v.clear();
-    for (int i = 0; i < u; i++) {
+    for (long long i = 0; i < static_cast<long long>(u); i++) {
         extend(v, w);
     }
     return v;
@@ -209,14 +240,17 @@ std::vector<T> unique(const std::vector<T>& v) {
 }
 
 inline long long radix_convert(const std::vector<long long>& v, int base = 10) {
+    assert(base >= 2);
     long long res = 0;
     for (long long d : v) {
+        assert(0 <= d && d < base);
         res = res * base + d;
     }
     return res;
 }
 
 inline std::vector<long long> radix_convert(long long v, int base = 10) {
+    assert(v >= 0 && base >= 2);
     std::vector<long long> res;
     while (v > 0) {
         res.push_back(v % base);

@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "sqrt.hpp"
-// https://github.com/shogo314/shogo-library/blob/b94a98acb19db49fa99249c824311583b1eb13e3/src/math/prime-counting.hpp
+// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/math/prime-counting.hpp
 
 /**
  * @brief すべての v = floor(n / k) について、v 以下の素数 p の g(p) の和を求めた表 (Lucy DP)

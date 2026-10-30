@@ -20,7 +20,7 @@
 #include <vector>
 
 #include "../utility/traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/b94a98acb19db49fa99249c824311583b1eb13e3/src/geometry/vector.hpp
+// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/geometry/vector.hpp
 
 /**
  * @brief 幾何学としてのベクトル
@@ -468,12 +468,13 @@ constexpr Vector<T, 2> reflection(const Vector<T, 2>& p1, const Vector<T, 2>& p2
 }
 
 /**
- * @brief 直線 p1p2 と直線 q1q2 の交点。浮動小数点型限定
- * @return std::optional<Vector<T, 2>> 交点 (平行なら std::nullopt)
+ * @brief 直線 p1p2 と直線 q1q2 の交点。浮動小数点型限定。p1 != p2 かつ q1 != q2 であること
+ * @return std::optional<Vector<T, 2>> 交点 (平行 (重なる直線も含む) なら std::nullopt)
  */
 template <typename T>
 constexpr std::optional<Vector<T, 2>> line_intersection(const Vector<T, 2>& p1, const Vector<T, 2>& p2, const Vector<T, 2>& q1, const Vector<T, 2>& q2) {
     static_assert(std::is_floating_point_v<T>, "line_intersection: T must be a floating point type");
+    assert(p1 != p2 && q1 != q2 && "line_intersection: degenerate line");
     Vector<T, 2> d = p2 - p1, e = q2 - q1;
     T c = cross(e, d);
     if (c == 0) return std::nullopt;
@@ -650,11 +651,12 @@ struct ClosestPair {
  * @brief 最近点対
  *
  * @tparam T 座標の型
- * @param points 頂点リスト
+ * @param points 頂点リスト (2個以上)
  * @return ClosestPairSquared<T> 最近点対の距離の2乗と添字
  */
 template <typename T>
 ClosestPairSquared<T> closest_point_pair_squared(const std::vector<Vector<T, 2>>& points) {
+    assert(points.size() >= 2 && "closest_point_pair_squared: fewer than 2 points");
     std::vector<int> sorted_idx(points.size());
     std::iota(sorted_idx.begin(), sorted_idx.end(), 0);
     std::sort(sorted_idx.begin(), sorted_idx.end(), [&](int i, int j) {
@@ -732,7 +734,7 @@ ClosestPairSquared<T> closest_point_pair_squared(const std::vector<Vector<T, 2>>
  * @brief 最近点対
  *
  * @tparam T 座標の型
- * @param points 頂点リスト
+ * @param points 頂点リスト (2個以上)
  * @return ClosestPair 最近点対の距離と添字
  */
 template <typename T>

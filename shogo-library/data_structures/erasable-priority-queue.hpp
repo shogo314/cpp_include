@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/b94a98acb19db49fa99249c824311583b1eb13e3/src/data_structures/erasable-priority-queue.hpp
+// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/data_structures/erasable-priority-queue.hpp
 
 /**
  * @file erasable-priority-queue.hpp
@@ -55,21 +55,22 @@ class ErasablePriorityQueue {
     }
     /**
      * @brief x を 1 つ削除する。x は含まれていること (含まれていない要素を削除すると壊れる)
-     * 比較関数で等しい要素は区別しない
+     * 比較関数で等しい要素は区別しない。空なら assert で落ちる
      */
     void erase(const T& x) {
+        assert(!empty());
         del.push(x);
         normalize();
     }
     /**
-     * @brief 先頭 (既定では最大) の要素
+     * @brief 先頭 (既定では最大) の要素。空なら assert で落ちる
      */
     const T& top() const {
         assert(!empty());
         return que.top();
     }
     /**
-     * @brief 先頭の要素を削除する
+     * @brief 先頭の要素を削除する。空なら assert で落ちる
      */
     void pop() {
         assert(!empty());

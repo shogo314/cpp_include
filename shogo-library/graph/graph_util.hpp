@@ -9,6 +9,7 @@
 #include <cassert>
 #include <functional>
 #include <limits>
+#include <optional>
 #include <queue>
 #include <stack>
 #include <utility>
@@ -16,15 +17,15 @@
 
 #include "../data_structures/unionfind.hpp"
 #include "graph.hpp"
-// https://github.com/shogo314/shogo-library/blob/b94a98acb19db49fa99249c824311583b1eb13e3/src/graph/graph_util.hpp
+// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/graph/graph_util.hpp
 
 /**
- * @brief 無向グラフについて、二部グラフなら0と1に彩色した結果をひとつ返し、二部グラフでないなら空のvectorを返す。
+ * @brief 無向グラフについて、二部グラフなら0と1に彩色した結果をひとつ返し、二部グラフでないならstd::nulloptを返す。
  * 連結成分のうち、インデックスの最も小さいものを0にする。
- * @return std::vector<int> 各頂点の彩色結果
+ * @return std::optional<std::vector<int>> 各頂点の彩色結果
  */
 template <typename Cost = long long>
-std::vector<int> bipartite_coloring(const Graph<Cost>& graph) {
+std::optional<std::vector<int>> bipartite_coloring(const Graph<Cost>& graph) {
     std::vector<int> color(graph.n, -1);
     for (long long i = 0; i < graph.n; i++) {
         if (color[i] != -1) continue;
@@ -39,7 +40,7 @@ std::vector<int> bipartite_coloring(const Graph<Cost>& graph) {
                     color[v] = color[u] ^ 1;
                     stk.push(v);
                 } else {
-                    if (color[u] == color[v]) return {};
+                    if (color[u] == color[v]) return std::nullopt;
                 }
             }
         }
@@ -53,7 +54,7 @@ std::vector<int> bipartite_coloring(const Graph<Cost>& graph) {
  */
 template <typename Cost = long long>
 bool is_bipartite(const Graph<Cost>& graph) {
-    return !bipartite_coloring(graph).empty();
+    return bipartite_coloring(graph).has_value();
 }
 
 /**
@@ -99,7 +100,7 @@ std::vector<std::vector<long long>> complement_connected_components(const Graph<
         groups.push_back({rest.back()});
         rest.pop_back();
         // groups.back() の i 番目の頂点を取り出し、rest のうち隣り合わないものを成分に移す
-        for (size_t i = 0; i < groups.back().size(); i++) {
+        for (long long i = 0; i < static_cast<long long>(groups.back().size()); i++) {
             const long long u = groups.back()[i];
             for (long long v : graph[u]) adj[v] = true;
             std::vector<long long> keep;
@@ -137,10 +138,10 @@ bool is_tree(const Graph<Cost>& graph) {
 
 /**
  * @brief 有向グラフをトポロジカルソートする
- * @return std::vector<long long> トポロジカル順に並べた頂点のリスト。DAG でなければ途中まで (閉路からたどり着けない頂点だけ) を並べたもので、長さが n より短くなる
+ * @return std::optional<std::vector<long long>> トポロジカル順に並べた頂点のリスト。DAG でなければ std::nullopt
  */
 template <typename Cost = long long>
-std::vector<long long> topological_sort(const Graph<Cost>& graph) {
+std::optional<std::vector<long long>> topological_sort(const Graph<Cost>& graph) {
     std::vector<int> indeg(graph.n);
     std::vector<long long> sorted;
     std::queue<long long> q;
@@ -158,27 +159,39 @@ std::vector<long long> topological_sort(const Graph<Cost>& graph) {
         }
         sorted.push_back(cur);
     }
+    if (static_cast<long long>(sorted.size()) < graph.n) return std::nullopt;
     return sorted;
 }
 
 /**
  * @brief 有向グラフについて、サイクルをもつかどうかを判定する。
+ * 無向グラフには使えない (辺が 1 本でもあれば true になる)。無向グラフは has_cycle_undirected
  * @return bool サイクルをもつならtrue、非巡回ならfalseを返す。
  */
 template <typename Cost = long long>
-bool has_cycle(const Graph<Cost>& graph) {
-    return static_cast<long long>(topological_sort(graph).size()) < graph.n;
+bool has_cycle_directed(const Graph<Cost>& graph) {
+    return !topological_sort(graph).has_value();
+}
+
+/**
+ * @brief 無向グラフについて、閉路をもつか (森でないか) を判定する
+ *
+ * 辺の数が n - (連結成分の数) より多いかで判定する。自己ループと多重辺も閉路とみなす。O(n + m)
+ */
+template <typename Cost = long long>
+bool has_cycle_undirected(const Graph<Cost>& graph) {
+    return graph.m > graph.n - static_cast<long long>(connected_components(graph).size());
 }
 
 /**
  * @brief 有向グラフの閉路を 1 つ求める
  *
  * DFS を再帰を使わずに行う。O(n + m)
- * @return std::vector<Edge> 閉路の辺を、たどる順に並べたもの (e[k].dst == e[k + 1].src、末尾の dst は先頭の src)。閉路がなければ空
+ * @return std::optional<std::vector<Edge>> 閉路の辺を、たどる順に並べたもの (e[k].dst == e[k + 1].src、末尾の dst は先頭の src)。閉路がなければ std::nullopt
  * 自己ループは長さ 1 の閉路になる。頂点の列は各辺の src で得られる
  */
 template <typename Cost = long long>
-std::vector<typename Graph<Cost>::Edge> find_cycle_directed(const Graph<Cost>& graph) {
+std::optional<std::vector<typename Graph<Cost>::Edge>> find_cycle_directed(const Graph<Cost>& graph) {
     using Edge = typename Graph<Cost>::Edge;
     // state: 0 は未訪問、1 は DFS のスタック上、2 は探索済み
     std::vector<int> state(graph.n, 0), iter(graph.n, 0);
@@ -209,18 +222,18 @@ std::vector<typename Graph<Cost>::Edge> find_cycle_directed(const Graph<Cost>& g
             }
         }
     }
-    return {};
+    return std::nullopt;
 }
 
 /**
  * @brief 無向グラフの閉路を 1 つ求める
  *
  * DFS を再帰を使わずに行う。O(n + m)
- * @return std::vector<Edge> 閉路の辺を、たどる順に並べたもの (e[k].dst == e[k + 1].src、末尾の dst は先頭の src)。閉路がなければ空
+ * @return std::optional<std::vector<Edge>> 閉路の辺を、たどる順に並べたもの (e[k].dst == e[k + 1].src、末尾の dst は先頭の src)。閉路がなければ std::nullopt
  * 自己ループは長さ 1、多重辺は長さ 2 の閉路になる (同じ辺を戻ることはない)。頂点の列は各辺の src で得られる
  */
 template <typename Cost = long long>
-std::vector<typename Graph<Cost>::Edge> find_cycle_undirected(const Graph<Cost>& graph) {
+std::optional<std::vector<typename Graph<Cost>::Edge>> find_cycle_undirected(const Graph<Cost>& graph) {
     using Edge = typename Graph<Cost>::Edge;
     std::vector<int> state(graph.n, 0), iter(graph.n, 0);
     std::vector<Edge> in(graph.n);
@@ -253,7 +266,7 @@ std::vector<typename Graph<Cost>::Edge> find_cycle_undirected(const Graph<Cost>&
             // state[u] == 2 にはならない (なるなら、u の側でこの辺により閉路が見つかっている)
         }
     }
-    return {};
+    return std::nullopt;
 }
 
 /**
@@ -514,35 +527,48 @@ SteinerDP<Cost> steiner_dp(const Graph<Cost>& graph, const std::vector<T>& X, Co
 }
 }  // namespace internal_graph_util
 
+namespace internal_graph_util {
+/**
+ * @brief steiner_dp の結果から、X をすべて含む部分木の重みが最小になる根を返す。X を連結にできなければ -1
+ */
+template <typename Cost>
+long long steiner_root(const std::vector<std::vector<Cost>>& dp, Cost inf) {
+    long long root = -1;
+    for (long long k = 0; k < static_cast<long long>(dp.size()); k++) {
+        if (dp[k].back() != inf && (root == -1 || dp[root].back() > dp[k].back())) root = k;
+    }
+    return root;
+}
+}  // namespace internal_graph_util
+
 /**
  * @brief 頂点集合 X をすべて含む部分木の辺の重みの総和の最小値 O(3^k n + 2^k m log m) (k = |X|)
- * @note 無向グラフ。X が空なら 0。X を連結にできなければ inf を返す
+ * @param inf 内部の DP で「まだ作れない」を表す値。答えになりうるどの値よりも大きくすること
+ * @return std::optional<Cost> 最小値。X を連結にできなければ std::nullopt
+ * @note 無向グラフ。X が空なら 0
  */
 template <typename Cost, typename T>
-Cost minimum_steiner_tree(const Graph<Cost>& graph, const std::vector<T>& X, Cost inf = std::numeric_limits<Cost>::max() / 4) {
+std::optional<Cost> minimum_steiner_tree(const Graph<Cost>& graph, const std::vector<T>& X, Cost inf = std::numeric_limits<Cost>::max() / 4) {
     if (X.empty()) return Cost{};
     const auto dp = internal_graph_util::steiner_dp(graph, X, inf, false).dp;
-    Cost res = inf;
-    for (long long k = 0; k < graph.n; k++) {
-        if (dp[k].back() != inf && (res == inf || res > dp[k].back())) res = dp[k].back();
-    }
-    return res;
+    const long long root = internal_graph_util::steiner_root(dp, inf);
+    if (root == -1) return std::nullopt;
+    return dp[root].back();
 }
 
 /**
  * @brief 頂点集合 X をすべて含む重み最小の部分木を 1 つ求め、その辺の番号を昇順に返す
  * 計算量は minimum_steiner_tree と同じ
- * @note 無向グラフ。X が空なら空。X の頂点どうしが連結でないときは呼ばないこと
+ * @param inf minimum_steiner_tree と同じ
+ * @return std::optional<std::vector<long long>> 辺の番号のリスト。X を連結にできなければ std::nullopt
+ * @note 無向グラフ。X が空なら空の vector
  */
 template <typename Cost, typename T>
-std::vector<long long> minimum_steiner_tree_restore(const Graph<Cost>& graph, const std::vector<T>& X, Cost inf = std::numeric_limits<Cost>::max() / 4) {
-    if (X.empty()) return {};
+std::optional<std::vector<long long>> minimum_steiner_tree_restore(const Graph<Cost>& graph, const std::vector<T>& X, Cost inf = std::numeric_limits<Cost>::max() / 4) {
+    if (X.empty()) return std::vector<long long>{};
     const auto [dp, from] = internal_graph_util::steiner_dp(graph, X, inf, true);
-    long long root = -1;
-    for (long long k = 0; k < graph.n; k++) {
-        if (dp[k].back() != inf && (root == -1 || dp[root].back() > dp[k].back())) root = k;
-    }
-    assert(root != -1);
+    const long long root = internal_graph_util::steiner_root(dp, inf);
+    if (root == -1) return std::nullopt;
     // 辺の重みが 0 だと同じ辺を 2 回使うことがあるので、最後に重複を除く
     std::vector<long long> res;
     std::vector<std::pair<long long, int>> stk = {{root, static_cast<int>(dp[root].size()) - 1}};

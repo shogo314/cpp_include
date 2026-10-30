@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "../algebra/monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/b94a98acb19db49fa99249c824311583b1eb13e3/src/data_structures/segtree-2d.hpp
+// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/data_structures/segtree-2d.hpp
 
 /**
  * @brief 2次元セグメント木 (更新する点を先読みする領域木)
@@ -115,11 +115,13 @@ class SegTree2D {
     }
 
     /**
-     * @brief 指定された点の値を v に更新する (コンストラクタで渡した点のみ)
+     * @brief 指定された点の値を v に更新する (コンストラクタで渡した点のみ。違えば assert で落ちる)
      */
     void set(long long x, long long y, const S& v) {
         int yi = y_index(y);
-        for (int k = n + x_index(x); k >= 1; k >>= 1) {
+        int leaf = n + x_index(x);
+        assert(find_y(leaf, yi) != -1);  // 渡した点か (葉にあれば祖先にもある)
+        for (int k = leaf; k >= 1; k >>= 1) {
             int len = static_cast<int>(node_ys[k].size());
             int p = find_y(k, yi) + len;
             data[k][p] = k >= n ? v : op(get_node(2 * k, yi), get_node(2 * k + 1, yi));
@@ -128,12 +130,14 @@ class SegTree2D {
     }
 
     /**
-     * @brief 指定された点の値に v を作用させる (コンストラクタで渡した点のみ)
+     * @brief 指定された点の値に v を作用させる (コンストラクタで渡した点のみ。違えば assert で落ちる)
      */
     void apply(long long x, long long y, const S& v) {
         int yi = y_index(y);
         // 可換なので、祖先の値にそのまま v を掛ければよい
-        for (int k = n + x_index(x); k >= 1; k >>= 1) {
+        int leaf = n + x_index(x);
+        assert(find_y(leaf, yi) != -1);  // 渡した点か (葉にあれば祖先にもある)
+        for (int k = leaf; k >= 1; k >>= 1) {
             for (int p = find_y(k, yi) + static_cast<int>(node_ys[k].size()); p >= 1; p >>= 1) data[k][p] = op(data[k][p], v);
         }
     }

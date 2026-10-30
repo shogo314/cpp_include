@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "graph.hpp"
-// https://github.com/shogo314/shogo-library/blob/b94a98acb19db49fa99249c824311583b1eb13e3/src/graph/tree.hpp
+// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/graph/tree.hpp
 
 template <typename>
 class RootedTree;
@@ -331,7 +331,7 @@ class DoublingClimbTree : private RootedTree<Cost> {
      *
      * @param u 元の頂点
      * @param k 登る段数
-     * @return long long k回登った頂点
+     * @return long long k回登った頂点 (存在しなければ -1)
      */
     long long hop(long long u, long long k) const {
         assert(0 <= u && u < this->n && k >= 0);
@@ -375,6 +375,7 @@ class DoublingClimbTree : private RootedTree<Cost> {
      * @return Cost uとv間の最短経路の辺の重みの和
      */
     Cost dist(long long u, long long v) const {
+        assert(0 <= u && u < this->n && 0 <= v && v < this->n);
         return this->depth[u] + this->depth[v] - this->depth[lca(u, v)] * 2;
     }
 

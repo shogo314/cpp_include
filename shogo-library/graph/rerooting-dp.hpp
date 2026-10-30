@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "tree.hpp"
-// https://github.com/shogo314/shogo-library/blob/b94a98acb19db49fa99249c824311583b1eb13e3/src/graph/rerooting-dp.hpp
+// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/graph/rerooting-dp.hpp
 
 /**
  * @brief 全方位木DP
@@ -44,13 +44,14 @@ std::vector<V> rerooting_dp(const Tree<Cost>& tree, E e, Merge merge, AddEdge ad
     std::vector<E> pe(rooted.n, e);
     for (long long u : rooted.preorder) {
         const auto& ch = rooted.child[u];
-        std::vector<E> ri(ch.size() + 1, e);
-        for (std::size_t i = ch.size(); i > 0; i--) {
-            ri[i - 1] = merge(ri[i], addedge(subdp[ch[i - 1].dst], ch[i - 1].cost, ch[i - 1].id));
+        const long long d = static_cast<long long>(ch.size());
+        std::vector<E> ri(d + 1, e);
+        for (long long i = d - 1; i >= 0; i--) {
+            ri[i] = merge(ri[i + 1], addedge(subdp[ch[i].dst], ch[i].cost, ch[i].id));
         }
         dp[u] = addnode(merge(pe[u], ri[0]), u);
         E le = pe[u];
-        for (std::size_t i = 0; i < ch.size(); i++) {
+        for (long long i = 0; i < d; i++) {
             pe[ch[i].dst] = addedge(addnode(merge(le, ri[i + 1]), u), ch[i].cost, ch[i].id);
             le = merge(le, addedge(subdp[ch[i].dst], ch[i].cost, ch[i].id));
         }

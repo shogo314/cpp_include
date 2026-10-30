@@ -10,12 +10,13 @@
 #include <deque>
 #include <functional>
 #include <limits>
+#include <optional>
 #include <queue>
 #include <utility>
 #include <vector>
 
 #include "graph.hpp"
-// https://github.com/shogo314/shogo-library/blob/b94a98acb19db49fa99249c824311583b1eb13e3/src/graph/shortest-path.hpp
+// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/graph/shortest-path.hpp
 
 /**
  * @brief 最短路の結果
@@ -29,9 +30,12 @@ struct ShortestPath {
     std::vector<Edge> prev;  //!< 各頂点への最短路上の直前の辺 (始点と未到達の頂点では src == -1)
     /**
      * @brief 始点から t への最短路を構成する辺のリスト (始点側から順に)
-     * @note t が始点か未到達の頂点なら空。負閉路の影響を受ける頂点では最短路が定まらない (assert で落ちる)
+     * @return std::optional<std::vector<Edge>> t が始点なら空、未到達なら std::nullopt
+     * @note 負閉路の影響を受ける頂点では最短路が定まらない (assert で落ちる)
      */
-    std::vector<Edge> path(long long t) const {
+    std::optional<std::vector<Edge>> path(long long t) const {
+        // 直前の辺がないのは始点と未到達の頂点。始点の距離は 0 で、未到達の距離 inf は正なので区別できる
+        if (prev[t].src == -1 && dist[t] != Cost{}) return std::nullopt;
         std::vector<Edge> res;
         while (prev[t].src != -1) {
             res.push_back(prev[t]);
@@ -99,12 +103,17 @@ ShortestPath<Cost> dijkstra(const Graph<Cost>& graph, long long s, Cost inf) {
  * @param weighted 1以外のコストの辺が存在するか 省略するとtrue
  * @param inf コストのminの単位元 未到達の頂点への距離はinfになる 省略すると std::numeric_limits<Cost>::max() / 4
  * @return ShortestPath 各頂点への最短路長 (dist) と、各頂点への最短路上の直前の辺 (prev)
+ * @note weighted なら Dijkstra なので、負の辺があると assert で落ちる (負の辺があるなら bellman_ford)
  */
 template <typename Cost = long long>
 ShortestPath<Cost> shortest_path(const Graph<Cost>& graph, long long s, bool weighted = true, Cost inf = std::numeric_limits<Cost>::max() / 4) {
     assert(0 <= s && s < graph.n);
-    if (weighted)
+    if (weighted) {
+        for (long long v = 0; v < graph.n; v++) {
+            for (const auto& e : graph[v]) assert(!(e.cost < Cost{}) && "shortest_path: negative edge (use bellman_ford)");
+        }
         return internal_shortest_path::dijkstra(graph, s, inf);
+    }
     return internal_shortest_path::bfs(graph, s, inf);
 }
 
@@ -197,6 +206,7 @@ ShortestPath<Cost> shortest_path_01bfs(const Graph<Cost>& graph, long long s, Co
  * @param inf 未到達を表す値 省略すると std::numeric_limits<Cost>::max() / 4
  * @return std::vector<std::vector<Cost>> dist[i][j] が i から j への最短路長 (到達できなければ inf)
  * @note 負の辺があってもよい。dist[i][i] < 0 となる i があれば負閉路がある
+ * 負閉路があるときの値は -inf 以上に切り詰めるので、あふれない (負閉路の影響を受ける組の値は最短路長ではない)
  */
 template <typename Cost = long long>
 std::vector<std::vector<Cost>> floyd_warshall(const Graph<Cost>& graph, Cost inf = std::numeric_limits<Cost>::max() / 4) {
@@ -211,7 +221,10 @@ std::vector<std::vector<Cost>> floyd_warshall(const Graph<Cost>& graph, Cost inf
             if (dist[i][k] == inf) continue;
             for (long long j = 0; j < n; j++) {
                 if (dist[k][j] == inf) continue;
-                dist[i][j] = std::min(dist[i][j], dist[i][k] + dist[k][j]);
+                // dist は -inf 以上 inf 以下なので、和は -2 inf 以上であふれない
+                Cost d = dist[i][k] + dist[k][j];
+                if (d < -inf) d = -inf;
+                if (d < dist[i][j]) dist[i][j] = d;
             }
         }
     }

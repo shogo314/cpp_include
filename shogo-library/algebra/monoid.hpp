@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/b94a98acb19db49fa99249c824311583b1eb13e3/src/algebra/monoid.hpp
+// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/algebra/monoid.hpp
 
 /**
  * @file monoid.hpp
@@ -106,6 +106,27 @@ struct ClampAdd {
         return os << f.lb << CharT(' ') << f.ub << CharT(' ') << f.add;
     }
 };
+
+namespace internal_monoid {
+// MinWith・MaxWith の単位元の位置。U が bool 以外の整数型なら -1 (実在の位置と区別できる)、そうでなければ U{}
+template <typename U>
+constexpr bool with_has_e_position = std::is_integral_v<U> && !std::is_same_v<U, bool>;
+template <typename U>
+constexpr U with_e_position() {
+    if constexpr (with_has_e_position<U>)
+        return static_cast<U>(-1);
+    else
+        return U{};
+}
+// U が bool 以外の整数型で、位置が -1 なら単位元
+template <typename U>
+constexpr bool with_is_e(const U& u) {
+    if constexpr (with_has_e_position<U>)
+        return u == static_cast<U>(-1);
+    else
+        return false;
+}
+}  // namespace internal_monoid
 
 namespace monoid {
 
@@ -309,28 +330,40 @@ struct Parenthesis {
 
 /**
  * @brief 最小値とその位置 同じ値なら左側を優先
+ * U が整数型なら単位元 (空区間) の位置は -1 で、値が型の最大値の要素があっても単位元として働く
+ * U が整数型でなければ単位元は {型の最大値, U{}} で、値が型の最大値の要素はないこと
  *
  * @tparam T 値の型
- * @tparam U 位置などの付随する値の型
+ * @tparam U 位置などの付随する値の型 (整数型なら -1 は使わないこと)
  */
 template <typename T, typename U = long long>
 struct MinWith {
     using S = std::pair<T, U>;
-    static constexpr S op(const S& a, const S& b) { return b.first < a.first ? b : a; }
-    static constexpr S e() { return {std::numeric_limits<T>::max(), U{}}; }
+    static constexpr S op(const S& a, const S& b) {
+        if (internal_monoid::with_is_e(a.second)) return b;
+        if (internal_monoid::with_is_e(b.second)) return a;
+        return b.first < a.first ? b : a;
+    }
+    static constexpr S e() { return {std::numeric_limits<T>::max(), internal_monoid::with_e_position<U>()}; }
 };
 
 /**
  * @brief 最大値とその位置 同じ値なら左側を優先
+ * U が整数型なら単位元 (空区間) の位置は -1 で、値が型の最小値の要素があっても単位元として働く
+ * U が整数型でなければ単位元は {型の最小値, U{}} で、値が型の最小値の要素はないこと
  *
  * @tparam T 値の型
- * @tparam U 位置などの付随する値の型
+ * @tparam U 位置などの付随する値の型 (整数型なら -1 は使わないこと)
  */
 template <typename T, typename U = long long>
 struct MaxWith {
     using S = std::pair<T, U>;
-    static constexpr S op(const S& a, const S& b) { return a.first < b.first ? b : a; }
-    static constexpr S e() { return {std::numeric_limits<T>::lowest(), U{}}; }
+    static constexpr S op(const S& a, const S& b) {
+        if (internal_monoid::with_is_e(a.second)) return b;
+        if (internal_monoid::with_is_e(b.second)) return a;
+        return a.first < b.first ? b : a;
+    }
+    static constexpr S e() { return {std::numeric_limits<T>::lowest(), internal_monoid::with_e_position<U>()}; }
 };
 
 /**

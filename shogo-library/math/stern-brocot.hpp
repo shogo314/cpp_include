@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "rational.hpp"
-// https://github.com/shogo314/shogo-library/blob/b94a98acb19db49fa99249c824311583b1eb13e3/src/math/stern-brocot.hpp
+// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/math/stern-brocot.hpp
 
 /**
  * @brief Stern–Brocot 木と連分数

@@ -6,13 +6,14 @@
  */
 
 #include <array>
+#include <cassert>
 #include <cstddef>
 #include <functional>
 #include <type_traits>
 #include <utility>
 
 #include "../utility/traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/b94a98acb19db49fa99249c824311583b1eb13e3/src/data_structures/priority_counter.hpp
+// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/data_structures/priority_counter.hpp
 
 template <typename T, std::size_t K = 1, class Compare = std::less<T>, ENABLE_IF_T(K >= 1)>
 struct PriorityCounter {
@@ -40,6 +41,7 @@ struct PriorityCounter {
     }
 
     constexpr void inc(const key_type& x, const mapped_type& c = 1) {
+        assert(c > 0);
         bool f = false;
         key_type pre_key{};
         mapped_type pre_mapped{};

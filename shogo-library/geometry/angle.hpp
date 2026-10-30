@@ -1,11 +1,12 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/b94a98acb19db49fa99249c824311583b1eb13e3/src/geometry/angle.hpp
+// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/geometry/angle.hpp
 
 /**
  * @file angle.hpp
  * @brief 偏角
  */
 
+#include <cassert>
 #include <cmath>
 #include <istream>
 #include <ostream>
@@ -67,9 +68,12 @@ struct Angle {
      */
     constexpr Angle next_turn() const noexcept { return Angle(x, y, turn + 1); }
     /**
-     * @brief π を足した偏角 (逆向きのベクトル)
+     * @brief π を足した偏角 (逆向きのベクトル)。零ベクトルには使えない
      */
-    constexpr Angle opposite() const noexcept { return Angle(-x, -y, turn + half()); }
+    constexpr Angle opposite() const noexcept {
+        assert(!is_zero() && "Angle::opposite: zero vector");
+        return Angle(-x, -y, turn + half());
+    }
 
     /**
      * @brief 符号を反転した偏角 (x 軸について折り返したベクトル)

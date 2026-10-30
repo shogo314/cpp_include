@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/b94a98acb19db49fa99249c824311583b1eb13e3/src/data_structures/mex-update.hpp
+// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/data_structures/mex-update.hpp
 
 /**
  * @file mex-update.hpp
@@ -37,9 +37,15 @@ class MexUpdate {
     }
 
    public:
-    MexUpdate() = default;
+    /**
+     * @brief 長さ 0 (mex は 0)
+     */
+    MexUpdate() : MexUpdate(0) {}
+    /**
+     * @brief 長さ n で、どの要素もまだ値を持たない (mex は 0)。n = 0 でもよい
+     */
     explicit MexUpdate(long long n) : n(n), v(n, e) {
-        assert(n > 0);
+        assert(n >= 0);
         assert(static_cast<unsigned long long>(n) + 1 < static_cast<unsigned long long>(e));
         std::set<int>::iterator hint = s.end();
         for (long long i = n; i >= 0; --i) {
@@ -47,7 +53,6 @@ class MexUpdate {
         }
     }
     explicit MexUpdate(const std::vector<value_type>& init) : n(init.size()), v(init) {
-        assert(n > 0);
         assert(static_cast<unsigned long long>(n) + 1 < static_cast<unsigned long long>(e));
         std::set<int>::iterator hint = s.end();
         for (long long i = n; i >= 0; --i) {

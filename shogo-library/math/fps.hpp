@@ -15,7 +15,7 @@
 #include "combinatorics.hpp"
 #include "convolution.hpp"
 #include "modular-arithmetic.hpp"
-// https://github.com/shogo314/shogo-library/blob/b94a98acb19db49fa99249c824311583b1eb13e3/src/math/fps.hpp
+// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/math/fps.hpp
 
 template <typename mint>
 struct FPS;
@@ -282,6 +282,7 @@ struct FPS : std::vector<mint> {
     // log(f) = \int f'/f dx, f[0] must be 1
     inline friend FPS log(const FPS& f, long long deg) {
         assert(!f.empty() && f[0] == 1);
+        if (deg < 0) deg = static_cast<long long>(f.size());
         FPS res = intg(diff(f) * inv(f, deg));
         res.resize(deg);
         return res;
@@ -293,7 +294,8 @@ struct FPS : std::vector<mint> {
     // exp(f), f[0] must be 0
     inline friend FPS exp(const FPS& f, long long deg) {
         assert(f.empty() || f[0] == 0);
-        if (deg <= 0) return FPS();
+        if (deg < 0) deg = static_cast<long long>(f.size());
+        if (deg == 0) return FPS();
         if constexpr (internal_convolution::ntt_candidate<mint>()) {
             if (internal_fps::use_ntt<mint>(2 * deg)) return internal_fps::exp_ntt<mint>(f, deg);
         }
@@ -310,6 +312,7 @@ struct FPS : std::vector<mint> {
 
     // pow(f) = exp(e * log f)
     inline friend FPS pow(const FPS& f, long long e, long long deg) {
+        if (deg < 0) deg = static_cast<long long>(f.size());
         if (e == 0) {
             auto ret = FPS(deg, 0);
             if (deg > 0) ret[0] = 1;
@@ -328,15 +331,17 @@ struct FPS : std::vector<mint> {
         return pow(f, e, f.size());
     }
 
-    // sqrt(f) の先頭 deg 項 (g^2 = f)。平方根がなければ std::nullopt
-    // 最初の 0 でない項 f_i x^i は、i が偶数で f_i が平方剰余であること。法は素数であること
+    // sqrt(f) (g^2 = f となる g) の先頭 deg 項。法は素数であること
+    // f = 0 なら 0。最初の 0 でない項 f_i x^i の i が奇数か、f_i が平方非剰余なら平方根はなく std::nullopt (deg によらない)
     inline friend std::optional<FPS> sqrt(const FPS& f, long long deg) {
+        if (deg < 0) deg = static_cast<long long>(f.size());
         long long i = 0;
         while (i < static_cast<long long>(f.size()) && f[i] == 0) ++i;
-        if (i == static_cast<long long>(f.size()) || i / 2 >= deg) return FPS(deg, 0);
+        if (i == static_cast<long long>(f.size())) return FPS(deg, 0);
         if (i % 2 == 1) return std::nullopt;
         long long r = sqrt_mod(f[i].val(), mint::mod());
         if (r == -1) return std::nullopt;
+        if (i / 2 >= deg) return FPS(deg, 0);
         // x^i を外した g = f / x^i (g_0 != 0) の平方根をニュートン法で求める: h <- (h + g / h) / 2
         const FPS g = f >> i;
         const long long d = deg - i / 2;

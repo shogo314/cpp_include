@@ -12,7 +12,7 @@
 
 #include "modular-arithmetic.hpp"
 #include "prime.hpp"
-// https://github.com/shogo314/shogo-library/blob/b94a98acb19db49fa99249c824311583b1eb13e3/src/math/gaussian-integer.hpp
+// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/math/gaussian-integer.hpp
 
 /**
  * @brief ガウス整数 a + bi
@@ -65,7 +65,7 @@ constexpr GaussianInteger<T> gaussian_gcd(GaussianInteger<T> x, GaussianInteger<
 }
 
 /**
- * @brief n = a^2 + b^2 となる 0 以上の整数の組 (a, b) を、a の昇順にすべて返す
+ * @brief n = a^2 + b^2 となる 0 以上の整数の組 (a, b) を、a の昇順にすべて返す。表せなければ空
  * n を素因数分解し、4 で割って 1 余る素数 p を p = π π' (π' は π の共役) と分けて、それぞれの選び方をすべて試す
  * 組の個数を K として、O(factorize(n) + p の個数 × log^2 n + K)
  * @pre 0 <= n <= 10^18 程度 (__int128 であふれない範囲)

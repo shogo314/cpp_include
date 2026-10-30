@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "../utility/traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/b94a98acb19db49fa99249c824311583b1eb13e3/src/data_structures/interval-set.hpp
+// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/data_structures/interval-set.hpp
 /**
  * @brief 半開区間を管理する
  * @tparam T スカラー
@@ -55,7 +55,7 @@ class IntervalSet {
    public:
     IntervalSet() = default;
     /**
-     * @brief k が含まれている区間
+     * @brief k が含まれている区間。なければ std::nullopt
      */
     std::optional<value_type> covered_by(key_type k) const {
         auto itr = data.upper_bound({k, k});
@@ -67,7 +67,7 @@ class IntervalSet {
         return {};
     }
     /**
-     * @brief [l,r) が完全に含まれている区間
+     * @brief [l,r) が完全に含まれている区間。なければ std::nullopt
      */
     std::optional<value_type> covered_by(key_type l, key_type r) const {
         auto opt = find(l, r);

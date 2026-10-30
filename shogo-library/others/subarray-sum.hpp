@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "../utility/two-pointers.hpp"
-// https://github.com/shogo314/shogo-library/blob/b94a98acb19db49fa99249c824311583b1eb13e3/src/others/subarray-sum.hpp
+// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/others/subarray-sum.hpp
 
 namespace internal_subarray_sum {
 // i < j かつ p[j] - p[i] <= k となる組 (i, j) の個数
@@ -44,7 +44,7 @@ long long count_pairs_at_most(std::vector<T> p, T k) {
 template <typename T>
 std::vector<T> prefix_sums(const std::vector<T>& a) {
     std::vector<T> p(a.size() + 1, T{});
-    for (size_t i = 0; i < a.size(); i++) p[i + 1] = p[i] + a[i];
+    for (long long i = 0; i < static_cast<long long>(a.size()); i++) p[i + 1] = p[i] + a[i];
     return p;
 }
 }  // namespace internal_subarray_sum

@@ -24,7 +24,7 @@
 #include <utility>
 
 #include "monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/b94a98acb19db49fa99249c824311583b1eb13e3/src/algebra/acted-monoid.hpp
+// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/algebra/acted-monoid.hpp
 
 namespace internal_acted_monoid {
 template <typename A, typename = void>
@@ -278,7 +278,11 @@ template <typename T, typename U = long long>
 struct AddMinWith : monoid::MinWith<T, U> {
     using S = std::pair<T, U>;
     using F = T;
-    static constexpr S mapping(const F& f, const S& x) { return {x.first + f, x.second}; }
+    // 単位元 (位置が -1) は単位元のまま (型の最大値・最小値に足してあふれないように)
+    static constexpr S mapping(const F& f, const S& x) {
+        if (internal_monoid::with_is_e(x.second)) return x;
+        return {x.first + f, x.second};
+    }
     static constexpr F composition(const F& f, const F& g) { return f + g; }
     static constexpr F id() { return F(0); }
 };
@@ -290,7 +294,11 @@ template <typename T, typename U = long long>
 struct AddMaxWith : monoid::MaxWith<T, U> {
     using S = std::pair<T, U>;
     using F = T;
-    static constexpr S mapping(const F& f, const S& x) { return {x.first + f, x.second}; }
+    // 単位元 (位置が -1) は単位元のまま (型の最大値・最小値に足してあふれないように)
+    static constexpr S mapping(const F& f, const S& x) {
+        if (internal_monoid::with_is_e(x.second)) return x;
+        return {x.first + f, x.second};
+    }
     static constexpr F composition(const F& f, const F& g) { return f + g; }
     static constexpr F id() { return F(0); }
 };
