@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/utility/traits.hpp
+// https://github.com/shogo314/shogo-library/blob/fd62a925bd6ae1f8029df3aa899800a2a2ba0680/src/utility/traits.hpp
 
 /**
  * @file traits.hpp
@@ -7,6 +7,7 @@
  */
 
 #include <cstddef>
+#include <functional>
 #include <iterator>
 #include <set>
 #include <type_traits>
@@ -69,6 +70,21 @@ HAS_METHOD_ARG(upper_bound)
 
 #define ENABLE_IF_T_IMPL(expr) std::enable_if_t<expr, std::nullptr_t> = nullptr
 #define ENABLE_IF_T(...) ENABLE_IF_T_IMPL((__VA_ARGS__))
+
+namespace internal_traits {
+// 射影 (proj) の既定値
+#if __cplusplus >= 202002L
+using identity = std::identity;
+#else
+struct identity {
+    using is_transparent = void;
+    template <class T>
+    constexpr T&& operator()(T&& x) const noexcept {
+        return std::forward<T>(x);
+    }
+};
+#endif
+}  // namespace internal_traits
 
 template <class C>
 using mem_value_type = typename C::value_type;

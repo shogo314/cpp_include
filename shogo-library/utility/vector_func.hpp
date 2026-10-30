@@ -15,30 +15,45 @@
 #include <vector>
 
 #include "traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/utility/vector_func.hpp
+// https://github.com/shogo314/shogo-library/blob/fd62a925bd6ae1f8029df3aa899800a2a2ba0680/src/utility/vector_func.hpp
 
 /**
- * @brief 値を comp の順に安定ソートしたときの添字の並び (APL の grade up)
+ * @brief 値を proj で写して comp の順に安定ソートしたときの添字の並び (APL の grade up)
  */
-template <typename T, typename F = std::less<>>
-std::vector<long long> argsort(const std::vector<T>& v, F comp = F()) {
+template <typename T, typename F = std::less<>, typename P = internal_traits::identity>
+std::vector<long long> argsort(const std::vector<T>& v, F comp = F(), P proj = P()) {
     std::vector<long long> ret(v.size());
     std::iota(ret.begin(), ret.end(), 0LL);
     std::stable_sort(ret.begin(), ret.end(), [&](long long i, long long j) {
-        return comp(v[i], v[j]);
+        return std::invoke(comp, std::invoke(proj, v[i]), std::invoke(proj, v[j]));
     });
     return ret;
 }
 
 /**
- * @brief 各要素の順位 (comp の順で v[i] より前に来る要素の個数)。同率は同じ順位で、次の順位は飛ばす
+ * @brief 各要素の順位 (proj で写して comp の順で v[i] より前に来る要素の個数)。同率は同じ順位で、次の順位は飛ばす
  */
-template <typename T, typename F = std::less<>>
-std::vector<long long> rank(const std::vector<T>& v, F comp = F()) {
+template <typename T, typename F = std::less<>, typename P = internal_traits::identity>
+std::vector<long long> rank(const std::vector<T>& v, F comp = F(), P proj = P()) {
     const long long n = v.size();
-    std::vector<long long> p = argsort(v, comp), ret(n);
+    std::vector<long long> p = argsort(v, comp, proj), ret(n);
     for (long long i = 0; i < n; i++) {
-        ret[p[i]] = i > 0 && !comp(v[p[i - 1]], v[p[i]]) ? ret[p[i - 1]] : i;
+        ret[p[i]] = i > 0 && !std::invoke(comp, std::invoke(proj, v[p[i - 1]]), std::invoke(proj, v[p[i]])) ? ret[p[i - 1]] : i;
+    }
+    return ret;
+}
+
+/**
+ * @brief 逆置換 (ret[p[i]] = i)。p は 0, ..., n-1 の置換であること
+ */
+template <typename I, ENABLE_IF_T(std::is_integral_v<I>)>
+std::vector<long long> inverse_permutation(const std::vector<I>& p) {
+    const long long n = p.size();
+    std::vector<long long> ret(n, -1);
+    for (long long i = 0; i < n; i++) {
+        const long long x = static_cast<long long>(p[i]);
+        assert(0 <= x && x < n && ret[x] == -1);
+        ret[x] = i;
     }
     return ret;
 }

@@ -11,7 +11,7 @@
 
 #include "../algebra/monoid.hpp"
 #include "unionfind.hpp"
-// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/data_structures/monoid-unionfind.hpp
+// https://github.com/shogo314/shogo-library/blob/fd62a925bd6ae1f8029df3aa899800a2a2ba0680/src/data_structures/monoid-unionfind.hpp
 
 /**
  * @brief 可換モノイドを乗せるUnionFind

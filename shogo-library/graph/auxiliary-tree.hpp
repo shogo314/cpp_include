@@ -11,7 +11,7 @@
 
 #include "heavy-light-decomposition.hpp"
 #include "tree.hpp"
-// https://github.com/shogo314/shogo-library/blob/8abe9d864dad0355ffad47d44d0d572d0d361b58/src/graph/auxiliary-tree.hpp
+// https://github.com/shogo314/shogo-library/blob/fd62a925bd6ae1f8029df3aa899800a2a2ba0680/src/graph/auxiliary-tree.hpp
 
 /**
  * @brief Auxiliary Tree (指定した頂点とその LCA だけを残して圧縮した木)
