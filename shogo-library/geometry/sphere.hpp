@@ -15,7 +15,7 @@
 
 #include "segment-3d.hpp"
 #include "vector.hpp"
-// https://github.com/shogo314/shogo-library/blob/460c030aa07ed32c4e107d6268544d802c0bc521/src/geometry/sphere.hpp
+// https://github.com/shogo314/shogo-library/blob/37ef4b20eeb8b4ec38d854e5a6d0bfae582ba3c6/src/geometry/sphere.hpp
 
 /**
  * @brief 球

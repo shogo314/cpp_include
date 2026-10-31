@@ -10,7 +10,7 @@
 #include "../graph/graph_util.hpp"
 #include "manhattan.hpp"
 #include "vector.hpp"
-// https://github.com/shogo314/shogo-library/blob/460c030aa07ed32c4e107d6268544d802c0bc521/src/geometry/manhattan-mst.hpp
+// https://github.com/shogo314/shogo-library/blob/37ef4b20eeb8b4ec38d854e5a6d0bfae582ba3c6/src/geometry/manhattan-mst.hpp
 
 /**
  * @brief 点の集合で、2 点を結ぶ辺の重みをマンハッタン距離 |dx| + |dy| とした完全グラフの最小全域木 O(n log n)

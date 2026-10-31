@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "graph.hpp"
-// https://github.com/shogo314/shogo-library/blob/460c030aa07ed32c4e107d6268544d802c0bc521/src/graph/shortest-path.hpp
+// https://github.com/shogo314/shogo-library/blob/37ef4b20eeb8b4ec38d854e5a6d0bfae582ba3c6/src/graph/shortest-path.hpp
 
 /**
  * @brief 最短路の結果

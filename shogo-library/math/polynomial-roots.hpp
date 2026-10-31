@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "fps.hpp"
-// https://github.com/shogo314/shogo-library/blob/460c030aa07ed32c4e107d6268544d802c0bc521/src/math/polynomial-roots.hpp
+// https://github.com/shogo314/shogo-library/blob/37ef4b20eeb8b4ec38d854e5a6d0bfae582ba3c6/src/math/polynomial-roots.hpp
 
 namespace internal_polynomial_roots {
 // 1 次の因子の積 g (根は相異なり 0 でない) を、根ごとに分けて res に入れる

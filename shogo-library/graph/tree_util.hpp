@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "tree.hpp"
-// https://github.com/shogo314/shogo-library/blob/460c030aa07ed32c4e107d6268544d802c0bc521/src/graph/tree_util.hpp
+// https://github.com/shogo314/shogo-library/blob/37ef4b20eeb8b4ec38d854e5a6d0bfae582ba3c6/src/graph/tree_util.hpp
 
 namespace internal_tree_util {
 
@@ -37,6 +37,26 @@ std::pair<std::vector<Cost>, std::vector<typename Tree<Cost>::Edge>> tree_distan
     return {dist, prev};
 }
 
+// 重みなしで c から各頂点への距離と、c のどの隣接頂点の側にあるか (c では -1) を求める
+template <typename Cost>
+std::pair<std::vector<long long>, std::vector<long long>> branch_depths(const Tree<Cost>& tree, long long c) {
+    long long n = tree.size();
+    std::vector<long long> dist(n, -1), branch(n, -1);
+    std::vector<long long> stk = {c};
+    dist[c] = 0;
+    while (!stk.empty()) {
+        long long u = stk.back();
+        stk.pop_back();
+        for (const auto& e : tree[u]) {
+            if (dist[e.dst] != -1) continue;
+            dist[e.dst] = dist[u] + 1;
+            branch[e.dst] = u == c ? e.dst : branch[u];
+            stk.push_back(e.dst);
+        }
+    }
+    return {dist, branch};
+}
+
 }  // namespace internal_tree_util
 
 /**
@@ -57,6 +77,61 @@ std::vector<typename Tree<Cost>::Edge> tree_diameter(const Tree<Cost>& tree, boo
     for (long long w = v; w != u; w = prev[w].src) path.push_back(prev[w]);
     std::reverse(path.begin(), path.end());
     return path;
+}
+
+/**
+ * @brief 木の中心 (重みなし)
+ *
+ * 最も遠い頂点までの辺の本数が最小になる頂点。直径の中点にあたる
+ * @param tree 木 (頂点数 1 以上)
+ * @return std::vector<long long> 中心 (1 つか 2 つ。2 つなら隣接していて、小さい順)
+ */
+template <typename Cost>
+std::vector<long long> tree_center(const Tree<Cost>& tree) {
+    auto path = tree_diameter(tree, false);
+    long long d = path.size();
+    if (d == 0) return {0};
+    long long c = path[d / 2].src;
+    if (d % 2 == 0) return {c};
+    long long c2 = path[d / 2].dst;
+    return {std::min(c, c2), std::max(c, c2)};
+}
+
+/**
+ * @brief 直径 (重みなし) の端点を、2 点がちょうど直径の両端になるのは異なるグループにあるとき、かつそのときに限るように分ける
+ *
+ * 直径の長さが偶数なら中心の隣接頂点ごと、奇数なら中心の辺のどちらの側かで分ける
+ * @param tree 木 (頂点数 1 以上)
+ * @return std::vector<std::vector<long long>> 各グループの頂点 (どれも空でなく、2 つ以上。頂点数 1 なら {{0}})
+ */
+template <typename Cost>
+std::vector<std::vector<long long>> tree_diameter_endpoint_groups(const Tree<Cost>& tree) {
+    long long n = tree.size();
+    if (n == 1) return {{0}};
+    auto center = tree_center(tree);
+    long long c = center[0];
+    auto [dist, branch] = internal_tree_util::branch_depths(tree, c);
+    long long r = *std::max_element(dist.begin(), dist.end());
+    std::vector<std::vector<long long>> groups;
+    if (center.size() == 2) {
+        // c の側は c からの距離が r - 1、もう一方の中心の側は r
+        groups.resize(2);
+        for (long long v = 0; v < n; v++) {
+            bool other = branch[v] == center[1];
+            if (dist[v] == (other ? r : r - 1)) groups[other].push_back(v);
+        }
+        return groups;
+    }
+    std::vector<long long> id(n, -1);
+    for (long long v = 0; v < n; v++) {
+        if (dist[v] != r) continue;
+        if (id[branch[v]] == -1) {
+            id[branch[v]] = groups.size();
+            groups.emplace_back();
+        }
+        groups[id[branch[v]]].push_back(v);
+    }
+    return groups;
 }
 
 /**
