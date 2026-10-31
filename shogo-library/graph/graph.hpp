@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/fd62a925bd6ae1f8029df3aa899800a2a2ba0680/src/graph/graph.hpp
+// https://github.com/shogo314/shogo-library/blob/460c030aa07ed32c4e107d6268544d802c0bc521/src/graph/graph.hpp
 
 /**
  * @file graph.hpp
@@ -115,7 +115,8 @@ class Graph {
      * @brief 辺のリスト
      * @return std::vector<Edge> 辺のリスト(idの昇順)
      *
-     * 無向辺は代表して1つだけ格納される
+     * 無向辺は代表して1つだけ格納される。その src と dst の向きは規定しない
+     * 有向辺は追加したときの向きのまま格納される
      */
     std::vector<Edge> edges() const {
         std::vector<Edge> res(m);

@@ -17,7 +17,7 @@
 
 #include "../data_structures/unionfind.hpp"
 #include "graph.hpp"
-// https://github.com/shogo314/shogo-library/blob/fd62a925bd6ae1f8029df3aa899800a2a2ba0680/src/graph/graph_util.hpp
+// https://github.com/shogo314/shogo-library/blob/460c030aa07ed32c4e107d6268544d802c0bc521/src/graph/graph_util.hpp
 
 /**
  * @brief 無向グラフについて、二部グラフなら0と1に彩色した結果をひとつ返し、二部グラフでないならstd::nulloptを返す。
@@ -352,8 +352,9 @@ MinimumSpanningTree<Cost> minimum_spanning_tree(const Graph<Cost>& graph) {
 }
 
 /**
- * @brief 無向グラフの彩色数 (隣り合う頂点が同じ色にならないように塗るときの色の最小数。頂点数 20 程度まで) O(3^n) より少し速い
+ * @brief 無向グラフの彩色数 (隣り合う頂点が同じ色にならないように塗るときの色の最小数。頂点数 20 程度まで) O(3^n)
  * 独立集合の表を O(2^n) で作り、dp[S] = min (dp[S \ T] + 1) を、T を「S の最小の頂点 v を含み、v と隣り合わない S の頂点からなる独立集合」に限って求める
+ * 枝刈りで速くなるのは定数倍だけで、2 頂点ずつ辺で結んだグラフなどでは内側のループが 3^n / 2 回近くまわる
  * 頂点がなければ 0。自己ループがあれば塗れないので -1
  */
 template <typename Cost = long long>

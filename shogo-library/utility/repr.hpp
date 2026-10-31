@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/fd62a925bd6ae1f8029df3aa899800a2a2ba0680/src/utility/repr.hpp
+// https://github.com/shogo314/shogo-library/blob/460c030aa07ed32c4e107d6268544d802c0bc521/src/utility/repr.hpp
 
 namespace internal_repr {
 
@@ -55,6 +55,14 @@ inline std::string repr(const unsigned long&);
 inline std::string type_str(const unsigned long long&);
 inline std::string initializer_str(const unsigned long long&);
 inline std::string repr(const unsigned long long&);
+
+inline std::string type_str(const __int128_t&);
+inline std::string initializer_str(const __int128_t&);
+inline std::string repr(const __int128_t&);
+
+inline std::string type_str(const __uint128_t&);
+inline std::string initializer_str(const __uint128_t&);
+inline std::string repr(const __uint128_t&);
 
 inline std::string type_str(const std::string&);
 inline std::string initializer_str(const std::string&);
@@ -229,6 +237,44 @@ inline std::string initializer_str(const unsigned long long& t) {
     return std::to_string(t) + "ull";
 }
 inline std::string repr(const unsigned long long& t) {
+    return internal_repr::initializer_str(t);
+}
+
+// 128 bit 整数のリテラルはないので、10^18 ごとに区切った式にする (各区切りに符号を付けるので、途中であふれない)
+// 例: (__int128_t{-170} * 1000000000000000000 - 141183460469231731) * 1000000000000000000 - 687303715884105728
+inline std::string int128_str(const std::string& type, unsigned __int128 u, bool neg) {
+    constexpr unsigned long long B = 1000000000000000000ULL;
+    std::vector<unsigned long long> c;
+    do {
+        c.push_back(static_cast<unsigned long long>(u % B));
+        u /= B;
+    } while (u > 0);
+    const std::string sign = neg ? "-" : "";
+    std::string ret = type + "{" + sign + std::to_string(c.back()) + "}";
+    for (int i = static_cast<int>(c.size()) - 2; i >= 0; i--) {
+        if (i + 2 < static_cast<int>(c.size())) ret = "(" + ret + ")";
+        ret += " * 1000000000000000000 " + std::string(neg ? "-" : "+") + " " + std::to_string(c[i]);
+    }
+    return ret;
+}
+
+inline std::string type_str(const __int128_t&) {
+    return "__int128_t";
+}
+inline std::string initializer_str(const __int128_t& t) {
+    return internal_repr::int128_str("__int128_t", t < 0 ? -static_cast<unsigned __int128>(t) : static_cast<unsigned __int128>(t), t < 0);
+}
+inline std::string repr(const __int128_t& t) {
+    return internal_repr::initializer_str(t);
+}
+
+inline std::string type_str(const __uint128_t&) {
+    return "__uint128_t";
+}
+inline std::string initializer_str(const __uint128_t& t) {
+    return internal_repr::int128_str("__uint128_t", t, false);
+}
+inline std::string repr(const __uint128_t& t) {
     return internal_repr::initializer_str(t);
 }
 

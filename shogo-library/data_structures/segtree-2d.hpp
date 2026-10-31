@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "../algebra/monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/fd62a925bd6ae1f8029df3aa899800a2a2ba0680/src/data_structures/segtree-2d.hpp
+// https://github.com/shogo314/shogo-library/blob/460c030aa07ed32c4e107d6268544d802c0bc521/src/data_structures/segtree-2d.hpp
 
 /**
  * @brief 2次元セグメント木 (更新する点を先読みする領域木)

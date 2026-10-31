@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "graph.hpp"
-// https://github.com/shogo314/shogo-library/blob/fd62a925bd6ae1f8029df3aa899800a2a2ba0680/src/graph/tree.hpp
+// https://github.com/shogo314/shogo-library/blob/460c030aa07ed32c4e107d6268544d802c0bc521/src/graph/tree.hpp
 
 template <typename>
 class RootedTree;
@@ -30,7 +30,8 @@ class DoublingClimbTree;
 template <typename Cost = long long>
 struct Tree : private Graph<Cost> {
     // Graph<Cost>* g = new Tree<Cost>(); ができてしまうと、delete時にメモリリークが発生
-    // 回避するためprivate継承にして、メンバをすべてusing宣言
+    // 回避するためprivate継承にして、公開するメンバをusing宣言する
+    // add_directed_edge は木でなくなるので公開しない (read は Tree::read で隠す)
     using Edge = typename Graph<Cost>::Edge;
     using Graph<Cost>::n;
     using Graph<Cost>::size;
@@ -38,7 +39,6 @@ struct Tree : private Graph<Cost> {
     using Graph<Cost>::g;
     using Graph<Cost>::Graph;
     using Graph<Cost>::add_edge;
-    using Graph<Cost>::add_directed_edge;
     using Graph<Cost>::operator[];
     using Graph<Cost>::edges;
 

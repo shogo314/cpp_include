@@ -14,8 +14,9 @@
 #include <utility>
 #include <vector>
 
+#include "segment.hpp"
 #include "vector.hpp"
-// https://github.com/shogo314/shogo-library/blob/fd62a925bd6ae1f8029df3aa899800a2a2ba0680/src/geometry/circle.hpp
+// https://github.com/shogo314/shogo-library/blob/460c030aa07ed32c4e107d6268544d802c0bc521/src/geometry/circle.hpp
 
 /**
  * @brief 円

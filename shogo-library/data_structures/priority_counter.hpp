@@ -13,7 +13,7 @@
 #include <utility>
 
 #include "../utility/traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/fd62a925bd6ae1f8029df3aa899800a2a2ba0680/src/data_structures/priority_counter.hpp
+// https://github.com/shogo314/shogo-library/blob/460c030aa07ed32c4e107d6268544d802c0bc521/src/data_structures/priority_counter.hpp
 
 template <typename T, std::size_t K = 1, class Compare = std::less<T>, ENABLE_IF_T(K >= 1)>
 struct PriorityCounter {
