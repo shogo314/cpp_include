@@ -16,7 +16,7 @@
 
 #include "polygon.hpp"
 #include "vector.hpp"
-// https://github.com/shogo314/shogo-library/blob/37ef4b20eeb8b4ec38d854e5a6d0bfae582ba3c6/src/geometry/point-pair.hpp
+// https://github.com/shogo314/shogo-library/blob/0488eb87696db73a49e2e3add8b80014b2d7920e/src/geometry/point-pair.hpp
 
 /**
  * @brief closest_point_pair_squared の戻り値

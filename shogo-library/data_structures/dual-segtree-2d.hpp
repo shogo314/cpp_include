@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "../algebra/acted-monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/37ef4b20eeb8b4ec38d854e5a6d0bfae582ba3c6/src/data_structures/dual-segtree-2d.hpp
+// https://github.com/shogo314/shogo-library/blob/0488eb87696db73a49e2e3add8b80014b2d7920e/src/data_structures/dual-segtree-2d.hpp
 
 /**
  * @brief 2次元双対セグメント木 (取得する点を先読みする)

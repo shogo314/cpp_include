@@ -12,7 +12,7 @@
 
 #include "modular-arithmetic.hpp"
 #include "prime.hpp"
-// https://github.com/shogo314/shogo-library/blob/37ef4b20eeb8b4ec38d854e5a6d0bfae582ba3c6/src/math/gaussian-integer.hpp
+// https://github.com/shogo314/shogo-library/blob/0488eb87696db73a49e2e3add8b80014b2d7920e/src/math/gaussian-integer.hpp
 
 /**
  * @brief ガウス整数 a + bi

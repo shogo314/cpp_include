@@ -8,11 +8,12 @@
 #include <algorithm>
 #include <cassert>
 #include <map>
+#include <tuple>
 #include <utility>
 #include <vector>
 
 #include "tree.hpp"
-// https://github.com/shogo314/shogo-library/blob/37ef4b20eeb8b4ec38d854e5a6d0bfae582ba3c6/src/graph/tree_util.hpp
+// https://github.com/shogo314/shogo-library/blob/0488eb87696db73a49e2e3add8b80014b2d7920e/src/graph/tree_util.hpp
 
 namespace internal_tree_util {
 
@@ -57,26 +58,62 @@ std::pair<std::vector<long long>, std::vector<long long>> branch_depths(const Tr
     return {dist, branch};
 }
 
+// 直径の両端 u, v と、u から各頂点への距離と辺 (tree_distances の結果) を求める
+template <typename Cost>
+std::tuple<long long, long long, std::vector<Cost>, std::vector<typename Tree<Cost>::Edge>> diameter_endpoints(const Tree<Cost>& tree, bool weighted) {
+    assert(tree.size() > 0);
+    auto dist0 = tree_distances(tree, 0, weighted).first;
+    long long u = std::max_element(dist0.begin(), dist0.end()) - dist0.begin();
+    auto [dist, prev] = tree_distances(tree, u, weighted);
+    long long v = std::max_element(dist.begin(), dist.end()) - dist.begin();
+    return {u, v, std::move(dist), std::move(prev)};
+}
+
 }  // namespace internal_tree_util
 
 /**
- * @brief 木の直径
+ * @brief 木の直径の長さ
  *
- * @param tree 木 (頂点数 1 以上)
- * @param weighted = true 重み付きか
- * @return std::vector<typename Tree<Cost>::Edge> 直径を構成する辺のリスト (端点から順に)
+ * @param tree 木 (頂点数 1 以上、辺の重みは非負)
+ * @param weighted = true 重み付きか。false なら辺の本数で測る
+ * @return Cost 直径の長さ (頂点数 1 なら 0)
  */
 template <typename Cost>
-std::vector<typename Tree<Cost>::Edge> tree_diameter(const Tree<Cost>& tree, bool weighted = true) {
-    assert(tree.size() > 0);
-    auto [dist0, prev0] = internal_tree_util::tree_distances(tree, 0, weighted);
-    long long u = std::max_element(dist0.begin(), dist0.end()) - dist0.begin();
-    auto [dist, prev] = internal_tree_util::tree_distances(tree, u, weighted);
-    long long v = std::max_element(dist.begin(), dist.end()) - dist.begin();
-    std::vector<typename Tree<Cost>::Edge> path;
-    for (long long w = v; w != u; w = prev[w].src) path.push_back(prev[w]);
-    std::reverse(path.begin(), path.end());
-    return path;
+Cost tree_diameter(const Tree<Cost>& tree, bool weighted = true) {
+    auto [u, v, dist, prev] = internal_tree_util::diameter_endpoints(tree, weighted);
+    return dist[v];
+}
+
+/**
+ * @brief 木の直径の結果
+ *
+ * auto [length, vertices, edges] = tree_diameter_restore(tree); のように受け取れる
+ */
+template <typename Cost>
+struct TreeDiameter {
+    Cost length;                                   //!< 直径の長さ
+    std::vector<long long> vertices;               //!< 一方の端点から他方の端点までの頂点の列 (頂点数 1 なら {0})
+    std::vector<typename Tree<Cost>::Edge> edges;  //!< vertices の順にたどる辺の列 (edges[k] は vertices[k] から vertices[k + 1] へ。頂点数 1 なら空)
+};
+
+/**
+ * @brief 木の直径を、長さ・頂点の列・辺の列で求める
+ *
+ * @param tree 木 (頂点数 1 以上、辺の重みは非負)
+ * @param weighted = true 重み付きか。false なら辺の本数で測る
+ * @return TreeDiameter<Cost> 長さ・頂点の列・辺の列
+ */
+template <typename Cost>
+TreeDiameter<Cost> tree_diameter_restore(const Tree<Cost>& tree, bool weighted = true) {
+    auto [u, v, dist, prev] = internal_tree_util::diameter_endpoints(tree, weighted);
+    TreeDiameter<Cost> res{dist[v], {v}, {}};
+    for (long long w = v; w != u; w = prev[w].src) {
+        res.vertices.push_back(prev[w].src);
+        res.edges.push_back(prev[w]);
+    }
+    std::reverse(res.vertices.begin(), res.vertices.end());
+    std::reverse(res.edges.begin(), res.edges.end());
+    return res;
 }
 
 /**
@@ -88,12 +125,11 @@ std::vector<typename Tree<Cost>::Edge> tree_diameter(const Tree<Cost>& tree, boo
  */
 template <typename Cost>
 std::vector<long long> tree_center(const Tree<Cost>& tree) {
-    auto path = tree_diameter(tree, false);
-    long long d = path.size();
-    if (d == 0) return {0};
-    long long c = path[d / 2].src;
+    auto path = tree_diameter_restore(tree, false).vertices;
+    long long d = path.size() - 1;
+    long long c = path[d / 2];
     if (d % 2 == 0) return {c};
-    long long c2 = path[d / 2].dst;
+    long long c2 = path[d / 2 + 1];
     return {std::min(c, c2), std::max(c, c2)};
 }
 
