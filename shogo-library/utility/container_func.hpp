@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/0488eb87696db73a49e2e3add8b80014b2d7920e/src/utility/container_func.hpp
+// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/utility/container_func.hpp
 
 #define METHOD_EXPAND(func)                                        \
     template <typename T, ENABLE_IF_T(has_##func##_v<T>)>          \
@@ -218,6 +218,28 @@ inline constexpr long long count_if(const C& v, F f) {
     long long res = 0;
     for (const auto& e : v) {
         if (f(e)) res++;
+    }
+    return res;
+}
+
+/**
+ * @brief 同じ長さの 2 つの列のハミング距離 (要素が異なる位置の数) O(N)
+ *
+ * @tparam R1 配列の型
+ * @tparam R2 配列の型
+ * @param s 配列
+ * @param t 配列 (s と同じ長さ)
+ * @return long long ハミング距離
+ */
+template <typename R1, typename R2>
+inline constexpr auto hamming_distance(const R1& s, const R2& t) -> decltype(std::begin(s), std::begin(t), 0LL) {
+    auto a = std::begin(s);
+    auto b = std::begin(t);
+    long long n = std::end(s) - a;
+    assert(n == std::end(t) - b);
+    long long res = 0;
+    for (long long i = 0; i < n; i++) {
+        if (!(a[i] == b[i])) res++;
     }
     return res;
 }

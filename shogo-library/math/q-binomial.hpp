@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "modular-arithmetic.hpp"
-// https://github.com/shogo314/shogo-library/blob/0488eb87696db73a49e2e3add8b80014b2d7920e/src/math/q-binomial.hpp
+// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/math/q-binomial.hpp
 
 /**
  * @brief q 二項係数 C(n, k)_q = [n]_q! / ([k]_q! [n-k]_q!) を素数 p で割った余り ([i]_q = 1 + q + ... + q^(i-1)、[n]_q! = [1]_q [2]_q ... [n]_q)
@@ -29,7 +29,7 @@ class QBinomial {
     void build(long long n, F term, std::vector<std::uint32_t>& f, std::vector<std::uint32_t>& g) const {
         f.assign(n + 1, 1), g.assign(n + 1, 1);
         for (long long i = 1; i <= n; i++) f[i] = static_cast<long long>(f[i - 1]) * term(i) % p;
-        g[n] = modinv(f[n], p);
+        g[n] = inv_mod(f[n], p);
         for (long long i = n; i >= 1; i--) g[i - 1] = static_cast<long long>(g[i]) * term(i) % p;
     }
 

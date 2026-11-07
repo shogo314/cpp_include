@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/0488eb87696db73a49e2e3add8b80014b2d7920e/src/data_structures/range-mode.hpp
+// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/data_structures/range-mode.hpp
 
 /**
  * @file range-mode.hpp
@@ -65,10 +65,17 @@ class RangeMode {
      */
     long long size() const { return n; }
     /**
-     * @brief a[l], ..., a[r-1] の最頻値の 1 つと、その出現回数 {値, 回数}
+     * @brief mode の結果。最頻値 value とその出現回数 count
+     */
+    struct Mode {
+        T value;          //!< 最頻値
+        long long count;  //!< 出現回数
+    };
+    /**
+     * @brief a[l], ..., a[r-1] の最頻値の 1 つと、その出現回数 {value, count}
      * @pre l < r
      */
-    std::pair<T, long long> mode(long long l, long long r) const {
+    Mode mode(long long l, long long r) const {
         assert(0 <= l && l < r && r <= n);
         // 間にあるブロック [bl, br]。なければ空にして、すべて端として扱う
         const long long bl = (l + B - 1) / B, br = r / B - 1;

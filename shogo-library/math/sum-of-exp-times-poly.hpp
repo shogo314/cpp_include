@@ -13,7 +13,7 @@
 #include "combinatorics.hpp"
 #include "lagrange-interpolation.hpp"
 #include "prime.hpp"
-// https://github.com/shogo314/shogo-library/blob/0488eb87696db73a49e2e3add8b80014b2d7920e/src/math/sum-of-exp-times-poly.hpp
+// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/math/sum-of-exp-times-poly.hpp
 
 namespace internal_sum_of_exp_times_poly {
 // 0^d, 1^d, ..., m^d を、素数は累乗、合成数は最小素因数との積で O(m) 回の掛け算で求める

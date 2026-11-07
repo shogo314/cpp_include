@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "rational.hpp"
-// https://github.com/shogo314/shogo-library/blob/0488eb87696db73a49e2e3add8b80014b2d7920e/src/math/stern-brocot.hpp
+// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/math/stern-brocot.hpp
 
 /**
  * @brief Stern–Brocot 木と連分数
@@ -25,6 +25,40 @@
  * stern_brocot::simplest_between(Rational<>(1, 3), Rational<>(1, 2));  // 2/5
  */
 namespace stern_brocot {
+
+/**
+ * @brief range・binary_search が返す区間の端の分数 num / den
+ * den == 0 なら +∞ を表す (Rational では表せないので、分子と分母をそのまま持つ)
+ */
+template <typename T>
+struct Endpoint {
+    T num;  //!< 分子
+    T den;  //!< 分母 (+∞ なら 0)
+    friend bool operator==(const Endpoint& a, const Endpoint& b) { return a.num == b.num && a.den == b.den; }
+    friend bool operator!=(const Endpoint& a, const Endpoint& b) { return !(a == b); }
+};
+
+/**
+ * @brief range・binary_search の結果。下端 lower と上端 upper
+ *
+ * auto [lower, upper] = stern_brocot::range(x); のように受け取れる
+ */
+template <typename T>
+struct Interval {
+    Endpoint<T> lower;  //!< 下端
+    Endpoint<T> upper;  //!< 上端
+    friend bool operator==(const Interval& a, const Interval& b) { return a.lower == b.lower && a.upper == b.upper; }
+    friend bool operator!=(const Interval& a, const Interval& b) { return !(a == b); }
+};
+
+/**
+ * @brief best_approximation の結果。x 以下で最大のもの lower と x 以上で最小のもの upper
+ */
+template <typename T>
+struct BestApproximation {
+    Rational<T> lower;  //!< x 以下で最大
+    Rational<T> upper;  //!< x 以上で最小
+};
 
 /**
  * @brief 連分数展開 x = a0 + 1 / (a1 + 1 / (... + 1 / an))
@@ -161,12 +195,12 @@ std::optional<Rational<T>> ancestor(const Rational<T>& x, T k) {
 }
 
 /**
- * @brief x の子孫 (x 自身を含む) が覆う開区間の {{下端の分子, 分母}, {上端の分子, 分母}}
+ * @brief x の子孫 (x 自身を含む) が覆う開区間 {lower, upper}
  * 下端は 0 なら {0, 1}、上端は +∞ なら {1, 0}
  * @pre x > 0
  */
 template <typename T>
-std::pair<std::pair<T, T>, std::pair<T, T>> range(const Rational<T>& x) {
+Interval<T> range(const Rational<T>& x) {
     internal::Bounds<T> b = internal::walk(encode_path(x));
     return {{b.lo_num, b.lo_den}, {b.hi_num, b.hi_den}};
 }
@@ -239,7 +273,7 @@ Rational<T> simplest_between(const Rational<T>& lo, const Rational<T>& hi, bool 
  * @pre n >= 1
  */
 template <typename T>
-std::pair<Rational<T>, Rational<T>> best_approximation(const Rational<T>& x, T n) {
+BestApproximation<T> best_approximation(const Rational<T>& x, T n) {
     assert(n >= 1);
     if (x.den() <= n) return {x, x};
     // 整数部分を引いた 0 < x - k < 1 で木をたどる (分母は変わらない)
@@ -258,13 +292,13 @@ std::pair<Rational<T>, Rational<T>> best_approximation(const Rational<T>& x, T n
 /**
  * @brief 分母が max_den 以下 (max_num を渡すと分子も max_num 以下) の 0 以上の分数の中で、単調な pred の境目を求める
  * pred(x) は小さい x で true、大きい x で false となる単調な関数で、pred(0) は true であること
- * 戻り値は {{pred が true の最大の分数の分子, 分母}, {pred が false の最小の分数の分子, 分母}}。false の側がなければ {1, 0} (+∞)
+ * 戻り値は {lower, upper}。lower は pred が true の最大の分数、upper は pred が false の最小の分数で、false の側がなければ {1, 0} (+∞)
  * max_num を渡さないなら、pred はどこかで false になること (そうでないと終わらない)
  * pred を呼ぶ回数は O(log max_den) 程度 (max_num を渡さないなら O(log (max_den + 境目の値)))
  * @pre max_den >= 1
  */
 template <typename T, typename Pred>
-std::pair<std::pair<T, T>, std::pair<T, T>> binary_search(T max_den, Pred pred, std::optional<internal::non_deduced_t<T>> max_num = std::nullopt) {
+Interval<T> binary_search(T max_den, Pred pred, std::optional<internal::non_deduced_t<T>> max_num = std::nullopt) {
     assert(max_den >= 1);
     assert(!max_num || *max_num >= 0);
     assert(pred(Rational<T>(0)));

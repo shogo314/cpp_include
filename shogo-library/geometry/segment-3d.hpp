@@ -13,7 +13,7 @@
 
 #include "segment.hpp"
 #include "vector.hpp"
-// https://github.com/shogo314/shogo-library/blob/0488eb87696db73a49e2e3add8b80014b2d7920e/src/geometry/segment-3d.hpp
+// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/geometry/segment-3d.hpp
 
 namespace internal_segment_3d {
 // 整数座標の外積・体積の計算に使う型 (座標が 1e9 なら体積は 1e27 程度になる)

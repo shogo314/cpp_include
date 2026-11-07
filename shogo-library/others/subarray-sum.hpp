@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "../utility/two-pointers.hpp"
-// https://github.com/shogo314/shogo-library/blob/0488eb87696db73a49e2e3add8b80014b2d7920e/src/others/subarray-sum.hpp
+// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/others/subarray-sum.hpp
 
 namespace internal_subarray_sum {
 // i < j かつ p[j] - p[i] <= k となる組 (i, j) の個数
@@ -54,7 +54,7 @@ std::vector<T> prefix_sums(const std::vector<T>& a) {
  * 累積和 P について、l < r かつ P[r] - P[l] <= k となる組を数える。要素がすべて 0 以上なら尺取り法で O(n)、そうでなければ O(n log n)
  */
 template <typename T>
-long long count_subarrays_with_sum_at_most(const std::vector<T>& a, T k) {
+long long subarray_sum_count_at_most(const std::vector<T>& a, T k) {
     return internal_subarray_sum::count_pairs_at_most(internal_subarray_sum::prefix_sums(a), k);
 }
 
@@ -64,8 +64,8 @@ long long count_subarrays_with_sum_at_most(const std::vector<T>& a, T k) {
  * @note 要素は整数型であること
  */
 template <typename T>
-long long count_subarrays_with_sum(const std::vector<T>& a, T k) {
-    static_assert(std::is_integral_v<T>, "count_subarrays_with_sum: T must be an integer type");
+long long subarray_sum_count(const std::vector<T>& a, T k) {
+    static_assert(std::is_integral_v<T>, "subarray_sum_count: T must be an integer type");
     const auto p = internal_subarray_sum::prefix_sums(a);
     return internal_subarray_sum::count_pairs_at_most(p, k) - internal_subarray_sum::count_pairs_at_most(p, k - 1);
 }

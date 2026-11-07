@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "modular-arithmetic.hpp"
-// https://github.com/shogo314/shogo-library/blob/0488eb87696db73a49e2e3add8b80014b2d7920e/src/math/combinatorics.hpp
+// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/math/combinatorics.hpp
 
 /**
  * @brief 素数 mod での階乗・二項係数など
@@ -236,7 +236,7 @@ struct CombinationPQ {
                 fact_p[i] = static_cast<long long>(fact_p[i - 1]) * i % pq;
         }
         inv_fact_p.resize(pq);
-        inv_fact_p[pq - 1] = modinv(fact_p[pq - 1], pq);
+        inv_fact_p[pq - 1] = inv_mod(fact_p[pq - 1], pq);
         for (int i = pq - 1; i > 0; i--) {
             if (i % p == 0)
                 inv_fact_p[i - 1] = inv_fact_p[i];

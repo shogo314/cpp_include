@@ -15,7 +15,7 @@
 #include "combinatorics.hpp"
 #include "convolution.hpp"
 #include "modular-arithmetic.hpp"
-// https://github.com/shogo314/shogo-library/blob/0488eb87696db73a49e2e3add8b80014b2d7920e/src/math/fps.hpp
+// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/math/fps.hpp
 
 template <typename mint>
 struct FPS;
@@ -525,7 +525,7 @@ FPS<mint> gcd(const FPS<mint>& f, const FPS<mint>& g) {
  * @brief f^n mod m (m は末尾が 0 でないこと) O(d log d log n) (d は m の次数)
  */
 template <typename mint>
-FPS<mint> modpow(const FPS<mint>& f, long long n, const FPS<mint>& m) {
+FPS<mint> pow_mod(const FPS<mint>& f, long long n, const FPS<mint>& m) {
     assert(!m.empty() && m.back() != 0);
     const long long d = static_cast<long long>(m.size()) - 1;  // m の次数
     if (d == 0) return FPS<mint>();
@@ -574,7 +574,7 @@ FPS<mint> extgcd(const FPS<mint>& f, const FPS<mint>& g, FPS<mint>& a, FPS<mint>
  * g は 0 でないこと。g が定数ならすべてが 0 と合同なので、h = 0 (空) を返す。h は末尾の 0 を取り除いた形
  */
 template <typename mint>
-std::optional<FPS<mint>> modinv(const FPS<mint>& f, const FPS<mint>& g) {
+std::optional<FPS<mint>> inv_mod(const FPS<mint>& f, const FPS<mint>& g) {
     using namespace internal_fps;
     const FPS<mint> gs = shrink(g);
     assert(!gs.empty());
@@ -609,15 +609,26 @@ FPS<mint> polynomial_product(std::vector<FPS<mint>> fs) {
 }
 
 /**
- * @brief 分数の和 Σ_i nums[i] / dens[i] を 1 つの分数 num / den にまとめる O(N log^2 N) (N は多項式の長さの和)
- * 半分ずつに分けて a / b + c / d = (ad + cb) / bd とまとめる。den は dens の積。空なら 0 / 1
- * @return std::pair<FPS<mint>, FPS<mint>> {num, den}
+ * @brief sum_of_fractions の結果。分数 num / den
+ *
+ * auto [num, den] = sum_of_fractions(nums, dens); のように受け取れる
  */
 template <typename mint>
-std::pair<FPS<mint>, FPS<mint>> sum_of_fractions(const std::vector<FPS<mint>>& nums, const std::vector<FPS<mint>>& dens) {
+struct SumOfFractions {
+    FPS<mint> num;  //!< 分子
+    FPS<mint> den;  //!< 分母
+};
+
+/**
+ * @brief 分数の和 Σ_i nums[i] / dens[i] を 1 つの分数 num / den にまとめる O(N log^2 N) (N は多項式の長さの和)
+ * 半分ずつに分けて a / b + c / d = (ad + cb) / bd とまとめる。den は dens の積。空なら 0 / 1
+ * @return SumOfFractions<mint> {num, den}
+ */
+template <typename mint>
+SumOfFractions<mint> sum_of_fractions(const std::vector<FPS<mint>>& nums, const std::vector<FPS<mint>>& dens) {
     assert(nums.size() == dens.size());
     if (nums.empty()) return {FPS<mint>(), FPS<mint>{1}};
-    auto rec = [&](auto&& self, long long l, long long r) -> std::pair<FPS<mint>, FPS<mint>> {
+    auto rec = [&](auto&& self, long long l, long long r) -> SumOfFractions<mint> {
         if (r - l == 1) return {nums[l], dens[l]};
         long long m = (l + r) / 2;
         auto [a, b] = self(self, l, m);

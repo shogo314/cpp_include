@@ -12,7 +12,7 @@
 #include "combinatorics.hpp"
 #include "convolution.hpp"
 #include "fps.hpp"
-// https://github.com/shogo314/shogo-library/blob/0488eb87696db73a49e2e3add8b80014b2d7920e/src/math/multipoint.hpp
+// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/math/multipoint.hpp
 
 namespace internal_multipoint {
 // 点 xs の subproduct tree: tree[k] は頂点 k が受け持つ点 x_i について Π (x - x_i)。葉は sz + i

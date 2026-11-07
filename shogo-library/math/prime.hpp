@@ -15,7 +15,7 @@
 #include <vector>
 
 #include "modular-arithmetic.hpp"
-// https://github.com/shogo314/shogo-library/blob/0488eb87696db73a49e2e3add8b80014b2d7920e/src/math/prime.hpp
+// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/math/prime.hpp
 
 namespace internal_prime {
 
@@ -28,7 +28,7 @@ inline u64 find_factor(u64 n) {
     if (n % 2 == 0) return 2;
     constexpr u64 m = 128;
     for (u64 c = 1;; c++) {
-        auto f = [&](u64 x) { return (modmul(x, x, n) + c) % n; };
+        auto f = [&](u64 x) { return (mul_mod(x, x, n) + c) % n; };
         auto diff = [](u64 x, u64 y) { return x > y ? x - y : y - x; };
         u64 x = 0, y = 2, ys = 2, q = 1, g = 1;
         for (u64 r = 1; g == 1; r <<= 1) {
@@ -38,7 +38,7 @@ inline u64 find_factor(u64 n) {
                 ys = y;
                 for (u64 i = 0; i < m && i < r - k; i++) {
                     y = f(y);
-                    q = modmul(q, diff(x, y), n);
+                    q = mul_mod(q, diff(x, y), n);
                 }
                 g = std::gcd(q, n);
             }
@@ -72,11 +72,11 @@ constexpr bool is_prime(long long n) {
     for (u64 a : {2ULL, 325ULL, 9375ULL, 28178ULL, 450775ULL, 9780504ULL, 1795265022ULL}) {
         a %= m;
         if (a == 0) continue;
-        u64 x = modpow(a, d, m);
+        u64 x = pow_mod(a, d, m);
         if (x == 1 || x == m - 1) continue;
         bool composite = true;
         for (int i = 1; i < s; i++) {
-            x = modmul(x, x, m);
+            x = mul_mod(x, x, m);
             if (x == m - 1) {
                 composite = false;
                 break;
@@ -172,7 +172,7 @@ inline long long primitive_root(long long m) {
         if (std::gcd(g, m) != 1) continue;
         bool ok = true;
         for (auto [q, e] : fphi) {
-            if (modpow(g, phi / q, m) == 1) {
+            if (pow_mod(g, phi / q, m) == 1) {
                 ok = false;
                 break;
             }
@@ -195,29 +195,29 @@ inline long long kth_root_mod(long long k, long long a, long long p) {
     if (k == 0) return a == 1 % p ? 1 : -1;
     if (a == 0) return 0;
     const long long m = p - 1, g = std::gcd(k, m);
-    if (modpow(a, m / g, p) != 1) return -1;
+    if (pow_mod(a, m / g, p) != 1) return -1;
     long long z = a;  // 素因数を 1 つずつ処理し、最後に z^g = a となるようにする
     for (auto [q, e] : factorize(g)) {
         long long s = 0, t = m, qe = 1;
         while (t % q == 0) t /= q, s++;
         for (long long i = 0; i < e; i++) qe *= q;
         // x1 = z^r (r q^e ≡ 1 mod t) とすると x1^(q^e) = z h (h は位数 q^s の部分群 H の元)
-        const long long r = t == 1 ? 0 : modinv(qe % t, t);
-        const long long x1 = modpow(z, r, p);
-        const long long target = modmul(z, modinv(modpow(x1, qe, p), p), p);  // h^(-1)、H の元で q^e 乗になっている
+        const long long r = t == 1 ? 0 : inv_mod(qe % t, t);
+        const long long x1 = pow_mod(z, r, p);
+        const long long target = mul_mod(z, inv_mod(pow_mod(x1, qe, p), p), p);  // h^(-1)、H の元で q^e 乗になっている
         // H の生成元 c = w^t (w は q 乗非剰余)
         long long w = 2;
-        while (modpow(w, m / q, p) == 1) w++;
-        const long long c = modpow(w, t, p);
+        while (pow_mod(w, m / q, p) == 1) w++;
+        const long long c = pow_mod(w, t, p);
         // target = c^d となる d を q 進で 1 桁ずつ求める (Pohlig-Hellman)
         long long zeta = c;  // 位数 q の元 c^(q^(s-1))
-        for (long long i = 0; i + 1 < s; i++) zeta = modpow(zeta, q, p);
+        for (long long i = 0; i + 1 < s; i++) zeta = pow_mod(zeta, q, p);
         const long long B = std::sqrt(static_cast<double>(q)) + 1;
         std::unordered_map<long long, long long> baby;  // zeta^j -> j (j < B)
-        for (long long j = 0, x = 1; j < B; j++, x = modmul(x, zeta, p)) baby.emplace(x, j);
-        const long long giant = modinv(modpow(zeta, B, p), p);
+        for (long long j = 0, x = 1; j < B; j++, x = mul_mod(x, zeta, p)) baby.emplace(x, j);
+        const long long giant = inv_mod(pow_mod(zeta, B, p), p);
         auto log_zeta = [&](long long y) {
-            for (long long i = 0; i <= q / B + 1; i++, y = modmul(y, giant, p)) {
+            for (long long i = 0; i <= q / B + 1; i++, y = mul_mod(y, giant, p)) {
                 auto it = baby.find(y);
                 if (it != baby.end()) return i * B + it->second;
             }
@@ -225,19 +225,19 @@ inline long long kth_root_mod(long long k, long long a, long long p) {
             return -1LL;
         };
         long long d = 0, qi = 1;
-        const long long cinv = modinv(c, p);
+        const long long cinv = inv_mod(c, p);
         for (long long i = 0; i < s; i++, qi *= q) {
             // (target c^(-d))^(q^(s-1-i)) = zeta^(d の i 桁目)
-            long long y = modmul(target, modpow(cinv, d, p), p);
-            for (long long j = 0; j + 1 + i < s; j++) y = modpow(y, q, p);
+            long long y = mul_mod(target, pow_mod(cinv, d, p), p);
+            for (long long j = 0; j + 1 + i < s; j++) y = pow_mod(y, q, p);
             d += log_zeta(y) * qi;
         }
         // d は q^e の倍数になっている
-        z = modmul(x1, modpow(c, d / qe, p), p);
+        z = mul_mod(x1, pow_mod(c, d / qe, p), p);
     }
     const long long mg = m / g;
-    const long long inv = mg == 1 ? 0 : modinv((k / g) % mg, mg);
-    return modpow(z, inv, p);
+    const long long inv = mg == 1 ? 0 : inv_mod((k / g) % mg, mg);
+    return pow_mod(z, inv, p);
 }
 
 /**

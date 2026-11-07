@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/0488eb87696db73a49e2e3add8b80014b2d7920e/src/string/aho-corasick.hpp
+// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/string/aho-corasick.hpp
 
 /**
  * @file aho-corasick.hpp
@@ -207,20 +207,29 @@ class AhoCorasick {
         return res;
     }
     /**
-     * @brief text に現れるパターンをすべて (開始位置, パターンの番号) の組で返す O(|text| + 出力の個数)
+     * @brief find_all が返す、パターンが現れた位置
+     */
+    struct Match {
+        long long pos;  //!< 開始位置
+        long long id;   //!< パターンの番号
+        friend bool operator==(const Match& a, const Match& b) { return a.pos == b.pos && a.id == b.id; }
+        friend bool operator!=(const Match& a, const Match& b) { return !(a == b); }
+    };
+    /**
+     * @brief text に現れるパターンをすべて {開始位置 pos, パターンの番号 id} で返す O(|text| + 出力の個数)
      * 終わる位置の順に並び、同じ位置で終わるものは長いパターンから、同じパターンは番号の小さい順に並ぶ
      */
     template <typename R>
-    std::vector<std::pair<long long, long long>> find_all(const R& text) const {
+    std::vector<Match> find_all(const R& text) const {
         assert(built);
-        std::vector<std::pair<long long, long long>> res;
+        std::vector<Match> res;
         int v = 0;
         long long pos = 0;
         for (auto c : text) {
             v = nodes[v].next[index(c)];
             pos++;
             for (int u = nodes[v].head != -1 ? v : nodes[v].out; u != -1; u = nodes[u].out) {
-                for (int id = nodes[u].head; id != -1; id = next_pattern[id]) res.emplace_back(pos - nodes[u].depth, id);
+                for (int id = nodes[u].head; id != -1; id = next_pattern[id]) res.push_back({pos - nodes[u].depth, id});
             }
         }
         return res;

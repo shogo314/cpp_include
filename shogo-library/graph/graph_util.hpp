@@ -17,7 +17,7 @@
 
 #include "../data_structures/unionfind.hpp"
 #include "graph.hpp"
-// https://github.com/shogo314/shogo-library/blob/0488eb87696db73a49e2e3add8b80014b2d7920e/src/graph/graph_util.hpp
+// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/graph/graph_util.hpp
 
 /**
  * @brief 無向グラフについて、二部グラフなら0と1に彩色した結果をひとつ返し、二部グラフでないならstd::nulloptを返す。
@@ -187,11 +187,11 @@ bool has_cycle_undirected(const Graph<Cost>& graph) {
  * @brief 有向グラフの閉路を 1 つ求める
  *
  * DFS を再帰を使わずに行う。O(n + m)
- * @return std::optional<std::vector<Edge>> 閉路の辺を、たどる順に並べたもの (e[k].dst == e[k + 1].src、末尾の dst は先頭の src)。閉路がなければ std::nullopt
- * 自己ループは長さ 1 の閉路になる。頂点の列は各辺の src で得られる
+ * @return std::optional<Path<Cost>> 閉路 (重みの和、たどる頂点、たどる辺)。vertices.front() == vertices.back()。閉路がなければ std::nullopt
+ * 自己ループは辺 1 本の閉路になる
  */
 template <typename Cost = long long>
-std::optional<std::vector<typename Graph<Cost>::Edge>> find_cycle_directed(const Graph<Cost>& graph) {
+std::optional<Path<Cost>> find_cycle_directed(const Graph<Cost>& graph) {
     using Edge = typename Graph<Cost>::Edge;
     // state: 0 は未訪問、1 は DFS のスタック上、2 は探索済み
     std::vector<int> state(graph.n, 0), iter(graph.n, 0);
@@ -218,7 +218,7 @@ std::optional<std::vector<typename Graph<Cost>::Edge>> find_cycle_directed(const
                 std::vector<Edge> res = {e};
                 for (long long w = v; w != u; w = in[w].src) res.push_back(in[w]);
                 std::reverse(res.begin(), res.end());
-                return res;
+                return internal_graph::make_path<Cost>(u, std::move(res));
             }
         }
     }
@@ -229,11 +229,11 @@ std::optional<std::vector<typename Graph<Cost>::Edge>> find_cycle_directed(const
  * @brief 無向グラフの閉路を 1 つ求める
  *
  * DFS を再帰を使わずに行う。O(n + m)
- * @return std::optional<std::vector<Edge>> 閉路の辺を、たどる順に並べたもの (e[k].dst == e[k + 1].src、末尾の dst は先頭の src)。閉路がなければ std::nullopt
- * 自己ループは長さ 1、多重辺は長さ 2 の閉路になる (同じ辺を戻ることはない)。頂点の列は各辺の src で得られる
+ * @return std::optional<Path<Cost>> 閉路 (重みの和、たどる頂点、たどる辺)。vertices.front() == vertices.back()。閉路がなければ std::nullopt
+ * 自己ループは辺 1 本、多重辺は辺 2 本の閉路になる (同じ辺を戻ることはない)
  */
 template <typename Cost = long long>
-std::optional<std::vector<typename Graph<Cost>::Edge>> find_cycle_undirected(const Graph<Cost>& graph) {
+std::optional<Path<Cost>> find_cycle_undirected(const Graph<Cost>& graph) {
     using Edge = typename Graph<Cost>::Edge;
     std::vector<int> state(graph.n, 0), iter(graph.n, 0);
     std::vector<Edge> in(graph.n);
@@ -261,7 +261,7 @@ std::optional<std::vector<typename Graph<Cost>::Edge>> find_cycle_undirected(con
                 std::vector<Edge> res = {e};
                 for (long long w = v; w != u; w = in[w].src) res.push_back(in[w]);
                 std::reverse(res.begin(), res.end());
-                return res;
+                return internal_graph::make_path<Cost>(u, std::move(res));
             }
             // state[u] == 2 にはならない (なるなら、u の側でこの辺により閉路が見つかっている)
         }
@@ -558,15 +558,26 @@ std::optional<Cost> minimum_steiner_tree(const Graph<Cost>& graph, const std::ve
 }
 
 /**
- * @brief 頂点集合 X をすべて含む重み最小の部分木を 1 つ求め、その辺の番号を昇順に返す
+ * @brief minimum_steiner_tree_restore の結果
+ *
+ * auto [cost, edges] = *minimum_steiner_tree_restore(g, X); のように受け取れる
+ */
+template <typename Cost>
+struct MinimumSteinerTree {
+    Cost cost;                                      //!< 使った辺の重みの総和
+    std::vector<typename Graph<Cost>::Edge> edges;  //!< 使った辺 (辺の番号順)
+};
+
+/**
+ * @brief 頂点集合 X をすべて含む重み最小の部分木を 1 つ求め、重みの総和と使った辺を返す
  * 計算量は minimum_steiner_tree と同じ
  * @param inf minimum_steiner_tree と同じ
- * @return std::optional<std::vector<long long>> 辺の番号のリスト。X を連結にできなければ std::nullopt
- * @note 無向グラフ。X が空なら空の vector
+ * @return std::optional<MinimumSteinerTree<Cost>> 重みの総和と、使った辺 (辺の番号順)。X を連結にできなければ std::nullopt
+ * @note 無向グラフ。X が空なら重み 0 で辺は空
  */
 template <typename Cost, typename T>
-std::optional<std::vector<long long>> minimum_steiner_tree_restore(const Graph<Cost>& graph, const std::vector<T>& X, Cost inf = std::numeric_limits<Cost>::max() / 4) {
-    if (X.empty()) return std::vector<long long>{};
+std::optional<MinimumSteinerTree<Cost>> minimum_steiner_tree_restore(const Graph<Cost>& graph, const std::vector<T>& X, Cost inf = std::numeric_limits<Cost>::max() / 4) {
+    if (X.empty()) return MinimumSteinerTree<Cost>{Cost{}, {}};
     const auto [dp, from] = internal_graph_util::steiner_dp(graph, X, inf, true);
     const long long root = internal_graph_util::steiner_root(dp, inf);
     if (root == -1) return std::nullopt;
@@ -587,5 +598,8 @@ std::optional<std::vector<long long>> minimum_steiner_tree_restore(const Graph<C
     }
     std::sort(res.begin(), res.end());
     res.erase(std::unique(res.begin(), res.end()), res.end());
-    return res;
+    const auto all = graph.edges();
+    MinimumSteinerTree<Cost> tree{dp[root].back(), {}};
+    for (long long id : res) tree.edges.push_back(all[id]);
+    return tree;
 }

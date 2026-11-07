@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/0488eb87696db73a49e2e3add8b80014b2d7920e/src/dp/subset-sum.hpp
+// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/dp/subset-sum.hpp
 
 /**
  * @file subset-sum.hpp
@@ -121,15 +121,25 @@ inline std::vector<bool> subset_sum(const std::vector<long long>& a, long long S
 }
 
 /**
- * @brief a の部分集合 (各要素は 1 回まで) で和がちょうど S になるものを 1 つ求め、その添字を昇順に返す O(N S / 64 + S)
+ * @brief subset_sum_restore・subset_sum_max_restore の結果
+ *
+ * auto [sum, indices] = subset_sum_max_restore(a, S); のように受け取れる
+ */
+struct SubsetSum {
+    long long sum;                   //!< 選んだ要素の和
+    std::vector<long long> indices;  //!< 選んだ添字の昇順のリスト
+};
+
+/**
+ * @brief a の部分集合 (各要素は 1 回まで) で和がちょうど S になるものを 1 つ求め、和と添字の昇順のリストを返す O(N S / 64 + S)
  * @param a 0 以上の整数の列
  * @return 作れなければ std::nullopt
  */
-inline std::optional<std::vector<long long>> subset_sum_restore(const std::vector<long long>& a, long long S) {
+inline std::optional<SubsetSum> subset_sum_restore(const std::vector<long long>& a, long long S) {
     std::vector<int> from;
     auto bits = internal_subset_sum::build(a, S, &from);
     if (!internal_subset_sum::test(bits, S)) return std::nullopt;
-    return internal_subset_sum::trace(a, from, S);
+    return SubsetSum{S, internal_subset_sum::trace(a, from, S)};
 }
 
 /**
@@ -162,26 +172,27 @@ inline long long subset_sum_max(const std::vector<long long>& a, long long S) {
 }
 
 /**
- * @brief 和が S 以下で最大になる部分集合 (各要素は 1 回まで) を 1 つ求め、その添字を昇順に返す
+ * @brief 和が S 以下で最大になる部分集合 (各要素は 1 回まで) を 1 つ求め、和と添字の昇順のリストを返す
  *
  * subset_sum_max と同じく、bitset O(N S / 64 + S) と半分全列挙 O(2^(N/2)) のうち計算量が小さい方を選ぶ
  * @param a 0 以上の整数の列
  */
-inline std::vector<long long> subset_sum_max_restore(const std::vector<long long>& a, long long S) {
+inline SubsetSum subset_sum_max_restore(const std::vector<long long>& a, long long S) {
     using namespace internal_subset_sum;
     int n = a.size();
     if (cost_bitset(n, S) <= cost_meet_in_the_middle(n)) {
         std::vector<int> from;
         auto bits = build(a, S, &from);
-        return trace(a, from, max_bit(bits, S));
+        const long long sum = max_bit(bits, S);
+        return {sum, trace(a, from, sum)};
     }
     MitmResult r = meet_in_the_middle(a, S);
-    std::vector<long long> res;
+    SubsetSum res{r.sum, {}};
     for (long long i = 0; i < n / 2; i++) {
-        if (r.left >> i & 1) res.push_back(i);
+        if (r.left >> i & 1) res.indices.push_back(i);
     }
     for (long long i = n / 2; i < n; i++) {
-        if (r.right >> (i - n / 2) & 1) res.push_back(i);
+        if (r.right >> (i - n / 2) & 1) res.indices.push_back(i);
     }
     return res;
 }

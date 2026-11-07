@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/0488eb87696db73a49e2e3add8b80014b2d7920e/src/math/f2-matrix.hpp
+// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/math/f2-matrix.hpp
 
 /**
  * @file f2-matrix.hpp
@@ -206,14 +206,11 @@ class F2Matrix {
         return T;
     }
 
+    struct ReducedRowEchelon;  // reduced_row_echelon の結果 (クラスの後で定義する)
     /**
-     * @brief 簡約化した行列と、各行の主成分の列 (個数がランク) O(nm min(n, m) / 64)
+     * @brief 簡約化した行列と、各行の主成分の列 (個数がランク) {matrix, pivots} O(nm min(n, m) / 64)
      */
-    std::pair<F2Matrix, std::vector<long long>> reduced_row_echelon() const {
-        F2Matrix A = *this;
-        std::vector<long long> pivots = reduce(A.a, n, w, m);
-        return {A, pivots};
-    }
+    ReducedRowEchelon reduced_row_echelon() const;
     /**
      * @brief ランク O(nm min(n, m) / 64)
      */
@@ -301,3 +298,18 @@ class F2Matrix {
         return os;
     }
 };
+
+/**
+ * @brief F2Matrix::reduced_row_echelon の結果
+ *
+ * auto [R, pivots] = A.reduced_row_echelon(); のように受け取れる
+ */
+struct F2Matrix::ReducedRowEchelon {
+    F2Matrix matrix;                //!< 簡約化した行列
+    std::vector<long long> pivots;  //!< 各行の主成分の列 (個数がランク)
+};
+inline F2Matrix::ReducedRowEchelon F2Matrix::reduced_row_echelon() const {
+    F2Matrix A = *this;
+    std::vector<long long> pivots = reduce(A.a, n, w, m);
+    return {A, pivots};
+}

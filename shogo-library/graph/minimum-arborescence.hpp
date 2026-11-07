@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "graph.hpp"
-// https://github.com/shogo314/shogo-library/blob/0488eb87696db73a49e2e3add8b80014b2d7920e/src/graph/minimum-arborescence.hpp
+// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/graph/minimum-arborescence.hpp
 
 namespace internal_minimum_arborescence {
 

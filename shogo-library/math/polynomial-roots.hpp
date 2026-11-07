@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "fps.hpp"
-// https://github.com/shogo314/shogo-library/blob/0488eb87696db73a49e2e3add8b80014b2d7920e/src/math/polynomial-roots.hpp
+// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/math/polynomial-roots.hpp
 
 namespace internal_polynomial_roots {
 // 1 次の因子の積 g (根は相異なり 0 でない) を、根ごとに分けて res に入れる
@@ -27,7 +27,7 @@ void split(const FPS<mint>& g, std::mt19937_64& rng, std::vector<mint>& res) {
     while (true) {
         // (x + a)^((p-1)/2) は、x + a が平方剰余になる根では 1、ならない根では -1 になる
         mint a = rng() % p;
-        FPS<mint> h = modpow(FPS<mint>{a, 1}, (p - 1) / 2, g);
+        FPS<mint> h = pow_mod(FPS<mint>{a, 1}, (p - 1) / 2, g);
         h -= 1;
         h.normalize();
         FPS<mint> c = gcd(g, h);
@@ -59,7 +59,7 @@ std::vector<mint> polynomial_roots(FPS<mint> f) {
     if (z > 0) res.push_back(mint(0)), f >>= z;
     if (f.size() > 1) {
         const long long p = mint::mod();
-        FPS<mint> xp = modpow(FPS<mint>{0, 1}, p, f);
+        FPS<mint> xp = pow_mod(FPS<mint>{0, 1}, p, f);
         xp -= FPS<mint>{0, 1};
         xp.normalize();
         FPS<mint> g = gcd(f, xp);

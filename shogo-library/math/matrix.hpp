@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/0488eb87696db73a49e2e3add8b80014b2d7920e/src/math/matrix.hpp
+// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/math/matrix.hpp
 
 /**
  * @file matrix.hpp
@@ -639,13 +639,14 @@ class Matrix {
         std::vector<std::vector<T>> basis;  //!< Ax = 0 の解空間の基底
     };
 
+    struct ReducedRowEchelon;  // reduced_row_echelon の結果 (クラスの後で定義する)
     /**
-     * @brief 簡約化した行列 (行基本変形で、各行の主成分を 1 にし、主成分のある列の他の成分を 0 にしたもの) と、各行の主成分の列
+     * @brief 簡約化した行列 (行基本変形で、各行の主成分を 1 にし、主成分のある列の他の成分を 0 にしたもの) と、各行の主成分の列 {matrix, pivots}
      * 主成分の列の個数がランク。0 だけの行は下にまとまる
      * @note 割り算を使うので、要素は体 (modint など) であること。浮動小数点型は誤差を考えないので使えない
      */
     [[nodiscard]]
-    std::pair<Matrix, std::vector<long long>> reduced_row_echelon() const {
+    ReducedRowEchelon reduced_row_echelon() const {
         Matrix A = *this;
         std::vector<long long> pivots = reduce(A.v, m);
         return {A, pivots};
@@ -818,6 +819,17 @@ class Matrix {
         }
         return d;
     }
+};
+
+/**
+ * @brief Matrix::reduced_row_echelon の結果
+ *
+ * auto [R, pivots] = A.reduced_row_echelon(); のように受け取れる
+ */
+template <class T, class OperatorProperty>
+struct Matrix<T, OperatorProperty>::ReducedRowEchelon {
+    Matrix matrix;                  //!< 簡約化した行列
+    std::vector<long long> pivots;  //!< 各行の主成分の列 (個数がランク)
 };
 
 /**

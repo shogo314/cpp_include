@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/0488eb87696db73a49e2e3add8b80014b2d7920e/src/utility/bit.hpp
+// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/utility/bit.hpp
 
 /**
  * @file bit.hpp
@@ -298,7 +298,7 @@ inline constexpr long long xor_upto(long long n) {
 /**
  * @brief 0 以上 n 以下の整数のうち、i ビット目が立っているものの数
  */
-inline constexpr long long count_bit_upto(long long n, long long i) {
+inline constexpr long long bit_count_upto(long long n, long long i) {
     assert(0 <= n && n < 0x7fffffffffffffffLL && 0 <= i && i < 63);
     // 2^(i + 1) ごとに、後半の 2^i 個で立つ
     unsigned long long m = static_cast<unsigned long long>(n) + 1, half = 1ULL << i, cycle = half << 1;

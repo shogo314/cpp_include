@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "graph.hpp"
-// https://github.com/shogo314/shogo-library/blob/0488eb87696db73a49e2e3add8b80014b2d7920e/src/graph/tree.hpp
+// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/graph/tree.hpp
 
 template <typename>
 class RootedTree;
@@ -52,7 +52,7 @@ struct Tree : private Graph<Cost> {
     /**
      * @brief Graph として見る
      *
-     * Graph を受け取る関数 (shortest_path など) に渡すときに使う
+     * Graph を受け取る関数 (shortest_path_dijkstra など) に渡すときに使う
      * @return const Graph<Cost>& この木を表すグラフ
      */
     const Graph<Cost>& graph() const { return *this; }

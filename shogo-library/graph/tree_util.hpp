@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "tree.hpp"
-// https://github.com/shogo314/shogo-library/blob/0488eb87696db73a49e2e3add8b80014b2d7920e/src/graph/tree_util.hpp
+// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/graph/tree_util.hpp
 
 namespace internal_tree_util {
 
@@ -85,28 +85,17 @@ Cost tree_diameter(const Tree<Cost>& tree, bool weighted = true) {
 }
 
 /**
- * @brief 木の直径の結果
- *
- * auto [length, vertices, edges] = tree_diameter_restore(tree); のように受け取れる
- */
-template <typename Cost>
-struct TreeDiameter {
-    Cost length;                                   //!< 直径の長さ
-    std::vector<long long> vertices;               //!< 一方の端点から他方の端点までの頂点の列 (頂点数 1 なら {0})
-    std::vector<typename Tree<Cost>::Edge> edges;  //!< vertices の順にたどる辺の列 (edges[k] は vertices[k] から vertices[k + 1] へ。頂点数 1 なら空)
-};
-
-/**
  * @brief 木の直径を、長さ・頂点の列・辺の列で求める
  *
+ * 一方の端点から他方の端点までの経路を返す。頂点数 1 なら長さ 0、頂点は {0}、辺は空
  * @param tree 木 (頂点数 1 以上、辺の重みは非負)
- * @param weighted = true 重み付きか。false なら辺の本数で測る
- * @return TreeDiameter<Cost> 長さ・頂点の列・辺の列
+ * @param weighted = true 重み付きか。false なら辺の本数で測る (cost も辺の本数)
+ * @return Path<Cost> 長さ cost・頂点の列 vertices・辺の列 edges
  */
 template <typename Cost>
-TreeDiameter<Cost> tree_diameter_restore(const Tree<Cost>& tree, bool weighted = true) {
+Path<Cost> tree_diameter_restore(const Tree<Cost>& tree, bool weighted = true) {
     auto [u, v, dist, prev] = internal_tree_util::diameter_endpoints(tree, weighted);
-    TreeDiameter<Cost> res{dist[v], {v}, {}};
+    Path<Cost> res{dist[v], {v}, {}};
     for (long long w = v; w != u; w = prev[w].src) {
         res.vertices.push_back(prev[w].src);
         res.edges.push_back(prev[w]);

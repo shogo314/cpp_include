@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/0488eb87696db73a49e2e3add8b80014b2d7920e/src/dp/knapsack.hpp
+// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/dp/knapsack.hpp
 
 /**
  * @file knapsack.hpp
@@ -139,9 +139,9 @@ inline long long knapsack(const std::vector<long long>& v, const std::vector<lon
 /**
  * @brief 個数制限なしナップサック (同じ品物を何個でも選べる) O(N W)
  */
-inline long long unbounded_knapsack(const std::vector<long long>& v, const std::vector<long long>& w, long long W) {
+inline long long knapsack_unbounded(const std::vector<long long>& v, const std::vector<long long>& w, long long W) {
     internal_knapsack::check(v, w, W);
-    for (int i = 0; i < static_cast<int>(v.size()); i++) assert((w[i] > 0 || v[i] == 0) && "unbounded_knapsack: infinite value");
+    for (int i = 0; i < static_cast<int>(v.size()); i++) assert((w[i] > 0 || v[i] == 0) && "knapsack_unbounded: infinite value");
     std::vector<long long> dp(W + 1, 0);
     for (int i = 0; i < static_cast<int>(v.size()); i++) {
         if (w[i] == 0 || w[i] > W) continue;
@@ -154,7 +154,7 @@ inline long long unbounded_knapsack(const std::vector<long long>& v, const std::
  * @brief 個数制限付きナップサック (品物 i は m[i] 個まで選べる、重さについての DP) O(N W)
  * 重さを w[i] で割った余りごとに、スライド最大値を使う
  */
-inline long long bounded_knapsack_by_weight(const std::vector<long long>& v, const std::vector<long long>& w,
+inline long long knapsack_bounded_by_weight(const std::vector<long long>& v, const std::vector<long long>& w,
                                             const std::vector<long long>& m, long long W) {
     internal_knapsack::check(v, w, W);
     assert(m.size() == v.size());
@@ -187,7 +187,7 @@ inline long long bounded_knapsack_by_weight(const std::vector<long long>& v, con
 /**
  * @brief 個数制限付きナップサック (二進分割で 0/1 ナップサックにして、価値についての DP) O(V sum log m[i]) (V は v[i] m[i] の和)
  */
-inline long long bounded_knapsack_by_value(const std::vector<long long>& v, const std::vector<long long>& w,
+inline long long knapsack_bounded_by_value(const std::vector<long long>& v, const std::vector<long long>& w,
                                            const std::vector<long long>& m, long long W) {
     internal_knapsack::check(v, w, W);
     assert(m.size() == v.size());
@@ -199,9 +199,9 @@ inline long long bounded_knapsack_by_value(const std::vector<long long>& v, cons
 /**
  * @brief 個数制限付きナップサック。入力の大きさから、計算量が最も小さいアルゴリズムを選ぶ
  *
- * bounded_knapsack_by_weight O(N W)、二進分割した後の 0/1 ナップサックの価値についての DP か半分全列挙のいずれか
+ * knapsack_bounded_by_weight O(N W)、二進分割した後の 0/1 ナップサックの価値についての DP か半分全列挙のいずれか
  */
-inline long long bounded_knapsack(const std::vector<long long>& v, const std::vector<long long>& w,
+inline long long knapsack_bounded(const std::vector<long long>& v, const std::vector<long long>& w,
                                   const std::vector<long long>& m, long long W) {
     using namespace internal_knapsack;
     check(v, w, W);
@@ -221,7 +221,7 @@ inline long long bounded_knapsack(const std::vector<long long>& v, const std::ve
     long double cw = cost_by_weight(n, W);
     long double cv = pieces > 1e9 ? std::numeric_limits<long double>::infinity() : cost_by_value(static_cast<int>(pieces), value_sum);
     long double cm = pieces > 80 ? std::numeric_limits<long double>::infinity() : cost_meet_in_the_middle(static_cast<int>(pieces));
-    if (cw <= cv && cw <= cm) return bounded_knapsack_by_weight(v, w, m, W);
+    if (cw <= cv && cw <= cm) return knapsack_bounded_by_weight(v, w, m, W);
     std::vector<long long> v2, w2;
     binary_split(v, w, m, W, v2, w2);
     if (cv <= cm) return knapsack_by_value(v2, w2, W);

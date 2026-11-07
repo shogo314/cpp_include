@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/0488eb87696db73a49e2e3add8b80014b2d7920e/src/dp/slope-trick.hpp
+// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/dp/slope-trick.hpp
 
 /**
  * @file slope-trick.hpp
@@ -61,9 +61,16 @@ class SlopeTrick {
      */
     T min() const { return min_f; }
     /**
+     * @brief argmin の結果。f が最小値をとる区間 [lower, upper]
+     */
+    struct Argmin {
+        T lower;  //!< 左端 (なければ -inf())
+        T upper;  //!< 右端 (なければ inf())
+    };
+    /**
      * @brief f が最小値をとる区間 [lower, upper]。端がなければ -inf()、inf()
      */
-    std::pair<T, T> argmin() const { return {top_l(), top_r()}; }
+    Argmin argmin() const { return {top_l(), top_r()}; }
     /**
      * @brief f に定数 a を足す
      */
