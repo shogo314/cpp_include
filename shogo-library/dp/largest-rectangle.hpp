@@ -1,5 +1,4 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/dp/largest-rectangle.hpp
 
 /**
  * @file largest-rectangle.hpp
@@ -10,6 +9,9 @@
 #include <cassert>
 #include <utility>
 #include <vector>
+
+#include "../utility/range.hpp"
+// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/dp/largest-rectangle.hpp
 
 /**
  * @brief ヒストグラム (幅 1 の棒が並んだもの) に含まれる長方形の面積の最大値 O(n)
@@ -38,36 +40,40 @@ long long largest_rectangle_in_histogram(const std::vector<T>& h) {
 }
 
 /**
- * @brief h 行 w 列のグリッドで、f(i, j) が真のマスだけからなる長方形のマスの個数の最大値 O(hw)
+ * @brief grid の行・列の範囲で、f(i, j) が真のマスだけからなる長方形のマスの個数の最大値 O(hw)
  *
  * 各行を底辺として、上に続く真のマスの個数をヒストグラムにする
  * @param f マス (i, j) を使えるか
  */
 template <typename F>
-long long largest_rectangle(long long h, long long w, const F& f) {
-    std::vector<long long> height(w, 0);
+long long largest_rectangle(const Grid& grid, const F& f) {
+    std::vector<long long> height(grid.cols.size(), 0);
     long long res = 0;
-    for (long long i = 0; i < h; i++) {
-        for (long long j = 0; j < w; j++) height[j] = f(i, j) ? height[j] + 1 : 0;
+    for (long long i : grid.rows) {
+        for (long long j : grid.cols) {
+            long long k = grid.cols.index(j);
+            height[k] = f(i, j) ? height[k] + 1 : 0;
+        }
         res = std::max(res, largest_rectangle_in_histogram(height));
     }
     return res;
 }
 
 /**
- * @brief h 行 w 列のグリッドで、f(i, j) が真のマスだけからなる正方形の辺の長さの最大値 O(hw)
+ * @brief grid の行・列の範囲で、f(i, j) が真のマスだけからなる正方形の辺の長さの最大値 O(hw)
  *
  * dp[i][j] = (i, j) を右下とする正方形の辺の長さの最大値 = min(上, 左, 左上) + 1
  * @param f マス (i, j) を使えるか
  */
 template <typename F>
-long long largest_square(long long h, long long w, const F& f) {
-    std::vector<long long> dp(w + 1, 0), prev(w + 1, 0);
+long long largest_square(const Grid& grid, const F& f) {
+    std::vector<long long> dp(grid.cols.size() + 1, 0), prev(grid.cols.size() + 1, 0);
     long long res = 0;
-    for (long long i = 0; i < h; i++) {
-        for (long long j = 0; j < w; j++) {
-            dp[j + 1] = f(i, j) ? std::min({prev[j + 1], dp[j], prev[j]}) + 1 : 0;
-            res = std::max(res, dp[j + 1]);
+    for (long long i : grid.rows) {
+        for (long long j : grid.cols) {
+            long long k = grid.cols.index(j);
+            dp[k + 1] = f(i, j) ? std::min({prev[k + 1], dp[k], prev[k]}) + 1 : 0;
+            res = std::max(res, dp[k + 1]);
         }
         std::swap(dp, prev);
     }

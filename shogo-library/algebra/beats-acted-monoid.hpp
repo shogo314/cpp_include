@@ -14,7 +14,7 @@
 #include <utility>
 
 #include "monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/algebra/beats-acted-monoid.hpp
+// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/algebra/beats-acted-monoid.hpp
 
 namespace beats_acted_monoid {
 

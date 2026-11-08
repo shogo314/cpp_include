@@ -15,7 +15,7 @@
 #include <vector>
 
 #include "traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/utility/vector_func.hpp
+// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/utility/vector_func.hpp
 
 /**
  * @brief 値を proj で写して comp の順に安定ソートしたときの添字の並び (APL の grade up)

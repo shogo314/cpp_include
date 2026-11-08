@@ -1,9 +1,9 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/utility/range.hpp
+// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/utility/range.hpp
 
 /**
  * @file range.hpp
- * @brief Python の range のような整数列と、その直積の Rect
+ * @brief Python の range のような整数列と、その直積の Grid
  */
 
 #include <cassert>
@@ -438,7 +438,7 @@ struct Range {
  * @brief 2 つの Range の直積 rows × cols
  * (i, j) を i の昇順、同じ i では j の昇順 (行優先) に並べたものとして扱う
  */
-struct Rect {
+struct Grid {
    public:
     using value_type = std::pair<long long, long long>;
     using size_type = long long;
@@ -454,28 +454,28 @@ struct Rect {
     /**
      * @brief [0, h) × [0, w)
      */
-    constexpr Rect(long long h, long long w) : rows(h), cols(w), width(cols.size()) {}
-    constexpr Rect(const Range& _rows, const Range& _cols) : rows(_rows), cols(_cols), width(cols.size()) {}
-    constexpr Rect(const Rect& o) = default;
-    Rect& operator=(const Rect& o) = delete;
+    constexpr Grid(long long h, long long w) : rows(h), cols(w), width(cols.size()) {}
+    constexpr Grid(const Range& _rows, const Range& _cols) : rows(_rows), cols(_cols), width(cols.size()) {}
+    constexpr Grid(const Grid& o) = default;
+    Grid& operator=(const Grid& o) = delete;
 
     struct const_iterator {
        public:
-        using difference_type = Rect::difference_type;
-        using value_type = Rect::value_type;
+        using difference_type = Grid::difference_type;
+        using value_type = Grid::value_type;
         using pointer = void;
         using reference = value_type;
         using iterator_category = std::forward_iterator_tag;
 
        private:
-        const Rect* rect = nullptr;
+        const Grid* rect = nullptr;
         long long w = 0;   // cols.size()
         long long ic = 0;  // rows の何番目か
         long long jc = 0;  // cols の何番目か
 
        public:
         constexpr const_iterator() noexcept = default;
-        constexpr const_iterator(const Rect* _rect, long long _w, long long _ic, long long _jc) noexcept
+        constexpr const_iterator(const Grid* _rect, long long _w, long long _ic, long long _jc) noexcept
             : rect(_rect), w(_w), ic(_ic), jc(_jc) {}
         constexpr value_type operator*() const noexcept {
             return {rect->rows.start + ic * rect->rows.step, rect->cols.start + jc * rect->cols.step};
@@ -547,7 +547,7 @@ struct Rect {
     }
 
    private:
-    // 近傍の方向 (rows・cols の中での位置の差) を Rect の順に並べたもの。先頭 4 つは上下左右だけを並べた別の表
+    // 近傍の方向 (rows・cols の中での位置の差) を Grid の順に並べたもの。先頭 4 つは上下左右だけを並べた別の表
     // 4 近傍と 8 近傍の境目が分かるように 2 行に分けているので整形しない
     // clang-format off
     static constexpr int neighbor_dirs[12][2] = {{-1, 0}, {0, -1}, {0, 1}, {1, 0},
@@ -557,16 +557,16 @@ struct Rect {
    public:
     /**
      * @brief neighbors4 / neighbors8 の戻り値 (範囲 for で使う)
-     * 作るときに Rect に含まれる方向をビットで持っておき、立っているビットを順に返す
+     * 作るときに Grid に含まれる方向をビットで持っておき、立っているビットを順に返す
      */
     struct Neighbors {
         long long i, j, row_step, col_step;
         int first;      // neighbor_dirs[first + k] がビット k の方向
-        unsigned mask;  // Rect に含まれる方向
+        unsigned mask;  // Grid に含まれる方向
 
         struct iterator {
             using difference_type = std::ptrdiff_t;
-            using value_type = Rect::value_type;
+            using value_type = Grid::value_type;
             using pointer = void;
             using reference = value_type;
             using iterator_category = std::forward_iterator_tag;
@@ -608,7 +608,7 @@ struct Rect {
 
    public:
     /**
-     * @brief (i, j) の上下左右のうち Rect に含まれるものを、Rect の順に返す
+     * @brief (i, j) の上下左右のうち Grid に含まれるものを、Grid の順に返す
      * 隣は rows・cols の中で隣り合う要素 (i ± rows.step など)。(i, j) が含まれないとエラー
      */
     constexpr Neighbors neighbors4(long long i, long long j) const {
@@ -618,7 +618,7 @@ struct Rect {
         return neighbors4(p.first, p.second);
     }
     /**
-     * @brief (i, j) を囲む 8 つのうち Rect に含まれるものを、Rect の順に返す
+     * @brief (i, j) を囲む 8 つのうち Grid に含まれるものを、Grid の順に返す
      */
     constexpr Neighbors neighbors8(long long i, long long j) const {
         return neighbors(i, j, 4, 12);
@@ -628,20 +628,20 @@ struct Rect {
     }
 
     static std::string type_str() {
-        return "Rect";
+        return "Grid";
     }
     std::string initializer_str() const {
         return "{" + rows.initializer_str() + ", " + cols.initializer_str() + "}";
     }
     std::string repr() const {
-        return "Rect(" + rows.repr() + ", " + cols.repr() + ")";
+        return "Grid(" + rows.repr() + ", " + cols.repr() + ")";
     }
 
-    constexpr friend bool operator==(const Rect& a, const Rect& b) noexcept {
+    constexpr friend bool operator==(const Grid& a, const Grid& b) noexcept {
         if (a.empty() && b.empty()) return true;
         return a.rows == b.rows && a.cols == b.cols;
     }
-    constexpr friend bool operator!=(const Rect& a, const Rect& b) noexcept {
+    constexpr friend bool operator!=(const Grid& a, const Grid& b) noexcept {
         return !(a == b);
     }
 };

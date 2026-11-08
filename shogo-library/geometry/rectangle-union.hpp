@@ -1,5 +1,4 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/geometry/rectangle-union.hpp
 
 /**
  * @file rectangle-union.hpp
@@ -7,10 +6,12 @@
  */
 
 #include <algorithm>
-#include <array>
 #include <cassert>
 #include <tuple>
 #include <vector>
+
+#include "rectangle.hpp"
+// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/geometry/rectangle-union.hpp
 
 /**
  * @brief 軸に平行な長方形 [l, r) × [d, u) の和集合の面積 (走査線) O(n log n)
@@ -21,7 +22,7 @@
  * @return T 面積
  */
 template <typename T>
-T rectangle_union_area(const std::vector<std::array<T, 4>>& rects) {
+T rectangle_union_area(const std::vector<Rectangle<T>>& rects) {
     std::vector<T> ys;
     for (const auto& [l, d, r, u] : rects) {
         assert(l <= r && d <= u);

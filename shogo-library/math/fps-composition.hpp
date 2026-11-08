@@ -11,7 +11,7 @@
 
 #include "convolution.hpp"
 #include "fps.hpp"
-// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/math/fps-composition.hpp
+// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/math/fps-composition.hpp
 
 namespace internal_fps_composition {
 // 2 変数多項式 A(x, y) を、x の次数ごとに y の係数を幅 w で並べた 1 次元の配列で持つ (A[i * w + j] が x^i y^j の係数)

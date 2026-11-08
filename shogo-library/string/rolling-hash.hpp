@@ -14,8 +14,9 @@
 #include <utility>
 #include <vector>
 
+#include "../utility/range.hpp"
 #include "../utility/traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/string/rolling-hash.hpp
+// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/string/rolling-hash.hpp
 
 struct RHString;
 class RollingHash2D;
@@ -377,9 +378,12 @@ class RollingHash2D {
     }
 
     /**
-     * @brief 行 [i1, i2)、列 [j1, j2) の長方形のハッシュ O(1) (初回は長さ分)
+     * @brief region のハッシュ O(1) (初回は長さ分)。行・列の step は 1
      */
-    ull query(const std::vector<std::vector<ull>>& hash, long long i1, long long j1, long long i2, long long j2) {
+    ull query(const std::vector<std::vector<ull>>& hash, const Grid& region) {
+        assert(region.rows.step == 1 && region.cols.step == 1);
+        const long long i1 = region.rows.start, i2 = region.rows.stop;
+        const long long j1 = region.cols.start, j2 = region.cols.stop;
         assert(0 <= i1 && i1 <= i2 && i2 < static_cast<long long>(hash.size()));
         assert(0 <= j1 && j1 <= j2 && j2 < static_cast<long long>(hash[0].size()));
         rh1.expand(i2 - i1);
@@ -407,11 +411,9 @@ std::vector<std::pair<long long, long long>> pattern_match_2d(const Grid1& text,
     if (ph > h || pw > w) return res;
     RollingHash2D rh;
     auto th = rh.build(text), pht = rh.build(pattern);
-    unsigned long long target = rh.query(pht, 0, 0, ph, pw);
-    for (long long i = 0; i + ph <= h; i++) {
-        for (long long j = 0; j + pw <= w; j++) {
-            if (rh.query(th, i, j, i + ph, j + pw) == target) res.emplace_back(i, j);
-        }
+    unsigned long long target = rh.query(pht, Grid(ph, pw));
+    for (auto [i, j] : Grid(h - ph + 1, w - pw + 1)) {
+        if (rh.query(th, Grid({i, i + ph}, {j, j + pw})) == target) res.emplace_back(i, j);
     }
     return res;
 }

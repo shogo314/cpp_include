@@ -13,7 +13,7 @@
 
 #include "../math/convolution.hpp"
 #include "../math/modint.hpp"
-// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/string/wildcard-matching.hpp
+// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/string/wildcard-matching.hpp
 
 /**
  * @brief text の中で pattern と一致する開始位置を昇順に返す。wildcard の要素はどの要素とも一致する (text と pattern の両方で使える) O((N + M) log (N + M))

@@ -14,9 +14,10 @@
 #include <utility>
 #include <vector>
 
-#include "segment.hpp"
+#include "line.hpp"
+#include "triangle.hpp"
 #include "vector.hpp"
-// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/geometry/circle.hpp
+// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/geometry/circle.hpp
 
 /**
  * @brief 円
@@ -59,7 +60,8 @@ constexpr int circle_relation(const Circle<T>& c1, const Circle<T>& c2) {
  * @brief 三角形 abc の内接円。浮動小数点型限定。3点が一直線上にあってはならない
  */
 template <typename T>
-Circle<T> incircle(const Vector<T, 2>& a, const Vector<T, 2>& b, const Vector<T, 2>& c) {
+Circle<T> incircle(const Triangle<T>& triangle) {
+    const auto& [a, b, c] = triangle;
     static_assert(std::is_floating_point_v<T>, "incircle: T must be a floating point type");
     assert(cross(b - a, c - a) != 0 && "incircle: collinear points");
     T la = (b - c).abs(), lb = (c - a).abs(), lc = (a - b).abs();
@@ -72,7 +74,8 @@ Circle<T> incircle(const Vector<T, 2>& a, const Vector<T, 2>& b, const Vector<T,
  * @brief 三角形 abc の外接円。浮動小数点型限定。3点が一直線上にあってはならない
  */
 template <typename T>
-Circle<T> circumcircle(const Vector<T, 2>& a, const Vector<T, 2>& b, const Vector<T, 2>& c) {
+Circle<T> circumcircle(const Triangle<T>& triangle) {
+    const auto& [a, b, c] = triangle;
     static_assert(std::is_floating_point_v<T>, "circumcircle: T must be a floating point type");
     Vector<T, 2> u = b - a, v = c - a;
     T d = cross(u, v) * 2;
@@ -88,9 +91,10 @@ Circle<T> circumcircle(const Vector<T, 2>& a, const Vector<T, 2>& b, const Vecto
  * @param eps 接する (交点が1個) とみなす、中心と直線の距離と半径の差
  */
 template <typename T>
-std::vector<Vector<T, 2>> circle_line_intersection(const Circle<T>& c, const Vector<T, 2>& p1, const Vector<T, 2>& p2, T eps = 1e-9) {
+std::vector<Vector<T, 2>> circle_line_intersection(const Circle<T>& c, const Line<T>& line, T eps = 1e-9) {
+    const auto& [p1, p2] = line;
     static_assert(std::is_floating_point_v<T>, "circle_line_intersection: T must be a floating point type");
-    Vector<T, 2> h = projection(p1, p2, c.c);
+    Vector<T, 2> h = projection(line, c.c);
     T d = (h - c.c).abs();
     if (d > c.r + eps) return {};
     // 接するかどうかは、中心と直線の距離と半径の差で判定する
@@ -153,16 +157,23 @@ std::vector<Vector<T, 2>> tangent_points(const Circle<T>& c, const Vector<T, 2>&
     return res;
 }
 
+/** @brief 共通接線と、各円との接点 */
+template <typename T>
+struct CommonTangent {
+    Line<T> line;
+    Vector<T, 2> contact1, contact2;
+};
+
 /**
  * @brief 2つの円の共通接線 (0〜4本)。浮動小数点型限定
  *
  * 同心で半径が違うなら空を返す。同じ円 (中心間の距離と半径の差がともに eps 以下) は接線が無数にあるので assert で落とす。
- * 各接線を (c1 との接点, c2 との接点) の組で返し、c1 との接点の座標の昇順に並べる。
+ * 各接線を CommonTangent {line, contact1, contact2} で返し、c1 との接点の座標の昇順に並べる。
  * 2つの円が接する点での接線は、2つの接点が同じ点になる (接線は中心を結ぶ直線に垂直)
  * @param eps 接する (その種類の接線が1本) とみなす、中心間の距離と半径の和・差の差
  */
 template <typename T>
-std::vector<std::pair<Vector<T, 2>, Vector<T, 2>>> common_tangents(const Circle<T>& c1, const Circle<T>& c2, T eps = 1e-9) {
+std::vector<CommonTangent<T>> common_tangents(const Circle<T>& c1, const Circle<T>& c2, T eps = 1e-9) {
     static_assert(std::is_floating_point_v<T>, "common_tangents: T must be a floating point type");
     Vector<T, 2> d = c2.c - c1.c;
     T d2 = d.squared_norm(), dist = std::sqrt(d2);
@@ -170,7 +181,7 @@ std::vector<std::pair<Vector<T, 2>, Vector<T, 2>>> common_tangents(const Circle<
         assert(std::abs(c1.r - c2.r) > eps && "common_tangents: same circles");
         return {};
     }
-    std::vector<std::pair<Vector<T, 2>, Vector<T, 2>>> res;
+    std::vector<CommonTangent<T>> res;
     // 共通外接線は c2 の半径を r2、共通内接線は -r2 として同じ式で求める
     for (T r2 : {c2.r, -c2.r}) {
         T dr = c1.r - r2;
@@ -180,11 +191,18 @@ std::vector<std::pair<Vector<T, 2>, Vector<T, 2>>> common_tangents(const Circle<
         for (int sign : {1, -1}) {
             // 中心から接点への単位ベクトル
             Vector<T, 2> v = (d * dr + Vector<T, 2>(-d[1], d[0]) * (h * sign)) / d2;
-            res.push_back({c1.c + v * c1.r, c2.c + v * r2});
+            Vector<T, 2> p = c1.c + v * c1.r, q = c2.c + v * r2;
+            // 接点が一致するときは半径に垂直な方向を使う。
+            // 大きな座標でも方向を足した点が丸めで p に戻らないよう、座標に合わせて拡大する。
+            T scale = std::max({T(1), std::abs(p[0]), std::abs(p[1])});
+            Vector<T, 2> second = touch || p == q ? p + Vector<T, 2>(-v[1], v[0]) * scale : q;
+            res.push_back({Line(p, second), p, q});
             if (touch) break;
         }
     }
-    std::sort(res.begin(), res.end());
+    std::sort(res.begin(), res.end(), [](const auto& a, const auto& b) {
+        return a.contact1 < b.contact1 || (!(b.contact1 < a.contact1) && a.contact2 < b.contact2);
+    });
     return res;
 }
 
@@ -294,7 +312,7 @@ struct EnclosingCircle {
             const Vector<double, 2> a = to(support[0]), b = to(support[1]);
             return Circle<double>((a + b) / 2.0, (a - b).abs() / 2);
         }
-        return circumcircle(to(support[0]), to(support[1]), to(support[2]));
+        return circumcircle(Triangle(to(support[0]), to(support[1]), to(support[2])));
     }
 };
 

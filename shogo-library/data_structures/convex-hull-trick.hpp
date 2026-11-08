@@ -15,7 +15,7 @@
 #include <vector>
 
 #include "../utility/traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/data_structures/convex-hull-trick.hpp
+// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/data_structures/convex-hull-trick.hpp
 
 /**
  * @brief 追加される傾きが単調とは限らない場合のConvex Hull Trick

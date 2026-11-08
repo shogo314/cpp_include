@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "vector.hpp"
-// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/geometry/polygon.hpp
+// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/geometry/polygon.hpp
 
 /**
  * @brief 多角形の符号付き面積の2倍
@@ -214,6 +214,7 @@ std::vector<Vector<T, 2>> convex_hull(const std::vector<Vector<T, 2>>& _points, 
 template <typename T>
 std::vector<Vector<T, 2>> convex_cut(const std::vector<Vector<T, 2>>& polygon, const Vector<T, 2>& p1, const Vector<T, 2>& p2) {
     static_assert(std::is_floating_point_v<T>, "convex_cut: T must be a floating point type");
+    assert(p1 != p2 && "convex_cut: degenerate line");
     std::vector<Vector<T, 2>> res;
     const int n = static_cast<int>(polygon.size());
     for (int i = 0; i < n; i++) {

@@ -1,5 +1,4 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/data_structures/kd-tree.hpp
 
 /**
  * @file kd-tree.hpp
@@ -12,6 +11,9 @@
 #include <utility>
 #include <vector>
 
+#include "../geometry/rectangle.hpp"
+// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/data_structures/kd-tree.hpp
+
 /**
  * @brief 2 次元の点の集合 (静的) について、長方形領域に入る点を列挙する kd-tree
  *
@@ -19,7 +21,7 @@
  * 列挙は O(√n + 列挙する個数)、個数を数えるのも O(√n)
  * 例:
  * KDTree<long long> kd(points);  // points[i] = {x, y}
- * auto ids = kd.enumerate(xl, xr, yl, yr);  // xl <= x < xr かつ yl <= y < yr の点の添字
+ * auto ids = kd.enumerate(Rectangle(xl, yl, xr, yr));  // xl <= x < xr かつ yl <= y < yr の点の添字
  *
  * @tparam T 座標の型
  */
@@ -50,7 +52,8 @@ class KDTree {
     }
     // 長方形に入る点を、1 点ずつ point(i) で、部分木ごと入るなら range(l, r) で報告する (i, l, r は木の順の位置)
     template <typename F, typename G>
-    void query(long long l, long long r, T xl, T xr, T yl, T yr, const F& point, const G& range) const {
+    void query(long long l, long long r, const Rectangle<T>& rect, const F& point, const G& range) const {
+        const auto& [xl, yl, xr, yr] = rect;
         if (l >= r) return;
         long long m = (l + r) / 2;
         if (max_x[m] < xl || xr <= min_x[m] || max_y[m] < yl || yr <= min_y[m]) return;
@@ -58,9 +61,9 @@ class KDTree {
             range(l, r);
             return;
         }
-        if (xl <= x[m] && x[m] < xr && yl <= y[m] && y[m] < yr) point(m);
-        query(l, m, xl, xr, yl, yr, point, range);
-        query(m + 1, r, xl, xr, yl, yr, point, range);
+        if (rect.contains(x[m], y[m])) point(m);
+        query(l, m, rect, point, range);
+        query(m + 1, r, rect, point, range);
     }
 
    public:
@@ -80,17 +83,17 @@ class KDTree {
     /**
      * @brief xl <= x < xr かつ yl <= y < yr の点の添字 (順不同)
      */
-    std::vector<long long> enumerate(T xl, T xr, T yl, T yr) const {
+    std::vector<long long> enumerate(const Rectangle<T>& rect) const {
         std::vector<long long> res;
-        query(0, n, xl, xr, yl, yr, [&](long long i) { res.push_back(ord[i]); }, [&](long long l, long long r) { res.insert(res.end(), ord.begin() + l, ord.begin() + r); });
+        query(0, n, rect, [&](long long i) { res.push_back(ord[i]); }, [&](long long l, long long r) { res.insert(res.end(), ord.begin() + l, ord.begin() + r); });
         return res;
     }
     /**
      * @brief xl <= x < xr かつ yl <= y < yr の点の個数
      */
-    long long count(T xl, T xr, T yl, T yr) const {
+    long long count(const Rectangle<T>& rect) const {
         long long res = 0;
-        query(0, n, xl, xr, yl, yr, [&](long long) { res++; }, [&](long long l, long long r) { res += r - l; });
+        query(0, n, rect, [&](long long) { res++; }, [&](long long l, long long r) { res += r - l; });
         return res;
     }
 };

@@ -13,9 +13,9 @@
 #include <type_traits>
 #include <vector>
 
-#include "segment-3d.hpp"
+#include "line.hpp"
 #include "vector.hpp"
-// https://github.com/shogo314/shogo-library/blob/a27de20f03b13a92daaf6af229791aeead4c70c9/src/geometry/sphere.hpp
+// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/geometry/sphere.hpp
 
 /**
  * @brief 球
@@ -50,20 +50,23 @@ struct SpaceCircle {
 };
 
 /**
- * @brief 球 s と直線 p1p2 の交点 (0〜2個、p1 から p2 の向きに順に並べる)。浮動小数点型限定。p1 != p2 であること
+ * @brief 球 s と直線 p1p2 の交点 (0〜2個、座標の辞書順)。浮動小数点型限定。p1 != p2 であること
  * @param eps 接する (交点が1個) とみなす、中心と直線の距離と半径の差
  */
 template <typename T>
-std::vector<Vector<T, 3>> sphere_line_intersection(const Sphere<T>& s, const Vector<T, 3>& p1, const Vector<T, 3>& p2, T eps = 1e-9) {
+std::vector<Vector<T, 3>> sphere_line_intersection(const Sphere<T>& s, const Line<T, 3>& line, T eps = 1e-9) {
+    const auto& [p1, p2] = line;
     static_assert(std::is_floating_point_v<T>, "sphere_line_intersection: T must be a floating point type");
-    Vector<T, 3> h = projection(p1, p2, s.c);
+    Vector<T, 3> h = projection(line, s.c);
     T d = (h - s.c).abs();
     if (d > s.r + eps) return {};
     // 接するかどうかは、中心と直線の距離と半径の差で判定する
     if (d >= s.r - eps) return {h};
     T t = std::sqrt(s.r * s.r - d * d);
     Vector<T, 3> u = (p2 - p1) / static_cast<T>((p2 - p1).abs());
-    return {h - u * t, h + u * t};
+    std::vector<Vector<T, 3>> result = {h - u * t, h + u * t};
+    std::sort(result.begin(), result.end());
+    return result;
 }
 
 /**
