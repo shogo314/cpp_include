@@ -8,13 +8,15 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <initializer_list>
 #include <ostream>
 #include <type_traits>
 #include <utility>
 #include <vector>
 
 #include "../algebra/acted-monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/data_structures/rbst.hpp
+#include "../utility/traits.hpp"
+// https://github.com/shogo314/shogo-library/blob/c965efc39d855af98a1bcf96c2b63f175ea40371/src/data_structures/rbst.hpp
 
 namespace internal_rbst {
 template <typename M, typename = void>
@@ -191,12 +193,14 @@ class RBST {
         update(t);
         return {t, b};
     }
-    int build(const std::vector<S>& v, int lo, int hi) {
+    template <class It>
+    int build(It& it, int lo, int hi) {
         if (lo >= hi) return 0;
         int mid = (lo + hi) / 2;
-        int lc = build(v, lo, mid);
-        int t = new_node(v[mid]);
-        int rc = build(v, mid + 1, hi);
+        int lc = build(it, lo, mid);
+        int t = new_node(S(*it));
+        ++it;
+        int rc = build(it, mid + 1, hi);
         node(t).l = lc, node(t).r = rc;
         update(t);
         return t;
@@ -252,7 +256,17 @@ class RBST {
     /**
      * @brief v の列 O(n)
      */
-    explicit RBST(const std::vector<S>& v, M m = M()) : m(std::move(m)) { root = build(v, 0, static_cast<int>(v.size())); }
+#if __cplusplus >= 202002L
+    template <class R = std::initializer_list<S>>
+        requires internal_traits::sized_constructible_range<R, S>
+#else
+    template <class R = std::initializer_list<S>, ENABLE_IF_T(internal_traits::is_sized_constructible_range<R, S>::value)>
+#endif
+    explicit RBST(R&& v, M m = M()) : m(std::move(m)) {
+        auto it = internal_traits::range_begin(v);
+        root = build(it, 0, static_cast<int>(internal_traits::range_size(v)));
+    }
+
     /**
      * @brief 複製する O(n)
      */
@@ -470,3 +484,8 @@ class RBST {
         return os;
     }
 };
+
+template <class R, typename M>
+RBST(R&&, M) -> RBST<M>;
+template <typename M>
+RBST(std::initializer_list<typename M::S>, M) -> RBST<M>;

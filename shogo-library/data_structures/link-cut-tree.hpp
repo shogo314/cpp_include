@@ -1,5 +1,4 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/data_structures/link-cut-tree.hpp
 
 /**
  * @file link-cut-tree.hpp
@@ -7,8 +6,13 @@
  */
 
 #include <cassert>
+#include <initializer_list>
+#include <type_traits>
 #include <utility>
 #include <vector>
+
+#include "../utility/traits.hpp"
+// https://github.com/shogo314/shogo-library/blob/c965efc39d855af98a1bcf96c2b63f175ea40371/src/data_structures/link-cut-tree.hpp
 
 /**
  * @brief Link-Cut Tree (森で、辺の追加・削除とパス上の値の集約ができる)
@@ -114,9 +118,20 @@ class LinkCutTree {
     /**
      * @brief 頂点 i の値が a[i]、辺なし
      */
-    explicit LinkCutTree(const std::vector<S>& a, M m = M()) : LinkCutTree(a.size(), std::move(m)) {
-        for (int i = 0; i < static_cast<int>(a.size()); i++) t[i].val = t[i].sum = t[i].rsum = a[i];
+#if __cplusplus >= 202002L
+    template <class R = std::initializer_list<S>>
+        requires internal_traits::sized_constructible_range<R, S>
+#else
+    template <class R = std::initializer_list<S>, ENABLE_IF_T(internal_traits::is_sized_constructible_range<R, S>::value)>
+#endif
+    explicit LinkCutTree(R&& a, M m = M()) : LinkCutTree(internal_traits::range_size(a), std::move(m)) {
+        long long i = 0;
+        for (auto&& x : a) {
+            t[i].val = t[i].sum = t[i].rsum = S(std::forward<decltype(x)>(x));
+            ++i;
+        }
     }
+
     /**
      * @brief 頂点数
      */
@@ -212,8 +227,10 @@ class LinkCutTree {
 
 template <typename M>
 LinkCutTree(long long, M) -> LinkCutTree<M>;
+template <class R, typename M>
+LinkCutTree(R&&, M) -> LinkCutTree<M>;
 template <typename M>
-LinkCutTree(std::vector<typename M::S>, M) -> LinkCutTree<M>;
+LinkCutTree(std::initializer_list<typename M::S>, M) -> LinkCutTree<M>;
 
 template <typename G>
 class SubtreeLinkCutTree {
@@ -301,9 +318,20 @@ class SubtreeLinkCutTree {
         x.val = x.path = x.virt = x.sum = e();
         t.assign(n, x);
     }
-    explicit SubtreeLinkCutTree(const std::vector<S>& a, G g = G()) : SubtreeLinkCutTree(a.size(), std::move(g)) {
-        for (int i = 0; i < static_cast<int>(a.size()); i++) t[i].val = t[i].path = t[i].sum = a[i];
+#if __cplusplus >= 202002L
+    template <class R = std::initializer_list<S>>
+        requires internal_traits::sized_constructible_range<R, S>
+#else
+    template <class R = std::initializer_list<S>, ENABLE_IF_T(internal_traits::is_sized_constructible_range<R, S>::value)>
+#endif
+    explicit SubtreeLinkCutTree(R&& a, G g = G()) : SubtreeLinkCutTree(internal_traits::range_size(a), std::move(g)) {
+        long long i = 0;
+        for (auto&& x : a) {
+            t[i].val = t[i].path = t[i].sum = S(std::forward<decltype(x)>(x));
+            ++i;
+        }
     }
+
     long long size() const { return static_cast<long long>(t.size()); }
     void evert(long long v) {
         access(v);
@@ -369,5 +397,7 @@ class SubtreeLinkCutTree {
 
 template <typename G>
 SubtreeLinkCutTree(long long, G) -> SubtreeLinkCutTree<G>;
+template <class R, typename G>
+SubtreeLinkCutTree(R&&, G) -> SubtreeLinkCutTree<G>;
 template <typename G>
-SubtreeLinkCutTree(std::vector<typename G::S>, G) -> SubtreeLinkCutTree<G>;
+SubtreeLinkCutTree(std::initializer_list<typename G::S>, G) -> SubtreeLinkCutTree<G>;

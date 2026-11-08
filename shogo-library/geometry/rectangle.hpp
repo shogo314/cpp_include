@@ -10,7 +10,7 @@
 #include <type_traits>
 
 #include "vector.hpp"
-// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/geometry/rectangle.hpp
+// https://github.com/shogo314/shogo-library/blob/c965efc39d855af98a1bcf96c2b63f175ea40371/src/geometry/rectangle.hpp
 
 /**
  * @brief 半開領域 [left, right) × [bottom, top)。幅・高さ 0 も許す

@@ -15,7 +15,7 @@
 
 #include "line.hpp"
 #include "vector.hpp"
-// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/geometry/sphere.hpp
+// https://github.com/shogo314/shogo-library/blob/c965efc39d855af98a1bcf96c2b63f175ea40371/src/geometry/sphere.hpp
 
 /**
  * @brief 球

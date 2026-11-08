@@ -6,12 +6,15 @@
  */
 
 #include <cassert>
+#include <initializer_list>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
+#include "../utility/traits.hpp"
 #include "fast-set.hpp"
 #include "segtree.hpp"
-// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/data_structures/sortable-segtree.hpp
+// https://github.com/shogo314/shogo-library/blob/c965efc39d855af98a1bcf96c2b63f175ea40371/src/data_structures/sortable-segtree.hpp
 
 /**
  * @brief 各位置にキーと値を持つ列で、1 点の変更・区間の積・区間をキーで並べ替える操作を行う
@@ -125,13 +128,24 @@ class SortableSegTree {
      * @param keys キー (0 <= キー < key_limit、すべて異なること)
      * @param key_limit キーの上限 (1 点の変更で使うキーもこれ未満であること)
      */
-    SortableSegTree(const std::vector<long long>& keys, const std::vector<S>& values, long long key_limit, M m = M())
-        : m(m), n(keys.size()), bits(1), root(n), rev(n, false), starts(n), seg(std::vector<S>(values), m) {
-        assert(keys.size() == values.size());
+#if __cplusplus >= 202002L
+    template <class K = std::initializer_list<long long>, class R = std::initializer_list<S>>
+        requires(internal_traits::sized_constructible_range<K, long long> && internal_traits::sized_constructible_range<R, S>)
+#else
+    template <class K = std::initializer_list<long long>, class R = std::initializer_list<S>,
+              ENABLE_IF_T(internal_traits::is_sized_constructible_range<K, long long>::value&& internal_traits::is_sized_constructible_range<R, S>::value)>
+#endif
+    SortableSegTree(K&& keys, R&& values, long long key_limit, M m = M())
+        : m(m), n(internal_traits::range_size(keys)), bits(1), root(n), rev(n, false), starts(n), seg(values, m) {
+        assert(n == static_cast<long long>(internal_traits::range_size(values)));
         while ((1LL << bits) < key_limit) bits++;
         nodes.reserve(n * (bits + 2) + 1);
         nodes.push_back(Node{{0, 0}, 0, this->m.e(), this->m.e()});
-        for (long long i = 0; i < n; i++) root[i] = make(keys[i], values[i]), starts.insert(i);
+        long long i = 0;
+        for (auto&& key : keys) {
+            root[i] = make(static_cast<long long>(std::forward<decltype(key)>(key)), seg.get(i));
+            starts.insert(i++);
+        }
     }
 
     /**
@@ -172,3 +186,8 @@ class SortableSegTree {
         seg.set(l, value(l));
     }
 };
+
+template <class K, class R, typename M>
+SortableSegTree(K&&, R&&, long long, M) -> SortableSegTree<M>;
+template <typename M>
+SortableSegTree(std::initializer_list<long long>, std::initializer_list<typename M::S>, long long, M) -> SortableSegTree<M>;

@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/graph/max-flow.hpp
+// https://github.com/shogo314/shogo-library/blob/c965efc39d855af98a1bcf96c2b63f175ea40371/src/graph/max-flow.hpp
 
 /**
  * @file max-flow.hpp
@@ -46,6 +46,11 @@ class MaxFlow {
     std::vector<std::vector<InnerEdge>> g;
     std::vector<std::pair<int, int>> pos;  // 追加した辺が g のどこにあるか
     std::vector<int> level, iter;
+    struct DfsFrame {
+        int v;
+        Cap up, flow;
+    };
+    std::vector<DfsFrame> dfs_stack;
 
     bool bfs(int s, int t) {
         level.assign(n, -1);
@@ -64,23 +69,40 @@ class MaxFlow {
         }
         return level[t] != -1;
     }
-    // v から t へ、up を上限としてレベルグラフ上で流す
-    Cap dfs(int v, int t, Cap up) {
-        if (v == t) return up;
-        Cap res = 0;
-        for (int& i = iter[v]; i < static_cast<int>(g[v].size()); i++) {
-            InnerEdge& e = g[v][i];
-            if (e.cap <= 0 || level[e.to] != level[v] + 1) continue;
-            Cap d = dfs(e.to, t, std::min(up - res, e.cap));
-            if (d <= 0) continue;
-            e.cap -= d;
-            g[e.to][e.rev].cap += d;
-            res += d;
-            if (res == up) return res;
+    // 再帰 DFS の呼び出しと、各頂点から返す流量を明示的なスタックで管理する。
+    Cap dfs(int s, int t, Cap up) {
+        dfs_stack.clear();
+        dfs_stack.push_back({s, up, 0});
+        while (!dfs_stack.empty()) {
+            auto& frame = dfs_stack.back();
+            const int v = frame.v;
+            if (v != t && frame.flow < frame.up) {
+                int& i = iter[v];
+                while (i < static_cast<int>(g[v].size())) {
+                    const auto& e = g[v][i];
+                    if (e.cap > 0 && level[e.to] == level[v] + 1) break;
+                    ++i;
+                }
+                if (i < static_cast<int>(g[v].size())) {
+                    const auto& e = g[v][i];
+                    Cap next_up = std::min(frame.up - frame.flow, e.cap);
+                    dfs_stack.push_back({e.to, next_up, 0});
+                    continue;
+                }
+                // これ以上流せないので、このフェーズでは使わない。
+                level[v] = n;
+            }
+            const Cap pushed = v == t ? frame.up : frame.flow;
+            dfs_stack.pop_back();
+            if (dfs_stack.empty()) return pushed;
+            auto& parent = dfs_stack.back();
+            auto& e = g[parent.v][iter[parent.v]];
+            e.cap -= pushed;
+            g[v][e.rev].cap += pushed;
+            parent.flow += pushed;
+            if (parent.flow < parent.up) ++iter[parent.v];
         }
-        // これ以上流せないので、このフェーズでは使わない
-        level[v] = n;
-        return res;
+        return 0;
     }
 
    public:

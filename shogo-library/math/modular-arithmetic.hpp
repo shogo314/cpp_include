@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/math/modular-arithmetic.hpp
+// https://github.com/shogo314/shogo-library/blob/c965efc39d855af98a1bcf96c2b63f175ea40371/src/math/modular-arithmetic.hpp
 
 /**
  * @file modular-arithmetic.hpp
@@ -52,15 +52,16 @@ constexpr long long pow_mod(long long a, long long n, long long m) {
     assert(m >= 1);
     a %= m;
     if (a < 0) a += m;
+    unsigned long long exponent = static_cast<unsigned long long>(n);
     if (n < 0) {
-        n = -n;
+        exponent = 0ULL - exponent;
         a = inv_mod(a, m);
     }
     long long res = 1 % m;
-    while (n > 0) {
-        if (n & 1) res = mul_mod(res, a, m);
+    while (exponent > 0) {
+        if (exponent & 1) res = mul_mod(res, a, m);
         a = mul_mod(a, a, m);
-        n >>= 1;
+        exponent >>= 1;
     }
     return res;
 }

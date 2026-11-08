@@ -12,7 +12,7 @@
 
 #include "internal/predicates.hpp"
 #include "vector.hpp"
-// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/geometry/line.hpp
+// https://github.com/shogo314/shogo-library/blob/c965efc39d855af98a1bcf96c2b63f175ea40371/src/geometry/line.hpp
 
 /**
  * @brief 2 点で表す直線。p1 != p2 が必要。等値比較は同じ直線かを判定する

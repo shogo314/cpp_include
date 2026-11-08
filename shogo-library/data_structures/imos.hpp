@@ -6,11 +6,14 @@
  */
 
 #include <cassert>
+#include <initializer_list>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 #include "../algebra/acted-monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/data_structures/imos.hpp
+#include "../utility/traits.hpp"
+// https://github.com/shogo314/shogo-library/blob/c965efc39d855af98a1bcf96c2b63f175ea40371/src/data_structures/imos.hpp
 
 /**
  * @brief imos法で区間作用、1点取得する。
@@ -53,7 +56,16 @@ class Imos {
      * @param value 各要素の初期値
      * @param a 作用素付きモノイド
      */
-    explicit Imos(const std::vector<S>& value, A a = A()) : a(std::move(a)), _n(value.size()), t(value.size()), data(value), lazy(value.size(), this->a.id()) {}
+#if __cplusplus >= 202002L
+    template <class R = std::initializer_list<S>>
+        requires internal_traits::sized_constructible_range<R, S>
+#else
+    template <class R = std::initializer_list<S>, ENABLE_IF_T(internal_traits::is_sized_constructible_range<R, S>::value)>
+#endif
+    explicit Imos(R&& value, A a = A()) : a(std::move(a)), _n(internal_traits::range_size(value)), t(_n), lazy(_n, this->a.id()) {
+        data.reserve(_n);
+        for (auto&& x : value) data.emplace_back(std::forward<decltype(x)>(x));
+    }
 
     /**
      * @brief 1点作用
@@ -99,5 +111,7 @@ template <typename A>
 Imos(long long, A) -> Imos<A>;
 template <typename A>
 Imos(long long, typename A::S, A) -> Imos<A>;
+template <class R, typename A>
+Imos(R&&, A) -> Imos<A>;
 template <typename A>
-Imos(std::vector<typename A::S>, A) -> Imos<A>;
+Imos(std::initializer_list<typename A::S>, A) -> Imos<A>;

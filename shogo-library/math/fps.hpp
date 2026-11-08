@@ -7,15 +7,18 @@
 
 #include <algorithm>
 #include <cassert>
+#include <initializer_list>
 #include <optional>
 #include <queue>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
+#include "../utility/traits.hpp"
 #include "combinatorics.hpp"
 #include "convolution.hpp"
 #include "modular-arithmetic.hpp"
-// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/math/fps.hpp
+// https://github.com/shogo314/shogo-library/blob/c965efc39d855af98a1bcf96c2b63f175ea40371/src/math/fps.hpp
 
 template <typename mint>
 struct FPS;
@@ -127,7 +130,16 @@ struct FPS : std::vector<mint> {
     using std::vector<mint>::vector;
 
     // constructor
-    FPS(const std::vector<mint>& r) : std::vector<mint>(r) {}
+#if __cplusplus >= 202002L
+    template <class R = std::initializer_list<mint>>
+        requires(internal_traits::sized_constructible_range<R, mint> && !std::is_same_v<std::decay_t<R>, FPS>)
+#else
+    template <class R = std::initializer_list<mint>, ENABLE_IF_T(internal_traits::is_sized_constructible_range<R, mint>::value && !std::is_same_v<std::decay_t<R>, FPS>)>
+#endif
+    FPS(R&& r) {
+        this->reserve(internal_traits::range_size(r));
+        for (auto&& x : r) this->emplace_back(std::forward<decltype(x)>(x));
+    }
 
     // core operator
     inline FPS pre(long long siz) const {
@@ -637,3 +649,6 @@ SumOfFractions<mint> sum_of_fractions(const std::vector<FPS<mint>>& nums, const 
     };
     return rec(rec, 0, nums.size());
 }
+
+template <class R>
+FPS(R&&) -> FPS<internal_traits::range_value_t<R>>;

@@ -6,11 +6,14 @@
  */
 
 #include <cassert>
+#include <initializer_list>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 #include "../algebra/monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/data_structures/sparse-table.hpp
+#include "../utility/traits.hpp"
+// https://github.com/shogo314/shogo-library/blob/c965efc39d855af98a1bcf96c2b63f175ea40371/src/data_structures/sparse-table.hpp
 
 /**
  * @brief Sparse Table
@@ -37,7 +40,16 @@ class SparseTable {
     S e() const { return m.e(); }
 
    public:
-    explicit SparseTable(const std::vector<S>& v = {}, M m = M()) : m(std::move(m)), n(v.size()), table(1, v), lg(n + 1, 0) {
+#if __cplusplus >= 202002L
+    template <class R = std::initializer_list<S>>
+        requires internal_traits::sized_constructible_range<R, S>
+#else
+    template <class R = std::initializer_list<S>, ENABLE_IF_T(internal_traits::is_sized_constructible_range<R, S>::value)>
+#endif
+    explicit SparseTable(R&& v = {}, M m = M()) : m(std::move(m)), n(internal_traits::range_size(v)), lg(n + 1, 0) {
+        table.emplace_back();
+        table[0].reserve(n);
+        for (auto&& x : v) table[0].emplace_back(std::forward<decltype(x)>(x));
         for (long long x = 2; x <= n; x++) lg[x] = lg[x / 2] + 1;
         for (int k = 1; (1LL << k) <= n; k++) {
             const auto& prev = table[k - 1];
@@ -68,5 +80,7 @@ class SparseTable {
     S all_prod() const { return prod(0, n); }
 };
 
+template <class R, typename M>
+SparseTable(R&&, M) -> SparseTable<M>;
 template <typename M>
-SparseTable(std::vector<typename M::S>, M) -> SparseTable<M>;
+SparseTable(std::initializer_list<typename M::S>, M) -> SparseTable<M>;

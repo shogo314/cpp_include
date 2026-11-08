@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/utility/traits.hpp
+// https://github.com/shogo314/shogo-library/blob/c965efc39d855af98a1bcf96c2b63f175ea40371/src/utility/traits.hpp
 
 /**
  * @file traits.hpp
@@ -13,6 +13,10 @@
 #include <type_traits>
 #include <utility>
 
+#if __cplusplus >= 202002L
+#include <ranges>
+#endif
+
 namespace internal_traits {
 using std::begin, std::end;
 
@@ -20,6 +24,42 @@ template <class T, class = void>
 struct is_range_impl : std::false_type {};
 template <class T>
 struct is_range_impl<T, std::void_t<decltype(begin(std::declval<T&>()), end(std::declval<T&>()))>> : std::true_type {};
+
+// サイズ付き範囲から要素を直接構築するコンストラクタで共有する。
+#if __cplusplus >= 202002L
+template <class R, class S>
+concept sized_constructible_range = std::ranges::input_range<R> && std::ranges::sized_range<R> &&
+                                    std::is_constructible_v<S, std::ranges::range_reference_t<R>>;
+
+template <class R>
+auto range_size(R& r) {
+    return std::ranges::size(r);
+}
+template <class R>
+auto range_begin(R& r) {
+    return std::ranges::begin(r);
+}
+template <class R>
+using range_value_t = std::ranges::range_value_t<R>;
+#else
+using std::size;
+template <class R>
+auto range_size(R& r) -> decltype(size(r)) {
+    return size(r);
+}
+template <class R>
+auto range_begin(R& r) -> decltype(begin(r)) {
+    return begin(r);
+}
+template <class R>
+using range_value_t = typename std::iterator_traits<decltype(range_begin(std::declval<R&>()))>::value_type;
+
+template <class R, class S, class = void>
+struct is_sized_constructible_range : std::false_type {};
+template <class R, class S>
+struct is_sized_constructible_range<R, S, std::void_t<decltype(range_size(std::declval<R&>())), decltype(++std::declval<decltype(begin(std::declval<R&>()))&>()), decltype(begin(std::declval<R&>()) != end(std::declval<R&>())), decltype(*begin(std::declval<R&>()))>>
+    : std::is_constructible<S, decltype(*begin(std::declval<R&>()))> {};
+#endif
 }  // namespace internal_traits
 
 template <class T>

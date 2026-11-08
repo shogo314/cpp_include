@@ -13,7 +13,7 @@
 #include "../algebra/group.hpp"
 #include "../data_structures/fenwick-tree.hpp"
 #include "segment.hpp"
-// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/geometry/axis-parallel-segments.hpp
+// https://github.com/shogo314/shogo-library/blob/c965efc39d855af98a1bcf96c2b63f175ea40371/src/geometry/axis-parallel-segments.hpp
 
 /**
  * @brief 水平か垂直な線分だけがあるとき、水平な線分と垂直な線分が共有点を持つ組の個数 (走査線) O(n log n)

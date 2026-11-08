@@ -7,13 +7,16 @@
 
 #include <algorithm>
 #include <cassert>
+#include <initializer_list>
 #include <memory>
 #include <ostream>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 #include "../algebra/acted-monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/data_structures/persistent-lazy-segtree.hpp
+#include "../utility/traits.hpp"
+// https://github.com/shogo314/shogo-library/blob/c965efc39d855af98a1bcf96c2b63f175ea40371/src/data_structures/persistent-lazy-segtree.hpp
 
 /**
  * @brief 永続遅延伝搬セグメント木
@@ -75,11 +78,17 @@ class PersistentLazySegTree {
         sz = 1;
         while (sz < n) sz <<= 1;
     }
-    int build(const std::vector<S>& v, long long a, long long b) {
-        if (b - a == 1) return pool->make_leaf(a < n ? v[a] : e());
+    template <class It>
+    int build(It& it, long long a, long long b) {
+        if (b - a == 1) {
+            if (a >= n) return pool->make_leaf(e());
+            S x(*it);
+            ++it;
+            return pool->make_leaf(x);
+        }
         long long mid = (a + b) / 2;
-        int l = build(v, a, mid);
-        int r = build(v, mid, b);
+        int l = build(it, a, mid);
+        int r = build(it, mid, b);
         return pool->make_node(l, r);
     }
     // ノード t ([a, b)) に f を作用させた新しいノード
@@ -198,9 +207,16 @@ class PersistentLazySegTree {
      * @param v 初期の要素
      * @param a 作用素付きモノイド
      */
-    explicit PersistentLazySegTree(const std::vector<S>& v, A a = A()) : pool(std::make_shared<Pool>(std::move(a))), n(v.size()) {
+#if __cplusplus >= 202002L
+    template <class R = std::initializer_list<S>>
+        requires internal_traits::sized_constructible_range<R, S>
+#else
+    template <class R = std::initializer_list<S>, ENABLE_IF_T(internal_traits::is_sized_constructible_range<R, S>::value)>
+#endif
+    explicit PersistentLazySegTree(R&& v, A a = A()) : pool(std::make_shared<Pool>(std::move(a))), n(internal_traits::range_size(v)) {
         init_size();
-        root = build(v, 0, sz);
+        auto it = internal_traits::range_begin(v);
+        root = build(it, 0, sz);
     }
 
     /**
@@ -376,5 +392,7 @@ class PersistentLazySegTree {
 
 template <typename A>
 PersistentLazySegTree(long long, A) -> PersistentLazySegTree<A>;
+template <class R, typename A>
+PersistentLazySegTree(R&&, A) -> PersistentLazySegTree<A>;
 template <typename A>
-PersistentLazySegTree(std::vector<typename A::S>, A) -> PersistentLazySegTree<A>;
+PersistentLazySegTree(std::initializer_list<typename A::S>, A) -> PersistentLazySegTree<A>;

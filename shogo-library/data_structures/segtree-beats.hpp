@@ -7,14 +7,17 @@
 
 #include <algorithm>
 #include <cassert>
+#include <initializer_list>
 #include <ostream>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 #include "../algebra/acted-monoid.hpp"
 #include "../algebra/beats-acted-monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/data_structures/segtree-beats.hpp
+#include "../utility/traits.hpp"
+// https://github.com/shogo314/shogo-library/blob/c965efc39d855af98a1bcf96c2b63f175ea40371/src/data_structures/segtree-beats.hpp
 
 /**
  * @brief Segment Tree Beats
@@ -109,8 +112,15 @@ class SegTreeBeats {
      * @param v 初期の要素
      * @param a 作用素付きモノイド
      */
-    explicit SegTreeBeats(const std::vector<S>& v, A a = A()) : SegTreeBeats(v.size(), std::move(a)) {
-        for (long long i = 0; i < n; i++) data[sz + i] = v[i];
+#if __cplusplus >= 202002L
+    template <class R = std::initializer_list<S>>
+        requires internal_traits::sized_constructible_range<R, S>
+#else
+    template <class R = std::initializer_list<S>, ENABLE_IF_T(internal_traits::is_sized_constructible_range<R, S>::value)>
+#endif
+    explicit SegTreeBeats(R&& v, A a = A()) : SegTreeBeats(internal_traits::range_size(v), std::move(a)) {
+        long long k = sz;
+        for (auto&& x : v) data[k++] = S(std::forward<decltype(x)>(x));
         for (long long i = sz - 1; i > 0; i--) update(i);
     }
 
@@ -347,8 +357,10 @@ class SegTreeBeats {
 
 template <typename A>
 SegTreeBeats(long long, A) -> SegTreeBeats<A>;
+template <class R, typename A>
+SegTreeBeats(R&&, A) -> SegTreeBeats<A>;
 template <typename A>
-SegTreeBeats(std::vector<typename A::S>, A) -> SegTreeBeats<A>;
+SegTreeBeats(std::initializer_list<typename A::S>, A) -> SegTreeBeats<A>;
 
 /**
  * @brief 区間 chmin、区間和・最大値

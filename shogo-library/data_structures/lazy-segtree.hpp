@@ -7,12 +7,15 @@
 
 #include <algorithm>
 #include <cassert>
+#include <initializer_list>
 #include <ostream>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 #include "../algebra/acted-monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/data_structures/lazy-segtree.hpp
+#include "../utility/traits.hpp"
+// https://github.com/shogo314/shogo-library/blob/c965efc39d855af98a1bcf96c2b63f175ea40371/src/data_structures/lazy-segtree.hpp
 
 /**
  * @brief 遅延伝搬セグメント木
@@ -95,8 +98,15 @@ class LazySegTree {
      * @param v 初期の要素
      * @param a 作用素付きモノイド
      */
-    explicit LazySegTree(const std::vector<S>& v, A a = A()) : LazySegTree(v.size(), std::move(a)) {
-        for (long long i = 0; i < n; i++) data[sz + i] = v[i];
+#if __cplusplus >= 202002L
+    template <class R = std::initializer_list<S>>
+        requires internal_traits::sized_constructible_range<R, S>
+#else
+    template <class R = std::initializer_list<S>, ENABLE_IF_T(internal_traits::is_sized_constructible_range<R, S>::value)>
+#endif
+    explicit LazySegTree(R&& v, A a = A()) : LazySegTree(internal_traits::range_size(v), std::move(a)) {
+        long long k = sz;
+        for (auto&& x : v) data[k++] = S(std::forward<decltype(x)>(x));
         for (long long i = sz - 1; i > 0; i--) update(i);
     }
 
@@ -333,8 +343,10 @@ class LazySegTree {
 
 template <typename A>
 LazySegTree(long long, A) -> LazySegTree<A>;
+template <class R, typename A>
+LazySegTree(R&&, A) -> LazySegTree<A>;
 template <typename A>
-LazySegTree(std::vector<typename A::S>, A) -> LazySegTree<A>;
+LazySegTree(std::initializer_list<typename A::S>, A) -> LazySegTree<A>;
 
 /**
  * @brief 区間最小値更新、区間最小値

@@ -6,11 +6,14 @@
  */
 
 #include <cassert>
+#include <initializer_list>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 #include "../algebra/group.hpp"
-// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/data_structures/fenwick-tree.hpp
+#include "../utility/traits.hpp"
+// https://github.com/shogo314/shogo-library/blob/c965efc39d855af98a1bcf96c2b63f175ea40371/src/data_structures/fenwick-tree.hpp
 
 /**
  * @brief Fenwick Tree (Binary Indexed Tree)
@@ -45,9 +48,17 @@ class FenwickTree {
     /**
      * @brief v を初期値とする Fenwick Tree を作る O(n)
      */
-    explicit FenwickTree(const std::vector<S>& v, G g = G()) : FenwickTree(v.size(), std::move(g)) {
+#if __cplusplus >= 202002L
+    template <class R = std::initializer_list<S>>
+        requires internal_traits::sized_constructible_range<R, S>
+#else
+    template <class R = std::initializer_list<S>, ENABLE_IF_T(internal_traits::is_sized_constructible_range<R, S>::value)>
+#endif
+    explicit FenwickTree(R&& v, G g = G()) : FenwickTree(internal_traits::range_size(v), std::move(g)) {
+        auto it = internal_traits::range_begin(v);
         for (long long i = 1; i <= n; i++) {
-            data[i] = op(data[i], v[i - 1]);
+            data[i] = op(data[i], S(*it));
+            ++it;
             long long j = i + (i & -i);
             if (j <= n) data[j] = op(data[j], data[i]);
         }
@@ -114,5 +125,7 @@ class FenwickTree {
 
 template <typename G>
 FenwickTree(long long, G) -> FenwickTree<G>;
+template <class R, typename G>
+FenwickTree(R&&, G) -> FenwickTree<G>;
 template <typename G>
-FenwickTree(std::vector<typename G::S>, G) -> FenwickTree<G>;
+FenwickTree(std::initializer_list<typename G::S>, G) -> FenwickTree<G>;

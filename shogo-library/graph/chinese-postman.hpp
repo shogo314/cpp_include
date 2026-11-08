@@ -15,7 +15,7 @@
 #include "eulerian-trail.hpp"
 #include "graph.hpp"
 #include "shortest-path.hpp"
-// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/graph/chinese-postman.hpp
+// https://github.com/shogo314/shogo-library/blob/c965efc39d855af98a1bcf96c2b63f175ea40371/src/graph/chinese-postman.hpp
 
 namespace internal_chinese_postman {
 /**

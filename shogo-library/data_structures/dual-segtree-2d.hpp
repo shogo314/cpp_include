@@ -13,7 +13,7 @@
 
 #include "../algebra/acted-monoid.hpp"
 #include "../geometry/rectangle.hpp"
-// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/data_structures/dual-segtree-2d.hpp
+// https://github.com/shogo314/shogo-library/blob/c965efc39d855af98a1bcf96c2b63f175ea40371/src/data_structures/dual-segtree-2d.hpp
 
 /**
  * @brief 2次元双対セグメント木 (取得する点を先読みする)

@@ -6,11 +6,14 @@
  */
 
 #include <cassert>
+#include <initializer_list>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 #include "../algebra/acted-monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/data_structures/dual-segtree.hpp
+#include "../utility/traits.hpp"
+// https://github.com/shogo314/shogo-library/blob/c965efc39d855af98a1bcf96c2b63f175ea40371/src/data_structures/dual-segtree.hpp
 
 /**
  * @brief 双対セグメント木 (区間作用、1点取得)
@@ -78,7 +81,17 @@ class DualSegTree {
      * @param v 初期の要素
      * @param a 作用素付きモノイド
      */
-    explicit DualSegTree(const std::vector<S>& v, A a = A()) : a(std::move(a)), n(v.size()), data(v) { construct(); }
+#if __cplusplus >= 202002L
+    template <class R = std::initializer_list<S>>
+        requires internal_traits::sized_constructible_range<R, S>
+#else
+    template <class R = std::initializer_list<S>, ENABLE_IF_T(internal_traits::is_sized_constructible_range<R, S>::value)>
+#endif
+    explicit DualSegTree(R&& v, A a = A()) : a(std::move(a)), n(internal_traits::range_size(v)) {
+        data.reserve(n);
+        for (auto&& x : v) data.emplace_back(std::forward<decltype(x)>(x));
+        construct();
+    }
 
     /**
      * @brief 要素数を返す
@@ -146,8 +159,10 @@ template <typename A>
 DualSegTree(long long, A) -> DualSegTree<A>;
 template <typename A>
 DualSegTree(long long, typename A::S, A) -> DualSegTree<A>;
+template <class R, typename A>
+DualSegTree(R&&, A) -> DualSegTree<A>;
 template <typename A>
-DualSegTree(std::vector<typename A::S>, A) -> DualSegTree<A>;
+DualSegTree(std::initializer_list<typename A::S>, A) -> DualSegTree<A>;
 
 // 別名 双対セグメント木は op, e を使わないので、取得の部分を名前に含めない
 // mapping が区間の長さを使わない Min 系を実体にする (値の型に S(sz) や掛け算を求めない)

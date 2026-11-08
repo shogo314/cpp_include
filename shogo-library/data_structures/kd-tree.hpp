@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "../geometry/rectangle.hpp"
-// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/data_structures/kd-tree.hpp
+// https://github.com/shogo314/shogo-library/blob/c965efc39d855af98a1bcf96c2b63f175ea40371/src/data_structures/kd-tree.hpp
 
 /**
  * @brief 2 次元の点の集合 (静的) について、長方形領域に入る点を列挙する kd-tree

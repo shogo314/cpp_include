@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "modular-arithmetic.hpp"
-// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/math/q-binomial.hpp
+// https://github.com/shogo314/shogo-library/blob/c965efc39d855af98a1bcf96c2b63f175ea40371/src/math/q-binomial.hpp
 
 /**
  * @brief q 二項係数 C(n, k)_q = [n]_q! / ([k]_q! [n-k]_q!) を素数 p で割った余り ([i]_q = 1 + q + ... + q^(i-1)、[n]_q! = [1]_q [2]_q ... [n]_q)

@@ -10,8 +10,9 @@
 #include <utility>
 #include <vector>
 
+#include "../data_structures/rollback-unionfind.hpp"
 #include "graph.hpp"
-// https://github.com/shogo314/shogo-library/blob/8eadfabbff53ac04c3000e8f0585b08e4fe5155f/src/graph/minimum-arborescence.hpp
+// https://github.com/shogo314/shogo-library/blob/c965efc39d855af98a1bcf96c2b63f175ea40371/src/graph/minimum-arborescence.hpp
 
 namespace internal_minimum_arborescence {
 
@@ -62,39 +63,6 @@ class LeftistHeap {
     }
 };
 
-/**
- * @brief 巻き戻しのできる Union-Find (経路圧縮をしない)
- */
-class RollbackUnionFind {
-   public:
-    explicit RollbackUnionFind(long long n) : parent_or_size(n, -1) {}
-    long long find(long long x) const {
-        while (parent_or_size[x] >= 0) x = parent_or_size[x];
-        return x;
-    }
-    bool merge(long long x, long long y) {
-        x = find(x), y = find(y);
-        if (x == y) return false;
-        if (parent_or_size[x] > parent_or_size[y]) std::swap(x, y);
-        history.push_back({x, parent_or_size[x]});
-        history.push_back({y, parent_or_size[y]});
-        parent_or_size[x] += parent_or_size[y];
-        parent_or_size[y] = x;
-        return true;
-    }
-    long long time() const { return static_cast<long long>(history.size()); }
-    void rollback(long long t) {
-        while (time() > t) {
-            parent_or_size[history.back().first] = history.back().second;
-            history.pop_back();
-        }
-    }
-
-   private:
-    std::vector<long long> parent_or_size;
-    std::vector<std::pair<long long, long long>> history;
-};
-
 }  // namespace internal_minimum_arborescence
 
 /**
@@ -124,7 +92,7 @@ std::optional<MinimumArborescence<Cost>> minimum_arborescence(const Graph<Cost>&
         for (const auto& e : graph[v]) es.push_back(e);
     }
     internal_minimum_arborescence::LeftistHeap<Cost> heap;
-    internal_minimum_arborescence::RollbackUnionFind uf(n);
+    RollbackUnionFind uf(n);
     std::vector<int> top(n, -1);  // 各成分に入る辺のヒープ
     for (long long i = 0; i < static_cast<long long>(es.size()); i++) {
         top[es[i].dst] = heap.merge(top[es[i].dst], heap.make(es[i].cost, i));
@@ -147,26 +115,26 @@ std::optional<MinimumArborescence<Cost>> minimum_arborescence(const Graph<Cost>&
             top[u] = heap.pop(top[u]);
             queue[qi] = i, path[qi++] = u, seen[u] = s;
             cost += w;
-            u = uf.find(es[i].src);
+            u = uf.leader(es[i].src);
             if (seen[u] == s) {
                 int cycle = -1;
-                long long end = qi, time = uf.time(), v;
+                long long end = qi, time = uf.snapshot(), v;
                 do {
                     v = path[--qi];
                     cycle = heap.merge(cycle, top[v]);
                 } while (uf.merge(u, v));
-                u = uf.find(u), top[u] = cycle, seen[u] = -1;
+                u = uf.leader(u), top[u] = cycle, seen[u] = -1;
                 cycles.push_back({u, time, std::vector<long long>(queue.begin() + qi, queue.begin() + end)});
             }
         }
-        for (long long i = 0; i < qi; i++) in[uf.find(es[queue[i]].dst)] = queue[i];
+        for (long long i = 0; i < qi; i++) in[uf.leader(es[queue[i]].dst)] = queue[i];
     }
     // 縮めた閉路を新しいものから戻し、閉路の中の辺を選び直す
     for (auto it = cycles.rbegin(); it != cycles.rend(); ++it) {
         uf.rollback(it->time);
         long long in_edge = in[it->u];
-        for (long long i : it->edges) in[uf.find(es[i].dst)] = i;
-        in[uf.find(es[in_edge].dst)] = in_edge;
+        for (long long i : it->edges) in[uf.leader(es[i].dst)] = i;
+        in[uf.leader(es[in_edge].dst)] = in_edge;
     }
     std::vector<Edge> parent_edge(n);
     for (long long v = 0; v < n; v++) {
