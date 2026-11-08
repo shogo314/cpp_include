@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "tree.hpp"
-// https://github.com/shogo314/shogo-library/blob/c965efc39d855af98a1bcf96c2b63f175ea40371/src/graph/heavy-light-decomposition.hpp
+// https://github.com/shogo314/shogo-library/blob/77ebb090933789a5c7f4dc5561b48ac9861e1e0b/src/graph/heavy-light-decomposition.hpp
 
 /**
  * @brief HL 分解 (Heavy-Light Decomposition)
@@ -21,7 +21,7 @@
  * 前計算 O(n)。DFS は再帰を使わない
  * 例:
  * HeavyLightDecomposition hld(tree, root);  // tree は Tree<Cost>
- * for (auto [a, b] : hld.path(u, v)) sum += seg.prod(std::min(a, b), std::max(a, b) + 1);
+ * for (auto [l, r, reverse] : hld.path(u, v)) sum += seg.prod(l, r);
  * auto [l, r] = hld.subtree(v);  // 部分木は区間 [l, r)
  */
 class HeavyLightDecomposition {
@@ -30,6 +30,15 @@ class HeavyLightDecomposition {
     std::vector<int> par, dep, sz, heavy, head, in, order;
 
    public:
+    /**
+     * @brief パスの一部に対応する半開区間 [l, r) と、たどる向き
+     */
+    struct PathSegment {
+        long long l;   //!< 区間の左端 (含む)
+        long long r;   //!< 区間の右端 (含まない)
+        bool reverse;  //!< true なら r - 1 から l へ、false なら l から r - 1 へたどる
+    };
+
     /**
      * @brief 木 tree を根 root で HL 分解する
      */
@@ -162,32 +171,31 @@ class HeavyLightDecomposition {
     /**
      * @brief u から v へのパスを、列の区間に分けて u 側から順に並べる O(log n)
      *
-     * 各要素 (a, b) は、列の a 番目から b 番目まで (両端を含む) を、a から b の向きにたどることを表す
-     * 向きを表すため、このライブラリの他の区間 (半開区間 [l, r)) と違って閉区間になっている
-     * a > b なら index が減る向き (根に近づく向き) にたどる
-     * 交換法則が成り立たない演算では、a > b の区間は逆順の積を使う
+     * 各要素は半開区間 [l, r) と向き reverse を持つ PathSegment
+     * reverse が false なら index の昇順、true なら降順 (根に近づく向き) にたどる
+     * 交換法則が成り立たない演算では、reverse が true の区間は逆順の積を使う
      * @param edge true なら辺についてのパスにする。辺 (parent(v), v) を index(v) 番目に対応させ、lca の位置を含めない
      */
-    std::vector<std::pair<long long, long long>> path(long long u, long long v, bool edge = false) const {
+    std::vector<PathSegment> path(long long u, long long v, bool edge = false) const {
         assert(0 <= u && u < n && 0 <= v && v < n);
-        std::vector<std::pair<long long, long long>> up, down;
+        std::vector<PathSegment> up, down;
         while (head[u] != head[v]) {
             if (dep[head[u]] >= dep[head[v]]) {
-                up.emplace_back(in[u], in[head[u]]);
+                up.push_back({in[head[u]], in[u] + 1, true});
                 u = par[head[u]];
             } else {
-                down.emplace_back(in[head[v]], in[v]);
+                down.push_back({in[head[v]], in[v] + 1, false});
                 v = par[head[v]];
             }
         }
         if (dep[u] >= dep[v]) {
             // v が lca
             long long l = in[v] + edge;
-            if (l <= in[u]) up.emplace_back(in[u], l);
+            if (l <= in[u]) up.push_back({l, in[u] + 1, true});
         } else {
             // u が lca
             long long l = in[u] + edge;
-            if (l <= in[v]) down.emplace_back(l, in[v]);
+            if (l <= in[v]) down.push_back({l, in[v] + 1, false});
         }
         up.insert(up.end(), down.rbegin(), down.rend());
         return up;

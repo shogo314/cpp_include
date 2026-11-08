@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "modular-arithmetic.hpp"
-// https://github.com/shogo314/shogo-library/blob/c965efc39d855af98a1bcf96c2b63f175ea40371/src/math/number-theory.hpp
+// https://github.com/shogo314/shogo-library/blob/77ebb090933789a5c7f4dc5561b48ac9861e1e0b/src/math/number-theory.hpp
 
 namespace internal_number_theory {
 inline long long normalize_mod(long long r, long long m) {

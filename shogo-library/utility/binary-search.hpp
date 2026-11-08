@@ -10,7 +10,7 @@
 
 #include "../base/functions.hpp"
 #include "traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/c965efc39d855af98a1bcf96c2b63f175ea40371/src/utility/binary-search.hpp
+// https://github.com/shogo314/shogo-library/blob/77ebb090933789a5c7f4dc5561b48ac9861e1e0b/src/utility/binary-search.hpp
 
 /**
  * f(ok) が真、f(ng) が偽として、境界で f が真になる側の値を返す

@@ -14,7 +14,7 @@
 #include "../utility/traits.hpp"
 #include "fast-set.hpp"
 #include "segtree.hpp"
-// https://github.com/shogo314/shogo-library/blob/c965efc39d855af98a1bcf96c2b63f175ea40371/src/data_structures/sortable-segtree.hpp
+// https://github.com/shogo314/shogo-library/blob/77ebb090933789a5c7f4dc5561b48ac9861e1e0b/src/data_structures/sortable-segtree.hpp
 
 /**
  * @brief 各位置にキーと値を持つ列で、1 点の変更・区間の積・区間をキーで並べ替える操作を行う
