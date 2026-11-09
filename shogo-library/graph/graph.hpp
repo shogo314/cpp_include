@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/77ebb090933789a5c7f4dc5561b48ac9861e1e0b/src/graph/graph.hpp
+// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/graph/graph.hpp
 
 /**
  * @file graph.hpp
@@ -37,10 +37,12 @@ class Graph {
         operator long long() const { return dst; }
     };
 
+   private:
     long long n;                       //!< 頂点数
     long long m;                       //!< 辺数
     std::vector<std::vector<Edge>> g;  //!< グラフの隣接リスト表現
 
+   public:
     /**
      * @brief デフォルトコンストラクタ
      */
@@ -54,6 +56,10 @@ class Graph {
      * @brief 頂点数
      */
     long long size() const { return n; }
+    /**
+     * @brief 辺数 (無向辺は 1 本と数える)
+     */
+    long long edge_count() const { return m; }
     /**
      * @brief 無向辺を追加する
      * @param u 始点
@@ -99,17 +105,10 @@ class Graph {
     /**
      * @brief ある頂点から出る辺を列挙する
      * @param v 頂点番号
-     * @return std::vector<Edge>& vから出る辺のリスト
-     */
-    std::vector<Edge>& operator[](long long v) {
-        return g[v];
-    }
-    /**
-     * @brief ある頂点から出る辺を列挙する
-     * @param v 頂点番号
      * @return const std::vector<Edge>& vから出る辺のリスト
      */
     const std::vector<Edge>& operator[](long long v) const {
+        assert(0 <= v && v < n);
         return g[v];
     }
     /**

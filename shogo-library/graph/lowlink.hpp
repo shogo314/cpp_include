@@ -11,7 +11,7 @@
 
 #include "graph.hpp"
 #include "tree.hpp"
-// https://github.com/shogo314/shogo-library/blob/77ebb090933789a5c7f4dc5561b48ac9861e1e0b/src/graph/lowlink.hpp
+// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/graph/lowlink.hpp
 
 /**
  * @brief 無向グラフの lowlink を求め、関節点・橋・二重辺連結成分・二重頂点連結成分を求める
@@ -36,24 +36,35 @@ class LowLink {
     std::vector<std::vector<long long>> bc_groups, bc_edge_groups;
     std::vector<long long> bc_edge_id;
 
-   public:
-    std::vector<long long> ord;  //!< DFS で訪れた順番
-    std::vector<long long> low;  //!< DFS 木の子孫から、木の辺を逆にたどらずに 1 本の後退辺で行ける頂点の ord の最小値
+    std::vector<long long> ord_data;  //!< DFS で訪れた順番
+    std::vector<long long> low_data;  //!< DFS 木の子孫から、木の辺を逆にたどらずに 1 本の後退辺で行ける頂点の ord の最小値
 
-    explicit LowLink(const Graph<Cost>& graph) : n(graph.n), art(n), bridge(graph.m), comp(n, -1), bc_edge_id(graph.m, -1), ord(n, -1), low(n) {
+   public:
+    /** @brief 頂点 v を DFS で訪れた順番 */
+    long long ord(long long v) const {
+        assert(0 <= v && v < n);
+        return ord_data[v];
+    }
+    /** @brief 頂点 v の lowlink の値 */
+    long long low(long long v) const {
+        assert(0 <= v && v < n);
+        return low_data[v];
+    }
+
+    explicit LowLink(const Graph<Cost>& graph) : n(graph.size()), art(n), bridge(graph.edge_count()), comp(n, -1), bc_edge_id(graph.edge_count(), -1), ord_data(n, -1), low_data(n) {
         std::vector<int> parent(n, -1), parent_edge(n, -1), iter(n, 0);
         std::vector<long long> st;
         // 二重頂点連結成分を作るために、通った辺 (木の辺と、子孫から祖先への後退辺) を積む
-        std::vector<long long> edge_st, edge_src(graph.m), edge_dst(graph.m), last_block(n, -1);
+        std::vector<long long> edge_st, edge_src(graph.edge_count()), edge_dst(graph.edge_count()), last_block(n, -1);
         auto push_edge = [&](long long id, long long a, long long b) {
             edge_st.push_back(id);
             edge_src[id] = a, edge_dst[id] = b;
         };
         long long k = 0;
         for (long long root = 0; root < n; root++) {
-            if (ord[root] != -1) continue;
+            if (ord_data[root] != -1) continue;
             int root_children = 0;
-            ord[root] = low[root] = k++;
+            ord_data[root] = low_data[root] = k++;
             st.push_back(root);
             while (!st.empty()) {
                 long long v = st.back();
@@ -61,25 +72,25 @@ class LowLink {
                     const auto& e = graph[v][iter[v]++];
                     if (e.id == parent_edge[v]) continue;
                     long long u = e.dst;
-                    if (ord[u] == -1) {
+                    if (ord_data[u] == -1) {
                         parent[u] = v;
                         parent_edge[u] = e.id;
-                        ord[u] = low[u] = k++;
+                        ord_data[u] = low_data[u] = k++;
                         st.push_back(u);
                         push_edge(e.id, v, u);
                     } else {
-                        low[v] = std::min(low[v], ord[u]);
+                        low_data[v] = std::min(low_data[v], ord_data[u]);
                         // 後退辺は子孫の側から見たときに 1 回だけ積む (自己ループは積まない)
-                        if (ord[u] < ord[v]) push_edge(e.id, v, u);
+                        if (ord_data[u] < ord_data[v]) push_edge(e.id, v, u);
                     }
                     continue;
                 }
                 st.pop_back();
                 if (v == root) continue;
                 long long p = parent[v];
-                low[p] = std::min(low[p], low[v]);
-                if (low[v] > ord[p]) bridge[parent_edge[v]] = true;
-                if (low[v] >= ord[p]) {
+                low_data[p] = std::min(low_data[p], low_data[v]);
+                if (low_data[v] > ord_data[p]) bridge[parent_edge[v]] = true;
+                if (low_data[v] >= ord_data[p]) {
                     // 親との辺までが 1 つの二重頂点連結成分
                     long long b = bc_groups.size();
                     bc_groups.emplace_back();
@@ -97,7 +108,7 @@ class LowLink {
                 }
                 if (p == root)
                     root_children++;
-                else if (low[v] >= ord[p])
+                else if (low_data[v] >= ord_data[p])
                     art[p] = true;
             }
             if (root_children >= 2) art[root] = true;
@@ -110,7 +121,7 @@ class LowLink {
         for (long long v = 0; v < n; v++) {
             if (art[v]) arts.push_back(v);
         }
-        for (long long id = 0; id < graph.m; id++) {
+        for (long long id = 0; id < graph.edge_count(); id++) {
             if (bridge[id]) bridge_ids.push_back(id);
         }
         // 橋を通らずに行ける頂点をまとめる

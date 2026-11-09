@@ -24,7 +24,7 @@
 #include <utility>
 
 #include "monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/77ebb090933789a5c7f4dc5561b48ac9861e1e0b/src/algebra/acted-monoid.hpp
+// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/algebra/acted-monoid.hpp
 
 namespace internal_acted_monoid {
 template <typename A, typename = void>

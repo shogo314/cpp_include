@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "graph.hpp"
-// https://github.com/shogo314/shogo-library/blob/77ebb090933789a5c7f4dc5561b48ac9861e1e0b/src/graph/general-matching.hpp
+// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/graph/general-matching.hpp
 
 namespace internal_general_matching {
 
@@ -21,7 +21,7 @@ namespace internal_general_matching {
 template <typename Cost>
 class Blossom {
    public:
-    explicit Blossom(const Graph<Cost>& graph) : graph(graph), n(static_cast<int>(graph.n)), match(n, -1), p(n), base(n), used(n), in_blossom(n) {}
+    explicit Blossom(const Graph<Cost>& graph) : graph(graph), n(static_cast<int>(graph.size())), match(n, -1), p(n), base(n), used(n), in_blossom(n) {}
 
     std::vector<int> solve() {
         // 貪欲に作ったマッチングから始める
@@ -127,7 +127,7 @@ template <typename Cost = long long>
 std::vector<typename Graph<Cost>::Edge> general_matching(const Graph<Cost>& graph) {
     std::vector<int> match = internal_general_matching::Blossom<Cost>(graph).solve();
     std::vector<typename Graph<Cost>::Edge> res;
-    for (long long v = 0; v < graph.n; v++) {
+    for (long long v = 0; v < graph.size(); v++) {
         if (match[v] <= v) continue;
         for (const auto& e : graph[v]) {
             if (e.dst == match[v]) {

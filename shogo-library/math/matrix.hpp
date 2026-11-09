@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/77ebb090933789a5c7f4dc5561b48ac9861e1e0b/src/math/matrix.hpp
+// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/math/matrix.hpp
 
 /**
  * @file matrix.hpp
@@ -15,6 +15,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <initializer_list>
+#include <iterator>
 #include <optional>
 #include <string>
 #include <type_traits>
@@ -76,9 +77,65 @@ inline constexpr bool is_modint_like_v = is_modint_like<T>::value;
  */
 template <class T, class OperatorProperty = matrix::OperatorPropertyDefault<T>>
 class Matrix {
-   public:
     long long n, m;
     std::vector<std::vector<T>> v;
+
+   public:
+    template <bool IsConst>
+    class RowView {
+        using Storage = std::conditional_t<IsConst, const std::vector<T>, std::vector<T>>;
+        Storage* row;
+        explicit RowView(Storage& row) : row(&row) {}
+        friend class Matrix;
+
+       public:
+        using value_type = T;
+
+        RowView(const RowView&) = default;
+        RowView& operator=(const RowView&) = delete;
+        long long size() const { return row->size(); }
+        bool empty() const { return row->empty(); }
+        decltype(auto) operator[](long long j) const {
+            assert(0 <= j && j < size());
+            return (*row)[j];
+        }
+        auto begin() const { return row->begin(); }
+        auto end() const { return row->end(); }
+    };
+
+    template <bool IsConst>
+    class RowIterator {
+        using Owner = std::conditional_t<IsConst, const Matrix, Matrix>;
+        Owner* owner = nullptr;
+        long long index = 0;
+        RowIterator(Owner& owner, long long index) : owner(&owner), index(index) {}
+        friend class Matrix;
+
+       public:
+        using value_type = RowView<IsConst>;
+        using reference = value_type;
+        struct pointer {
+            value_type row;
+            const value_type* operator->() const { return &row; }
+        };
+        using difference_type = std::ptrdiff_t;
+        using iterator_category = std::input_iterator_tag;
+
+        RowIterator() = default;
+        reference operator*() const { return (*owner)[index]; }
+        pointer operator->() const { return {**this}; }
+        RowIterator& operator++() {
+            ++index;
+            return *this;
+        }
+        RowIterator operator++(int) {
+            auto old = *this;
+            ++*this;
+            return old;
+        }
+        friend bool operator==(const RowIterator& a, const RowIterator& b) { return a.owner == b.owner && a.index == b.index; }
+        friend bool operator!=(const RowIterator& a, const RowIterator& b) { return !(a == b); }
+    };
 
     /**
      * @brief コンストラクタ
@@ -89,6 +146,7 @@ class Matrix {
     Matrix(const std::vector<Iterable>& v_) noexcept : n(v_.size()), m(v_.size() == 0 ? 0 : v_[0].size()) {
         v.resize(n);
         for (long long i = 0; i < n; i++) {
+            assert(static_cast<long long>(v_[i].size()) == m);
             v[i].assign(v_[i].begin(), v_[i].end());
         }
     }
@@ -100,7 +158,10 @@ class Matrix {
      */
     Matrix(std::initializer_list<std::initializer_list<T>> il) : n(il.size()), m(il.size() == 0 ? 0 : il.begin()->size()) {
         v.reserve(n);
-        for (const auto& row : il) v.emplace_back(row);
+        for (const auto& row : il) {
+            assert(static_cast<long long>(row.size()) == m);
+            v.emplace_back(row);
+        }
     }
     /**
      * @brief コンストラクタ
@@ -111,23 +172,31 @@ class Matrix {
      */
     Matrix(long long _n, long long _m, T _val = OperatorProperty::zero()) : n(_n), m(_m), v(n, std::vector<T>(m, _val)) {}
 
-    auto begin() noexcept { return v.begin(); }
-    auto end() noexcept { return v.end(); }
-    auto begin() const noexcept { return v.begin(); }
-    auto end() const noexcept { return v.end(); }
+    RowIterator<false> begin() noexcept { return RowIterator<false>(*this, 0); }
+    RowIterator<false> end() noexcept { return RowIterator<false>(*this, n); }
+    RowIterator<true> begin() const noexcept { return RowIterator<true>(*this, 0); }
+    RowIterator<true> end() const noexcept { return RowIterator<true>(*this, n); }
 
-    /**
-     * @brief 行列(グリッド)の行数
-     * @return long long
-     */
-    [[nodiscard]]
-    long long size() const { return v.size(); }
+    /** @brief 行数 */
+    long long size() const { return n; }
+    /** @brief 行数 */
+    long long height() const { return n; }
+    /** @brief 列数 */
+    long long width() const { return m; }
 
-    std::vector<T>& operator[](long long i) { return v[i]; }
-    const std::vector<T>& operator[](long long i) const { return v[i]; }
+    RowView<false> operator[](long long i) {
+        assert(0 <= i && i < n);
+        return RowView<false>(v[i]);
+    }
+    RowView<true> operator[](long long i) const {
+        assert(0 <= i && i < n);
+        return RowView<true>(v[i]);
+    }
     Matrix& operator=(const std::vector<std::vector<T>>& A) noexcept {
-        n = A.size();
-        m = (n == 0 ? 0 : A[0].size());
+        const long long rows = A.size(), cols = (rows == 0 ? 0 : A[0].size());
+        for (const auto& row : A) assert(static_cast<long long>(row.size()) == cols);
+        n = rows;
+        m = cols;
         v = A;
         return *this;
     }

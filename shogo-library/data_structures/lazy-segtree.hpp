@@ -15,7 +15,7 @@
 
 #include "../algebra/acted-monoid.hpp"
 #include "../utility/traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/77ebb090933789a5c7f4dc5561b48ac9861e1e0b/src/data_structures/lazy-segtree.hpp
+// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/data_structures/lazy-segtree.hpp
 
 /**
  * @brief 遅延伝搬セグメント木

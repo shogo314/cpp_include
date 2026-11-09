@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "wavelet-matrix.hpp"
-// https://github.com/shogo314/shogo-library/blob/77ebb090933789a5c7f4dc5561b48ac9861e1e0b/src/data_structures/range-count-distinct.hpp
+// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/data_structures/range-count-distinct.hpp
 
 /**
  * @brief 固定した列について、区間内の異なる値の個数をオンラインで答える

@@ -13,7 +13,7 @@
 #include <utility>
 
 #include "../utility/traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/77ebb090933789a5c7f4dc5561b48ac9861e1e0b/src/data_structures/priority_counter.hpp
+// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/data_structures/priority_counter.hpp
 
 template <typename T, std::size_t K = 1, class Compare = std::less<T>, ENABLE_IF_T(K >= 1)>
 struct PriorityCounter {
@@ -22,8 +22,16 @@ struct PriorityCounter {
     using value_type = std::pair<key_type, mapped_type>;
     inline constexpr static std::size_t k = K;
 
+   private:
     // C++17 の constexpr コンストラクタではすべてのメンバの初期化が必要なので、値初期化しておく
     std::array<value_type, K> data{};
+
+   public:
+    /** @brief 上位から i 番目の値と個数。size() <= i < K では個数は 0 */
+    constexpr const value_type& operator[](long long i) const {
+        assert(0 <= i && i < static_cast<long long>(K));
+        return data[i];
+    }
 
     constexpr PriorityCounter() {}
     explicit constexpr PriorityCounter(const key_type& x) : PriorityCounter() {

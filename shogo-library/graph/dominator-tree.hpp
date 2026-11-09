@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "graph.hpp"
-// https://github.com/shogo314/shogo-library/blob/77ebb090933789a5c7f4dc5561b48ac9861e1e0b/src/graph/dominator-tree.hpp
+// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/graph/dominator-tree.hpp
 
 /**
  * @brief 有向グラフの支配木 (Lengauer–Tarjan) O(m log n)
@@ -20,7 +20,7 @@
  */
 template <typename Cost>
 std::vector<long long> dominator_tree(const Graph<Cost>& graph, long long root) {
-    const long long n = graph.n;
+    const long long n = graph.size();
     assert(0 <= root && root < n);
     std::vector<std::vector<long long>> radj(n);
     for (long long u = 0; u < n; u++) {

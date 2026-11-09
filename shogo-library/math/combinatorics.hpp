@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "modular-arithmetic.hpp"
-// https://github.com/shogo314/shogo-library/blob/77ebb090933789a5c7f4dc5561b48ac9861e1e0b/src/math/combinatorics.hpp
+// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/math/combinatorics.hpp
 
 /**
  * @brief 素数 mod での階乗・二項係数など
@@ -210,13 +210,14 @@ long long Combination<Modint>::cached_mod = 0;
  * 素数でない mod M では、M = p1^q1 ... pk^qk と素因数分解し、各 p^q で C を求めて crt (number-theory.hpp) でまとめる
  * 参考: https://nyaannyaan.github.io/library/modulo/arbitrary-mod-binomial.hpp (一般化 Lucas の定理)
  */
-struct CombinationPQ {
+class CombinationPQ {
     int p;                                //!< 素数
     int q;                                //!< 指数
     int pq;                               //!< p^q (法)
     std::vector<int> fact_p, inv_fact_p;  // p の倍数を除いた階乗 (mod p^q) とその逆元
     int delta;                            // 符号の補正。p = 2 かつ q >= 3 なら 1、そうでなければ -1
 
+   public:
     /**
      * @brief p^q 未満の数についての階乗を前計算する
      * @param p 素数
@@ -248,6 +249,11 @@ struct CombinationPQ {
         else
             delta = -1;
     }
+    /**
+     * @brief 法 p^q
+     */
+    int mod() const { return pq; }
+
     /**
      * @brief nCr mod p^q
      * @param n 0 以上 (大きくてもよい)

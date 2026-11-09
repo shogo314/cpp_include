@@ -15,7 +15,7 @@
 #include "eulerian-trail.hpp"
 #include "graph.hpp"
 #include "shortest-path.hpp"
-// https://github.com/shogo314/shogo-library/blob/77ebb090933789a5c7f4dc5561b48ac9861e1e0b/src/graph/chinese-postman.hpp
+// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/graph/chinese-postman.hpp
 
 namespace internal_chinese_postman {
 /**
@@ -33,7 +33,7 @@ struct Solver {
 };
 template <typename Cost>
 Solver<Cost> solve(const Graph<Cost>& graph, Cost inf) {
-    const long long n = graph.n;
+    const long long n = graph.size();
     Solver<Cost> res;
     Cost total{};
     for (const auto& e : graph.edges()) {
@@ -108,9 +108,9 @@ std::optional<Path<Cost>> chinese_postman_restore(const Graph<Cost>& graph, Cost
     using Edge = typename Graph<Cost>::Edge;
     auto res = internal_chinese_postman::solve(graph, inf);
     if (!res.cost) return std::nullopt;
-    if (res.start == -1) return Path<Cost>{Cost{}, graph.n == 0 ? std::vector<long long>{} : std::vector<long long>{0}, {}};
+    if (res.start == -1) return Path<Cost>{Cost{}, graph.size() == 0 ? std::vector<long long>{} : std::vector<long long>{0}, {}};
     // 元の辺と、組の間の最短路の辺を複製したものを並べた多重グラフ。orig[新しい番号] は元の辺の番号
-    Graph<Cost> h(graph.n);
+    Graph<Cost> h(graph.size());
     std::vector<long long> orig;
     auto add = [&](const Edge& e) {
         h.add_edge(e.src, e.dst, e.cost);

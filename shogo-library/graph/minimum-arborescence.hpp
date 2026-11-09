@@ -12,7 +12,7 @@
 
 #include "../data_structures/rollback-unionfind.hpp"
 #include "graph.hpp"
-// https://github.com/shogo314/shogo-library/blob/77ebb090933789a5c7f4dc5561b48ac9861e1e0b/src/graph/minimum-arborescence.hpp
+// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/graph/minimum-arborescence.hpp
 
 namespace internal_minimum_arborescence {
 
@@ -85,7 +85,7 @@ struct MinimumArborescence {
 template <typename Cost = long long>
 std::optional<MinimumArborescence<Cost>> minimum_arborescence(const Graph<Cost>& graph, long long root) {
     using Edge = typename Graph<Cost>::Edge;
-    const long long n = graph.n;
+    const long long n = graph.size();
     assert(0 <= root && root < n);
     std::vector<Edge> es;
     for (long long v = 0; v < n; v++) {

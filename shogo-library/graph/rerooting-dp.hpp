@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "tree.hpp"
-// https://github.com/shogo314/shogo-library/blob/77ebb090933789a5c7f4dc5561b48ac9861e1e0b/src/graph/rerooting-dp.hpp
+// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/graph/rerooting-dp.hpp
 
 /**
  * @brief 全方位木DP
@@ -32,18 +32,18 @@ std::vector<V> rerooting_dp(const Tree<Cost>& tree, E e, Merge merge, AddEdge ad
     static_assert(std::is_invocable_r_v<E, AddEdge, V, Cost, long long>);
     static_assert(std::is_invocable_r_v<V, AddNode, E, long long>);
     RootedTree<Cost> rooted(tree, 0);
-    std::vector<V> subdp(rooted.n);
-    for (long long u : rooted.postorder) {
+    std::vector<V> subdp(rooted.size());
+    for (long long u : rooted.postorder()) {
         E tmp = e;
-        for (auto edge : rooted.child[u]) {
+        for (auto edge : rooted.children(u)) {
             tmp = merge(tmp, addedge(subdp[edge.dst], edge.cost, edge.id));
         }
         subdp[u] = addnode(tmp, u);
     }
-    std::vector<V> dp(rooted.n);
-    std::vector<E> pe(rooted.n, e);
-    for (long long u : rooted.preorder) {
-        const auto& ch = rooted.child[u];
+    std::vector<V> dp(rooted.size());
+    std::vector<E> pe(rooted.size(), e);
+    for (long long u : rooted.preorder()) {
+        const auto& ch = rooted.children(u);
         const long long d = static_cast<long long>(ch.size());
         std::vector<E> ri(d + 1, e);
         for (long long i = d - 1; i >= 0; i--) {
@@ -85,7 +85,7 @@ inline std::vector<Cost> distance_sums(const Tree<Cost>& tree) {
         [](P a, Cost c, long long) { return P{a.first + a.second * c, a.second}; },
         [](P a, long long) { return P{a.first, a.second + 1}; });
     std::vector<Cost> res;
-    res.reserve(tree.n);
+    res.reserve(tree.size());
     for (const P& s : tmp) res.push_back(s.first);
     return res;
 }

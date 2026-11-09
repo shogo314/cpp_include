@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "convolution.hpp"
-// https://github.com/shogo314/shogo-library/blob/77ebb090933789a5c7f4dc5561b48ac9861e1e0b/src/math/linear-recurrence.hpp
+// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/math/linear-recurrence.hpp
 
 namespace internal_linear_recurrence {
 

@@ -17,7 +17,7 @@
 
 #include "../data_structures/unionfind.hpp"
 #include "graph.hpp"
-// https://github.com/shogo314/shogo-library/blob/77ebb090933789a5c7f4dc5561b48ac9861e1e0b/src/graph/graph_util.hpp
+// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/graph/graph_util.hpp
 
 /**
  * @brief 無向グラフについて、二部グラフなら0と1に彩色した結果をひとつ返し、二部グラフでないならstd::nulloptを返す。
@@ -26,8 +26,8 @@
  */
 template <typename Cost = long long>
 std::optional<std::vector<int>> bipartite_coloring(const Graph<Cost>& graph) {
-    std::vector<int> color(graph.n, -1);
-    for (long long i = 0; i < graph.n; i++) {
+    std::vector<int> color(graph.size(), -1);
+    for (long long i = 0; i < graph.size(); i++) {
         if (color[i] != -1) continue;
         std::stack<long long> stk;
         stk.push(i);
@@ -64,8 +64,8 @@ bool is_bipartite(const Graph<Cost>& graph) {
 template <typename Cost = long long>
 std::vector<std::vector<long long>> connected_components(const Graph<Cost>& graph) {
     std::vector<std::vector<long long>> groups;
-    std::vector<bool> visited(graph.n);
-    for (long long i = 0; i < graph.n; i++) {
+    std::vector<bool> visited(graph.size());
+    for (long long i = 0; i < graph.size(); i++) {
         if (visited[i]) continue;
         std::stack<long long> stk;
         stk.push(i);
@@ -91,7 +91,7 @@ std::vector<std::vector<long long>> connected_components(const Graph<Cost>& grap
  */
 template <typename Cost = long long>
 std::vector<std::vector<long long>> complement_connected_components(const Graph<Cost>& graph) {
-    const long long n = graph.n;
+    const long long n = graph.size();
     std::vector<long long> rest(n);
     for (long long i = 0; i < n; i++) rest[i] = i;
     std::vector<bool> adj(n, false);
@@ -133,7 +133,7 @@ bool is_connected(const Graph<Cost>& graph) {
  */
 template <typename Cost = long long>
 bool is_tree(const Graph<Cost>& graph) {
-    return graph.m == graph.n - 1 && is_connected(graph);
+    return graph.edge_count() == graph.size() - 1 && is_connected(graph);
 }
 
 /**
@@ -142,13 +142,13 @@ bool is_tree(const Graph<Cost>& graph) {
  */
 template <typename Cost = long long>
 std::optional<std::vector<long long>> topological_sort(const Graph<Cost>& graph) {
-    std::vector<int> indeg(graph.n);
+    std::vector<int> indeg(graph.size());
     std::vector<long long> sorted;
     std::queue<long long> q;
-    for (long long i = 0; i < graph.n; i++) {
+    for (long long i = 0; i < graph.size(); i++) {
         for (long long dst : graph[i]) indeg[dst]++;
     }
-    for (long long i = 0; i < graph.n; i++) {
+    for (long long i = 0; i < graph.size(); i++) {
         if (!indeg[i]) q.push(i);
     }
     while (!q.empty()) {
@@ -159,7 +159,7 @@ std::optional<std::vector<long long>> topological_sort(const Graph<Cost>& graph)
         }
         sorted.push_back(cur);
     }
-    if (static_cast<long long>(sorted.size()) < graph.n) return std::nullopt;
+    if (static_cast<long long>(sorted.size()) < graph.size()) return std::nullopt;
     return sorted;
 }
 
@@ -180,7 +180,7 @@ bool has_cycle_directed(const Graph<Cost>& graph) {
  */
 template <typename Cost = long long>
 bool has_cycle_undirected(const Graph<Cost>& graph) {
-    return graph.m > graph.n - static_cast<long long>(connected_components(graph).size());
+    return graph.edge_count() > graph.size() - static_cast<long long>(connected_components(graph).size());
 }
 
 /**
@@ -194,9 +194,9 @@ template <typename Cost = long long>
 std::optional<Path<Cost>> find_cycle_directed(const Graph<Cost>& graph) {
     using Edge = typename Graph<Cost>::Edge;
     // state: 0 は未訪問、1 は DFS のスタック上、2 は探索済み
-    std::vector<int> state(graph.n, 0), iter(graph.n, 0);
-    std::vector<Edge> in(graph.n);  // DFS 木で v に入る辺
-    for (long long root = 0; root < graph.n; root++) {
+    std::vector<int> state(graph.size(), 0), iter(graph.size(), 0);
+    std::vector<Edge> in(graph.size());  // DFS 木で v に入る辺
+    for (long long root = 0; root < graph.size(); root++) {
         if (state[root]) continue;
         std::vector<long long> st = {root};
         state[root] = 1;
@@ -235,9 +235,9 @@ std::optional<Path<Cost>> find_cycle_directed(const Graph<Cost>& graph) {
 template <typename Cost = long long>
 std::optional<Path<Cost>> find_cycle_undirected(const Graph<Cost>& graph) {
     using Edge = typename Graph<Cost>::Edge;
-    std::vector<int> state(graph.n, 0), iter(graph.n, 0);
-    std::vector<Edge> in(graph.n);
-    for (long long root = 0; root < graph.n; root++) {
+    std::vector<int> state(graph.size(), 0), iter(graph.size(), 0);
+    std::vector<Edge> in(graph.size());
+    for (long long root = 0; root < graph.size(); root++) {
         if (state[root]) continue;
         std::vector<long long> st = {root};
         state[root] = 1;
@@ -279,7 +279,7 @@ std::optional<Path<Cost>> find_cycle_undirected(const Graph<Cost>& graph) {
  */
 template <typename Cost = long long>
 std::vector<std::vector<long long>> strongly_connected_components(const Graph<Cost>& graph) {
-    const long long n = graph.n;
+    const long long n = graph.size();
     std::vector<int> ord(n, -1), low(n), comp(n, -1), iter(n, 0);
     std::vector<long long> visiting;  // 成分がまだ決まっていない訪問済みの頂点
     std::vector<long long> call;      // DFS の呼び出しスタック
@@ -340,7 +340,7 @@ template <typename Cost = long long>
 MinimumSpanningTree<Cost> minimum_spanning_tree(const Graph<Cost>& graph) {
     auto es = graph.edges();
     std::stable_sort(es.begin(), es.end(), [](const auto& a, const auto& b) { return a.cost < b.cost; });
-    UnionFind uf(graph.n);
+    UnionFind uf(graph.size());
     MinimumSpanningTree<Cost> res{Cost{}, {}};
     for (const auto& e : es) {
         if (uf.merge(e.src, e.dst)) {
@@ -359,7 +359,7 @@ MinimumSpanningTree<Cost> minimum_spanning_tree(const Graph<Cost>& graph) {
  */
 template <typename Cost = long long>
 long long chromatic_number(const Graph<Cost>& graph) {
-    const int n = graph.n;
+    const int n = graph.size();
     if (n == 0) return 0;
     assert(n <= 30);
     std::vector<int> adj(n, 0);
@@ -400,7 +400,7 @@ long long chromatic_number(const Graph<Cost>& graph) {
  */
 template <typename Cost = long long>
 std::vector<long long> maximum_independent_set(const Graph<Cost>& graph) {
-    const int n = graph.n;
+    const int n = graph.size();
     assert(n <= 64);
     using u64 = unsigned long long;
     std::vector<u64> adj(n, 0);
@@ -449,7 +449,7 @@ std::vector<long long> maximum_independent_set(const Graph<Cost>& graph) {
  */
 template <typename Cost, typename F>
 void enumerate_triangles(const Graph<Cost>& graph, F f) {
-    const long long n = graph.n;
+    const long long n = graph.size();
     auto less = [&](long long u, long long v) {
         return graph[u].size() != graph[v].size() ? graph[u].size() < graph[v].size() : u < v;
     };
@@ -490,16 +490,16 @@ struct SteinerDP {
 };
 template <typename Cost, typename T>
 SteinerDP<Cost> steiner_dp(const Graph<Cost>& graph, const std::vector<T>& X, Cost inf, bool restore) {
-    for (const auto& x : X) assert(0 <= x && x < graph.n);
+    for (const auto& x : X) assert(0 <= x && x < graph.size());
     const int full = 1 << X.size();
     SteinerDP<Cost> res;
     auto& dp = res.dp;
-    dp.assign(graph.n, std::vector<Cost>(full, inf));
-    if (restore) res.from.assign(graph.n, std::vector<SteinerFrom>(full));
+    dp.assign(graph.size(), std::vector<Cost>(full, inf));
+    if (restore) res.from.assign(graph.size(), std::vector<SteinerFrom>(full));
     for (int p = 0; p < static_cast<int>(X.size()); p++) dp[X[p]][1 << p] = {};
     for (int i = 0; i < full; i++) {
         for (int j = i; j > 0; j = (j - 1) & i) {
-            for (long long k = 0; k < graph.n; k++) {
+            for (long long k = 0; k < graph.size(); k++) {
                 if (dp[k][j] != inf && dp[k][i ^ j] != inf) {
                     if (dp[k][i] == inf || dp[k][i] > dp[k][j] + dp[k][i ^ j]) {
                         dp[k][i] = dp[k][j] + dp[k][i ^ j];
@@ -509,7 +509,7 @@ SteinerDP<Cost> steiner_dp(const Graph<Cost>& graph, const std::vector<T>& X, Co
             }
         }
         std::priority_queue<std::pair<Cost, long long>, std::vector<std::pair<Cost, long long>>, std::greater<std::pair<Cost, long long>>> que;
-        for (long long k = 0; k < graph.n; k++)
+        for (long long k = 0; k < graph.size(); k++)
             if (dp[k][i] != inf) que.emplace(dp[k][i], k);
         while (que.size()) {
             auto [d, u] = que.top();

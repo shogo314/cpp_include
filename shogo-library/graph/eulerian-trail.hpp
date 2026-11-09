@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "graph.hpp"
-// https://github.com/shogo314/shogo-library/blob/77ebb090933789a5c7f4dc5561b48ac9861e1e0b/src/graph/eulerian-trail.hpp
+// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/graph/eulerian-trail.hpp
 
 namespace internal_eulerian_trail {
 
@@ -25,8 +25,8 @@ namespace internal_eulerian_trail {
 template <typename Cost>
 std::optional<std::vector<typename Graph<Cost>::Edge>> hierholzer(const Graph<Cost>& graph, long long s) {
     using Edge = typename Graph<Cost>::Edge;
-    std::vector<int> iter(graph.n, 0);
-    std::vector<bool> used(graph.m, false);
+    std::vector<int> iter(graph.size(), 0);
+    std::vector<bool> used(graph.edge_count(), false);
     std::vector<Edge> res;
     // (今いる頂点, そこへ来るのに使った辺)。始点では辺の src == -1
     std::vector<std::pair<long long, Edge>> st = {{s, Edge()}};
@@ -43,7 +43,7 @@ std::optional<std::vector<typename Graph<Cost>::Edge>> hierholzer(const Graph<Co
             st.push_back({e.dst, e});
         }
     }
-    if (static_cast<long long>(res.size()) != graph.m) return std::nullopt;
+    if (static_cast<long long>(res.size()) != graph.edge_count()) return std::nullopt;
     std::reverse(res.begin(), res.end());
     return res;
 }
@@ -51,7 +51,7 @@ std::optional<std::vector<typename Graph<Cost>::Edge>> hierholzer(const Graph<Co
 // 辺がないグラフのオイラー路。頂点 0 だけの路 (頂点もなければ空)
 template <typename Cost>
 Path<Cost> empty_trail(const Graph<Cost>& graph) {
-    if (graph.n == 0) return {Cost{}, {}, {}};
+    if (graph.size() == 0) return {Cost{}, {}, {}};
     return {Cost{}, {0}, {}};
 }
 
@@ -66,14 +66,14 @@ Path<Cost> empty_trail(const Graph<Cost>& graph) {
  */
 template <typename Cost = long long>
 std::optional<Path<Cost>> eulerian_trail_directed(const Graph<Cost>& graph) {
-    if (graph.m == 0) return internal_eulerian_trail::empty_trail(graph);
-    std::vector<long long> diff(graph.n, 0);  // 出次数 - 入次数
-    for (long long v = 0; v < graph.n; v++) {
+    if (graph.edge_count() == 0) return internal_eulerian_trail::empty_trail(graph);
+    std::vector<long long> diff(graph.size(), 0);  // 出次数 - 入次数
+    for (long long v = 0; v < graph.size(); v++) {
         for (long long u : graph[v]) diff[v]++, diff[u]--;
     }
     // 出次数が 1 多い頂点があればそこから始める。なければ辺を持つ頂点から
     long long s = -1, plus = 0;
-    for (long long v = 0; v < graph.n; v++) {
+    for (long long v = 0; v < graph.size(); v++) {
         if (std::abs(diff[v]) > 1) return std::nullopt;
         if (diff[v] == 1) s = v, plus++;
     }
@@ -95,10 +95,10 @@ std::optional<Path<Cost>> eulerian_trail_directed(const Graph<Cost>& graph) {
  */
 template <typename Cost = long long>
 std::optional<Path<Cost>> eulerian_trail_undirected(const Graph<Cost>& graph) {
-    if (graph.m == 0) return internal_eulerian_trail::empty_trail(graph);
+    if (graph.edge_count() == 0) return internal_eulerian_trail::empty_trail(graph);
     // 次数が奇数の頂点が 2 個ならその一方から、0 個なら辺を持つ頂点から始める
     long long s = -1, odd = 0;
-    for (long long v = 0; v < graph.n; v++) {
+    for (long long v = 0; v < graph.size(); v++) {
         if (graph[v].size() % 2 == 1) s = v, odd++;
     }
     if (odd > 2) return std::nullopt;
