@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "../utility/two-pointers.hpp"
-// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/others/subarray-sum.hpp
+// https://github.com/shogo314/shogo-library/blob/9a3850ecb2614059a50786efbc668c34530bbd74/src/others/subarray-sum.hpp
 
 namespace internal_subarray_sum {
 // i < j かつ p[j] - p[i] <= k となる組 (i, j) の個数

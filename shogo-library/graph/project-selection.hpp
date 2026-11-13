@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "max-flow.hpp"
-// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/graph/project-selection.hpp
+// https://github.com/shogo314/shogo-library/blob/9a3850ecb2614059a50786efbc668c34530bbd74/src/graph/project-selection.hpp
 
 /**
  * @brief 燃やす埋める (Project Selection Problem)

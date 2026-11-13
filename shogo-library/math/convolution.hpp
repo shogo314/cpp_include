@@ -15,7 +15,7 @@
 
 #include "modint.hpp"
 #include "modular-arithmetic.hpp"
-// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/math/convolution.hpp
+// https://github.com/shogo314/shogo-library/blob/9a3850ecb2614059a50786efbc668c34530bbd74/src/math/convolution.hpp
 
 /**
  * @brief 畳み込み

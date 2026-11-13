@@ -6,12 +6,16 @@
  */
 
 #include <algorithm>
+#include <array>
 #include <cassert>
+#include <cstddef>
+#include <iterator>
+#include <limits>
 #include <utility>
 #include <vector>
 
 #include "tree.hpp"
-// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/graph/heavy-light-decomposition.hpp
+// https://github.com/shogo314/shogo-library/blob/9a3850ecb2614059a50786efbc668c34530bbd74/src/graph/heavy-light-decomposition.hpp
 
 /**
  * @brief HL 分解 (Heavy-Light Decomposition)
@@ -168,36 +172,124 @@ class HeavyLightDecomposition {
         return -1;
     }
 
+   private:
+    class PathEnumeration {
+        const HeavyLightDecomposition* hld;
+        int u, v;
+        bool edge;
+
+       public:
+        PathEnumeration(const HeavyLightDecomposition* hld, long long u, long long v, bool edge)
+            : hld(hld), u(static_cast<int>(u)), v(static_cast<int>(v)), edge(edge) {}
+
+        class iterator {
+            struct Interval {
+                int l, r;
+            };
+            const HeavyLightDecomposition* hld = nullptr;
+            int u = 0, v = 0, top = 0;
+            bool edge = false, ascending = true, done = true;
+            // v 側から集めた区間を逆順に返す。light edge を越えるたびに部分木の大きさは倍以上になる。
+            // 未使用の要素は初期化せず、iterator のコピーでも [0, top) だけをコピーする。
+            std::array<Interval, std::numeric_limits<long long>::digits> pending;
+            PathSegment current{0, 0, false};
+
+           public:
+            using value_type = PathSegment;
+            using difference_type = std::ptrdiff_t;
+            using reference = value_type;
+            using pointer = void;
+            using iterator_category = std::input_iterator_tag;
+
+            iterator() = default;
+            iterator(const HeavyLightDecomposition* hld, long long u, long long v, bool edge)
+                : hld(hld), u(static_cast<int>(u)), v(static_cast<int>(v)), edge(edge), done(false) { ++*this; }
+            iterator(const iterator& other)
+                : hld(other.hld), u(other.u), v(other.v), top(other.top), edge(other.edge), ascending(other.ascending), done(other.done), current(other.current) {
+                std::copy_n(other.pending.begin(), top, pending.begin());
+            }
+            iterator& operator=(const iterator& other) {
+                if (this != &other) {
+                    hld = other.hld;
+                    u = other.u;
+                    v = other.v;
+                    top = other.top;
+                    edge = other.edge;
+                    ascending = other.ascending;
+                    done = other.done;
+                    current = other.current;
+                    std::copy_n(other.pending.begin(), top, pending.begin());
+                }
+                return *this;
+            }
+            value_type operator*() const { return current; }
+            iterator& operator++() {
+                if (ascending) {
+                    while (hld->head[u] != hld->head[v]) {
+                        if (hld->dep[hld->head[u]] >= hld->dep[hld->head[v]]) {
+                            current = {hld->in[hld->head[u]], hld->in[u] + 1, true};
+                            u = hld->par[hld->head[u]];
+                            return *this;
+                        }
+                        pending[top++] = {hld->in[hld->head[v]], hld->in[v] + 1};
+                        v = hld->par[hld->head[v]];
+                    }
+                    ascending = false;
+                    if (hld->dep[u] >= hld->dep[v]) {
+                        const long long l = hld->in[v] + edge;
+                        if (l <= hld->in[u]) {
+                            current = {l, hld->in[u] + 1, true};
+                            return *this;
+                        }
+                    } else {
+                        const long long l = hld->in[u] + edge;
+                        if (l <= hld->in[v]) {
+                            current = {l, hld->in[v] + 1, false};
+                            return *this;
+                        }
+                    }
+                }
+                if (top > 0) {
+                    const auto [l, r] = pending[--top];
+                    current = {l, r, false};
+                } else {
+                    done = true;
+                }
+                return *this;
+            }
+            // 後置 increment では、退避した区間をコピーせず、変更前の値だけを返す。
+            struct Postfix {
+                value_type value;
+                value_type operator*() const { return value; }
+            };
+            Postfix operator++(int) {
+                const Postfix previous{current};
+                ++*this;
+                return previous;
+            }
+            bool operator==(const iterator& other) const {
+                if (done || other.done) return done == other.done;
+                return hld == other.hld && current.l == other.current.l && current.r == other.current.r && current.reverse == other.current.reverse;
+            }
+            bool operator!=(const iterator& other) const { return !(*this == other); }
+        };
+
+        iterator begin() const { return iterator(hld, u, v, edge); }
+        iterator end() const { return iterator(); }
+    };
+
+   public:
     /**
-     * @brief u から v へのパスを、列の区間に分けて u 側から順に並べる O(log n)
+     * @brief u から v へのパスの区間を u 側から順に遅延列挙する。構築 O(1)、全走査 O(log n)
      *
      * 各要素は半開区間 [l, r) と向き reverse を持つ PathSegment
      * reverse が false なら index の昇順、true なら降順 (根に近づく向き) にたどる
      * 交換法則が成り立たない演算では、reverse が true の区間は逆順の積を使う
+     * @pre 走査中は、この HeavyLightDecomposition を有効なまま保持し、変更しないこと
      * @param edge true なら辺についてのパスにする。辺 (parent(v), v) を index(v) 番目に対応させ、lca の位置を含めない
      */
-    std::vector<PathSegment> path(long long u, long long v, bool edge = false) const {
+    auto path(long long u, long long v, bool edge = false) const {
         assert(0 <= u && u < n && 0 <= v && v < n);
-        std::vector<PathSegment> up, down;
-        while (head[u] != head[v]) {
-            if (dep[head[u]] >= dep[head[v]]) {
-                up.push_back({in[head[u]], in[u] + 1, true});
-                u = par[head[u]];
-            } else {
-                down.push_back({in[head[v]], in[v] + 1, false});
-                v = par[head[v]];
-            }
-        }
-        if (dep[u] >= dep[v]) {
-            // v が lca
-            long long l = in[v] + edge;
-            if (l <= in[u]) up.push_back({l, in[u] + 1, true});
-        } else {
-            // u が lca
-            long long l = in[u] + edge;
-            if (l <= in[v]) down.push_back({l, in[v] + 1, false});
-        }
-        up.insert(up.end(), down.rbegin(), down.rend());
-        return up;
+        return PathEnumeration(this, u, v, edge);
     }
 };

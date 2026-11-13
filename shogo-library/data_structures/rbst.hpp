@@ -16,13 +16,15 @@
 
 #include "../algebra/acted-monoid.hpp"
 #include "../utility/traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/data_structures/rbst.hpp
+// https://github.com/shogo314/shogo-library/blob/9a3850ecb2614059a50786efbc668c34530bbd74/src/data_structures/rbst.hpp
 
 namespace internal_rbst {
+#if __cplusplus < 202002L
 template <typename M, typename = void>
 struct has_acted : std::false_type {};
 template <typename M>
 struct has_acted<M, std::void_t<typename M::F>> : std::true_type {};
+#endif
 // 作用素付きでないモノイドのときの作用素の型
 struct NoAct {
     using F = NoAct;
@@ -48,11 +50,19 @@ template <typename M>
 class RBST {
    public:
     using S = typename M::S;
+#if __cplusplus >= 202002L
+    static constexpr bool acted = requires { typename M::F; };
+#else
     static constexpr bool acted = internal_rbst::has_acted<M>::value;
+#endif
     using F = typename std::conditional_t<acted, M, internal_rbst::NoAct>::F;
 
    private:
+#if __cplusplus >= 202002L
+    static_assert(!acted || !requires(const M& m, const F& f, const S& x) { m.mapping(f, x, 0LL, 0LL); }, "RBST: mapping(f, x, l, r) は使えない");
+#else
     static_assert(!acted || !internal_acted_monoid::has_mapping_lr<M>::value, "RBST: mapping(f, x, l, r) は使えない");
+#endif
 
     // 頂点 0 は空の木を表す
     struct Node {

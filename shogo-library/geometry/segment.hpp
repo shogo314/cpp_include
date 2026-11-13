@@ -13,7 +13,7 @@
 
 #include "internal/predicates.hpp"
 #include "line.hpp"
-// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/geometry/segment.hpp
+// https://github.com/shogo314/shogo-library/blob/9a3850ecb2614059a50786efbc668c34530bbd74/src/geometry/segment.hpp
 
 /**
  * @brief 2 端点で表す線分。長さ 0 も許す。等値比較では端点の順序を無視する

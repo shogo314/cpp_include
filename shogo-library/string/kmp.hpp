@@ -1,12 +1,14 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/string/kmp.hpp
+// https://github.com/shogo314/shogo-library/blob/9a3850ecb2614059a50786efbc668c34530bbd74/src/string/kmp.hpp
 
 /**
  * @file kmp.hpp
  * @brief 接頭辞関数と KMP 法
  */
 
+#include <cstddef>
 #include <iterator>
+#include <utility>
 #include <vector>
 
 /**
@@ -44,35 +46,77 @@ std::vector<long long> prefix_function(const R& s) {
     return prefix_function(std::begin(s), std::end(s));
 }
 
+namespace internal_kmp {
+template <typename Text, typename Pattern>
+class Matches {
+    Text text;
+    Pattern pattern;
+    std::vector<long long> pi;
+    long long n, m;
+
+   public:
+    Matches(Text&& text, Pattern&& pattern)
+        : text(std::forward<Text>(text)), pattern(std::forward<Pattern>(pattern)), pi(prefix_function(this->pattern)), n(std::end(std::as_const(this->text)) - std::begin(std::as_const(this->text))), m(pi.size()) {}
+
+    class iterator {
+        const Matches* range = nullptr;
+        long long i = 0, j = 0, pos = -1;
+
+       public:
+        using value_type = long long;
+        using difference_type = std::ptrdiff_t;
+        using reference = value_type;
+        using pointer = void;
+        using iterator_category = std::input_iterator_tag;
+
+        iterator() = default;
+        explicit iterator(const Matches* range) : range(range) { ++*this; }
+        value_type operator*() const { return pos; }
+        iterator& operator++() {
+            if (range->m == 0) {
+                pos = i;
+                i = i == range->n ? -1 : i + 1;
+                return *this;
+            }
+            auto t = std::begin(std::as_const(range->text));
+            auto p = std::begin(std::as_const(range->pattern));
+            while (i < range->n) {
+                while (j > 0 && !(t[i] == p[j])) j = range->pi[j - 1];
+                if (t[i] == p[j]) j++;
+                i++;
+                if (j == range->m) {
+                    pos = i - range->m;
+                    j = range->pi[j - 1];
+                    return *this;
+                }
+            }
+            pos = -1;
+            return *this;
+        }
+        iterator operator++(int) {
+            auto previous = *this;
+            ++*this;
+            return previous;
+        }
+        bool operator==(const iterator& other) const {
+            if (pos == -1 || other.pos == -1) return pos == other.pos;
+            return range == other.range && pos == other.pos;
+        }
+        bool operator!=(const iterator& other) const { return !(*this == other); }
+    };
+
+    iterator begin() const { return iterator(this); }
+    iterator end() const { return iterator(); }
+};
+}  // namespace internal_kmp
+
 /**
- * @brief KMP 法で text の中の pattern の出現位置 (開始位置) をすべて昇順に求める O(N + M)
- * pattern が空なら 0, 1, ..., N を返す
- *
- * @tparam R1 配列の型
- * @tparam R2 配列の型
- * @param text 探す対象
- * @param pattern 探す列
- * @return std::vector<long long> 出現位置
+ * @brief KMP 法による一致位置の遅延列挙。構築 O(|pattern|)、全走査 O(|text| + |pattern|)、追加領域 O(|pattern|)
+ * pattern が空なら 0, 1, ..., |text| を返す。左辺値の入力は参照し、右辺値は所有する
+ * @pre 両方の入力にランダムアクセス可能な iterator があること
+ * @pre 走査中は range と参照する入力を有効なまま保持し、変更しないこと
  */
 template <typename R1, typename R2>
-std::vector<long long> kmp_search(const R1& text, const R2& pattern) {
-    auto t = std::begin(text);
-    auto p = std::begin(pattern);
-    long long n = std::end(text) - t, m = std::end(pattern) - p;
-    std::vector<long long> res;
-    if (m == 0) {
-        for (long long i = 0; i <= n; i++) res.push_back(i);
-        return res;
-    }
-    std::vector<long long> pi = prefix_function(pattern);
-    for (long long i = 0, j = 0; i < n; i++) {
-        // pattern[0, j) と text[i - j, i) が一致している
-        while (j > 0 && !(t[i] == p[j])) j = pi[j - 1];
-        if (t[i] == p[j]) j++;
-        if (j == m) {
-            res.push_back(i - m + 1);
-            j = pi[j - 1];
-        }
-    }
-    return res;
+auto kmp_search(R1&& text, R2&& pattern) {
+    return internal_kmp::Matches<R1, R2>(std::forward<R1>(text), std::forward<R2>(pattern));
 }

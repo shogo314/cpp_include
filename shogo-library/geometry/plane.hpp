@@ -12,7 +12,7 @@
 
 #include "internal/predicates.hpp"
 #include "line.hpp"
-// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/geometry/plane.hpp
+// https://github.com/shogo314/shogo-library/blob/9a3850ecb2614059a50786efbc668c34530bbd74/src/geometry/plane.hpp
 
 /**
  * @brief 一直線上にない 3 点で表す平面。等値比較は点の選び方・順序によらず同じ平面かを判定する

@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/string/aho-corasick.hpp
+// https://github.com/shogo314/shogo-library/blob/9a3850ecb2614059a50786efbc668c34530bbd74/src/string/aho-corasick.hpp
 
 /**
  * @file aho-corasick.hpp
@@ -8,7 +8,10 @@
 
 #include <array>
 #include <cassert>
+#include <cstddef>
 #include <iterator>
+#include <optional>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -215,23 +218,85 @@ class AhoCorasick {
         friend bool operator==(const Match& a, const Match& b) { return a.pos == b.pos && a.id == b.id; }
         friend bool operator!=(const Match& a, const Match& b) { return !(a == b); }
     };
+
+   private:
+    template <typename R>
+    class Matches {
+        const AhoCorasick* ac;
+        R text;
+        using Text = std::remove_reference_t<R>;
+        using TextIterator = decltype(std::begin(std::declval<const Text&>()));
+        using TextSentinel = decltype(std::end(std::declval<const Text&>()));
+
+       public:
+        Matches(const AhoCorasick* ac, R&& text) : ac(ac), text(std::forward<R>(text)) {}
+
+        class iterator {
+            const AhoCorasick* ac = nullptr;
+            // 終端 iterator は入力を持たない。入力 iterator のデフォルト構築は要求しない。
+            std::optional<TextIterator> cursor;
+            std::optional<TextSentinel> stop;
+            long long pos = 0;
+            int v = 0, u = -1, id = -1;
+
+           public:
+            using value_type = Match;
+            using difference_type = std::ptrdiff_t;
+            using reference = value_type;
+            using pointer = void;
+            using iterator_category = std::input_iterator_tag;
+
+            iterator() = default;
+            iterator(const AhoCorasick* ac, TextIterator cursor, TextSentinel stop) : ac(ac), cursor(cursor), stop(stop) { ++*this; }
+            value_type operator*() const { return {pos - ac->nodes[u].depth, id}; }
+            iterator& operator++() {
+                if (id != -1) {
+                    id = ac->next_pattern[id];
+                    if (id != -1) return *this;
+                    u = ac->nodes[u].out;
+                    if (u != -1) {
+                        id = ac->nodes[u].head;
+                        return *this;
+                    }
+                }
+                while (*cursor != *stop) {
+                    v = ac->nodes[v].next[index(**cursor)];
+                    ++*cursor;
+                    ++pos;
+                    u = ac->nodes[v].head != -1 ? v : ac->nodes[v].out;
+                    if (u != -1) {
+                        id = ac->nodes[u].head;
+                        break;
+                    }
+                }
+                return *this;
+            }
+            iterator operator++(int) {
+                auto previous = *this;
+                ++*this;
+                return previous;
+            }
+            bool operator==(const iterator& other) const {
+                if (id == -1 || other.id == -1) return id == other.id;
+                return ac == other.ac && pos == other.pos && id == other.id;
+            }
+            bool operator!=(const iterator& other) const { return !(*this == other); }
+        };
+
+        iterator begin() const { return iterator(ac, std::begin(std::as_const(text)), std::end(std::as_const(text))); }
+        iterator end() const { return iterator(); }
+    };
+
+   public:
     /**
-     * @brief text に現れるパターンをすべて {開始位置 pos, パターンの番号 id} で返す O(|text| + 出力の個数)
-     * 終わる位置の順に並び、同じ位置で終わるものは長いパターンから、同じパターンは番号の小さい順に並ぶ
+     * @brief 一致を Match {pos, id} として遅延列挙する。全走査 O(|text| + 出力の個数)、列挙状態は O(1)
+     * 終了位置の昇順。同じ終了位置なら長さの降順、同じ長さならパターン番号の昇順
+     * 左辺値の text は参照し、右辺値は所有する
+     * @pre 走査が終わるまで、このオートマトンと参照する入力を有効なまま保持すること
      */
     template <typename R>
-    std::vector<Match> find_all(const R& text) const {
+    auto find_all(R&& text) const {
         assert(built);
-        std::vector<Match> res;
-        int v = 0;
-        long long pos = 0;
-        for (auto c : text) {
-            v = nodes[v].next[index(c)];
-            pos++;
-            for (int u = nodes[v].head != -1 ? v : nodes[v].out; u != -1; u = nodes[u].out) {
-                for (int id = nodes[u].head; id != -1; id = next_pattern[id]) res.push_back({pos - nodes[u].depth, id});
-            }
-        }
-        return res;
+        return Matches<R>(this, std::forward<R>(text));
     }
 };

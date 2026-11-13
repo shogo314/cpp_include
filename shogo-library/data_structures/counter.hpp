@@ -17,7 +17,7 @@
 #include <vector>
 
 #include "../utility/traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/data_structures/counter.hpp
+// https://github.com/shogo314/shogo-library/blob/9a3850ecb2614059a50786efbc668c34530bbd74/src/data_structures/counter.hpp
 
 template <typename T = long long>
 struct Counter {
@@ -44,8 +44,14 @@ struct Counter {
      * @brief 範囲の要素を数える
      * Counter 自身と key_type (std::string など範囲でもあるもの) はこちらで受け取らない
      */
+#if __cplusplus >= 202002L
+    template <class C>
+        requires(!std::same_as<std::decay_t<C>, Counter> && !std::convertible_to<C, key_type> &&
+                 requires(C& c) { std::begin(c); std::end(c); })
+#else
     template <class C, ENABLE_IF_T(!std::is_same_v<std::decay_t<C>, Counter> && !std::is_convertible_v<C, key_type>),
               class = decltype(std::begin(std::declval<C&>()), std::end(std::declval<C&>()))>
+#endif
     explicit Counter(C&& v) {
         for (const key_type& a : v) {
             inc(a, 1);

@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/utility/bit.hpp
+// https://github.com/shogo314/shogo-library/blob/9a3850ecb2614059a50786efbc668c34530bbd74/src/utility/bit.hpp
 
 /**
  * @file bit.hpp
@@ -7,6 +7,8 @@
  */
 
 #include <cassert>
+#include <cstddef>
+#include <iterator>
 #include <string>
 #include <utility>
 
@@ -314,12 +316,24 @@ struct BitEnumeration {
     bool empty;
     Next next;  // next(s) は次の値、終わりなら -1
     struct iterator {
-        long long s;
-        const Next* next;
+        using value_type = long long;
+        using difference_type = std::ptrdiff_t;
+        using pointer = void;
+        using reference = value_type;
+        using iterator_category = std::input_iterator_tag;
+        using iterator_concept = std::forward_iterator_tag;
+
+        long long s = -1;
+        const Next* next = nullptr;
         constexpr long long operator*() const { return s; }
         constexpr iterator& operator++() {
             s = (*next)(s);
             return *this;
+        }
+        constexpr iterator operator++(int) {
+            auto previous = *this;
+            ++*this;
+            return previous;
         }
         constexpr bool operator!=(const iterator& other) const { return s != other.s; }
         constexpr bool operator==(const iterator& other) const { return s == other.s; }
@@ -327,6 +341,97 @@ struct BitEnumeration {
     constexpr iterator begin() const { return {empty ? -1 : first, &next}; }
     constexpr iterator end() const { return {-1, &next}; }
 };
+struct Bits {
+    long long mask;
+    struct iterator {
+        using value_type = long long;
+        using difference_type = std::ptrdiff_t;
+        using pointer = void;
+        using reference = value_type;
+        using iterator_category = std::input_iterator_tag;
+        using iterator_concept = std::forward_iterator_tag;
+
+        long long s = 0;
+        constexpr long long operator*() const { return countr_zero(s); }
+        constexpr iterator& operator++() {
+            s &= s - 1;
+            return *this;
+        }
+        constexpr iterator operator++(int) {
+            auto previous = *this;
+            ++*this;
+            return previous;
+        }
+        constexpr bool operator!=(const iterator& other) const { return s != other.s; }
+        constexpr bool operator==(const iterator& other) const { return s == other.s; }
+    };
+    constexpr iterator begin() const { return {mask}; }
+    constexpr iterator end() const { return {0}; }
+};
+
+struct SubsetPairs {
+    long long n;
+    struct iterator {
+        using value_type = std::pair<long long, long long>;
+        using difference_type = std::ptrdiff_t;
+        using pointer = void;
+        using reference = value_type;
+        using iterator_category = std::input_iterator_tag;
+        using iterator_concept = std::forward_iterator_tag;
+
+        long long s = 0, t = 0;
+        constexpr std::pair<long long, long long> operator*() const { return {s, t}; }
+        constexpr iterator& operator++() {
+            if (t == 0) {
+                t = ++s;
+            } else {
+                t = (t - 1) & s;
+            }
+            return *this;
+        }
+        constexpr iterator operator++(int) {
+            auto previous = *this;
+            ++*this;
+            return previous;
+        }
+        constexpr bool operator!=(const iterator& other) const { return s != other.s || t != other.t; }
+        constexpr bool operator==(const iterator& other) const { return s == other.s && t == other.t; }
+    };
+    constexpr iterator begin() const { return {0, 0}; }
+    constexpr iterator end() const { return {1LL << n, 1LL << n}; }
+};
+
+struct SubsetsNext {
+    long long mask;
+    constexpr long long operator()(long long s) const { return s == 0 ? -1 : (s - 1) & mask; }
+};
+struct SupersetsNext {
+    long long mask, full;
+    constexpr long long operator()(long long s) const { return s == full ? -1 : (s + 1) | mask; }
+};
+struct CombinationsNext {
+    long long limit;
+    constexpr long long operator()(long long s) const;
+};
+struct FixedSubsetsNext {
+    long long mask, k;
+    constexpr long long lowest(long long count) const {
+        long long res = 0, rest = mask;
+        for (long long j = 0; j < count; j++) {
+            res |= rest & -rest;
+            rest &= rest - 1;
+        }
+        return res;
+    }
+    constexpr long long operator()(long long s) const {
+        if (s == 0) return -1;
+        // mask の外のビットを 1 とみなして最下位ビットを足すと、繰り上がりが mask の中だけを進む。
+        unsigned long long c = s & -s, r = ((static_cast<unsigned long long>(s) | ~static_cast<unsigned long long>(mask)) + c) & static_cast<unsigned long long>(mask);
+        if (r == 0) return -1;
+        return static_cast<long long>(r) | lowest(k - popcount(static_cast<long long>(r)));
+    }
+};
+
 template <class Next>
 constexpr BitEnumeration<Next> make_bit_enumeration(long long first, bool empty, Next next) {
     return {first, empty, next};
@@ -338,7 +443,7 @@ constexpr BitEnumeration<Next> make_bit_enumeration(long long first, bool empty,
  */
 inline constexpr auto subsets(long long mask) {
     assert(mask >= 0);
-    return internal_bit::make_bit_enumeration(mask, false, [mask](long long s) { return s == 0 ? -1 : (s - 1) & mask; });
+    return internal_bit::make_bit_enumeration(mask, false, internal_bit::SubsetsNext{mask});
 }
 /**
  * @brief n ビットの集合のうち mask を含むものを mask から昇順に列挙する (mask と 2^n - 1 を含む) 全体で O(2^(n - popcount(mask)))
@@ -346,7 +451,7 @@ inline constexpr auto subsets(long long mask) {
 inline constexpr auto supersets(long long mask, long long n) {
     assert(0 <= n && n <= 62 && 0 <= mask && mask < (1LL << n));
     long long full = (1LL << n) - 1;
-    return internal_bit::make_bit_enumeration(mask, false, [mask, full](long long s) { return s == full ? -1 : (s + 1) | mask; });
+    return internal_bit::make_bit_enumeration(mask, false, internal_bit::SupersetsNext{mask, full});
 }
 /**
  * @brief mask の立っているビットの位置を昇順に列挙する 全体で O(popcount(mask))
@@ -354,22 +459,7 @@ inline constexpr auto supersets(long long mask, long long n) {
 inline constexpr auto bits(long long mask) {
     assert(mask >= 0);
     // 内部では残りのビットを持ち、* で最下位ビットの位置を返す
-    struct Bits {
-        long long mask;
-        struct iterator {
-            long long s;
-            constexpr long long operator*() const { return countr_zero(s); }
-            constexpr iterator& operator++() {
-                s &= s - 1;
-                return *this;
-            }
-            constexpr bool operator!=(const iterator& other) const { return s != other.s; }
-            constexpr bool operator==(const iterator& other) const { return s == other.s; }
-        };
-        constexpr iterator begin() const { return {mask}; }
-        constexpr iterator end() const { return {0}; }
-    };
-    return Bits{mask};
+    return internal_bit::Bits{mask};
 }
 /**
  * @brief s と立っているビットの数が同じで、s より大きい最小の値 (Gosper's hack)
@@ -381,6 +471,12 @@ inline constexpr long long next_combination_mask(long long s) {
     unsigned long long t = (((r ^ u) >> 2) / c) | r;
     return t > 0x7fffffffffffffffULL ? -1 : static_cast<long long>(t);
 }
+constexpr long long internal_bit::CombinationsNext::operator()(long long s) const {
+    if (s == 0) return -1;
+    long long t = next_combination_mask(s);
+    return t >= limit ? -1 : t;
+}
+
 /**
  * @brief n ビットの集合のうち、ちょうど k 個のビットが立つものを昇順に列挙する (Gosper's hack) 全体で O(C(n, k))
  * k > n なら何も列挙しない
@@ -388,11 +484,7 @@ inline constexpr long long next_combination_mask(long long s) {
 inline constexpr auto combinations_mask(long long n, long long k) {
     assert(0 <= n && n <= 62 && 0 <= k);
     long long limit = 1LL << n;
-    return internal_bit::make_bit_enumeration(k > n ? -1 : (1LL << k) - 1, k > n, [limit](long long s) {
-        if (s == 0) return -1LL;  // k = 0 のときは 0 だけ
-        long long t = next_combination_mask(s);
-        return t >= limit ? -1 : t;
-    });
+    return internal_bit::make_bit_enumeration(k > n ? -1 : (1LL << k) - 1, k > n, internal_bit::CombinationsNext{limit});
 }
 /**
  * @brief mask の部分集合のうち、ちょうど k 個のビットが立つものを昇順に列挙する 1 つあたり O(k)
@@ -400,24 +492,9 @@ inline constexpr auto combinations_mask(long long n, long long k) {
  */
 inline constexpr auto subsets_of_size(long long mask, long long k) {
     assert(mask >= 0 && 0 <= k);
-    // mask の下位 cnt 個の立っているビット
-    auto lowest = [mask](long long cnt) {
-        long long res = 0, rest = mask;
-        for (long long j = 0; j < cnt; j++) {
-            res |= rest & -rest;
-            rest &= rest - 1;
-        }
-        return res;
-    };
+    const internal_bit::FixedSubsetsNext next{mask, k};
     bool empty = k > popcount(mask);
-    return internal_bit::make_bit_enumeration(empty ? -1 : lowest(k), empty, [mask, k, lowest](long long s) {
-        if (s == 0) return -1LL;  // k = 0 のときは 0 だけ
-        // mask の外のビットを 1 とみなして最下位ビットを足すと、繰り上がりが mask の中だけを進む
-        unsigned long long c = s & -s, r = ((static_cast<unsigned long long>(s) | ~static_cast<unsigned long long>(mask)) + c) & static_cast<unsigned long long>(mask);
-        if (r == 0) return -1LL;  // 繰り上がりが mask の最上位を越えた
-        // 繰り上がりで消えたビットを mask の下位に詰め直す
-        return static_cast<long long>(r) | lowest(k - popcount(static_cast<long long>(r)));
-    });
+    return internal_bit::make_bit_enumeration(empty ? -1 : next.lowest(k), empty, next);
 }
 
 namespace internal_bit {
@@ -425,7 +502,14 @@ namespace internal_bit {
 struct ToggleOneBit {
     long long mask, rest;
     struct iterator {
-        long long mask, s;
+        using value_type = std::pair<long long, long long>;
+        using difference_type = std::ptrdiff_t;
+        using pointer = void;
+        using reference = value_type;
+        using iterator_category = std::input_iterator_tag;
+        using iterator_concept = std::forward_iterator_tag;
+
+        long long mask = 0, s = 0;
         constexpr std::pair<long long, long long> operator*() const {
             long long i = countr_zero(s);
             return {i, mask ^ (1LL << i)};
@@ -433,6 +517,11 @@ struct ToggleOneBit {
         constexpr iterator& operator++() {
             s &= s - 1;
             return *this;
+        }
+        constexpr iterator operator++(int) {
+            auto previous = *this;
+            ++*this;
+            return previous;
         }
         constexpr bool operator!=(const iterator& other) const { return s != other.s; }
         constexpr bool operator==(const iterator& other) const { return s == other.s; }
@@ -465,24 +554,5 @@ inline constexpr internal_bit::ToggleOneBit remove_one(long long mask) {
  */
 inline constexpr auto subset_pairs(long long n) {
     assert(0 <= n && n <= 62);
-    struct SubsetPairs {
-        long long n;
-        struct iterator {
-            long long s, t;
-            constexpr std::pair<long long, long long> operator*() const { return {s, t}; }
-            constexpr iterator& operator++() {
-                if (t == 0) {
-                    t = ++s;
-                } else {
-                    t = (t - 1) & s;
-                }
-                return *this;
-            }
-            constexpr bool operator!=(const iterator& other) const { return s != other.s || t != other.t; }
-            constexpr bool operator==(const iterator& other) const { return s == other.s && t == other.t; }
-        };
-        constexpr iterator begin() const { return {0, 0}; }
-        constexpr iterator end() const { return {1LL << n, 1LL << n}; }
-    };
-    return SubsetPairs{n};
+    return internal_bit::SubsetPairs{n};
 }

@@ -16,8 +16,28 @@
 #include <vector>
 
 #include "traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/utility/container_func.hpp
+// https://github.com/shogo314/shogo-library/blob/9a3850ecb2614059a50786efbc668c34530bbd74/src/utility/container_func.hpp
 
+#if __cplusplus >= 202002L
+#define METHOD_EXPAND(func)         \
+    template <typename T>           \
+        requires(has_##func##_v<T>) \
+    inline constexpr auto func(const T& t) -> decltype(t.func()) { return t.func(); }
+
+#define METHOD_AND_FUNC_ARG_EXPAND(func)                                                               \
+    template <typename T, typename U>                                                                  \
+        requires(has_##func##_v<T, U>)                                                                 \
+    inline constexpr auto func(const T& t, const U& u) -> decltype(t.func(u)) { return t.func(u); }    \
+    template <typename T, typename U>                                                                  \
+        requires(!has_##func##_v<T, U>)                                                                \
+    inline constexpr auto func(const T& t, const U& u) -> decltype(std::func(t.begin(), t.end(), u)) { \
+        if constexpr (requires { std::ranges::func(t, u); }) {                                         \
+            return std::ranges::func(t, u);                                                            \
+        } else {                                                                                       \
+            return std::func(t.begin(), t.end(), u);                                                   \
+        }                                                                                              \
+    }
+#else
 #define METHOD_EXPAND(func)                                        \
     template <typename T, ENABLE_IF_T(has_##func##_v<T>)>          \
     inline constexpr auto func(const T& t) -> decltype(t.func()) { \
@@ -35,60 +55,129 @@
         -> decltype(std::func(t.begin(), t.end(), u)) {                   \
         return std::func(t.begin(), t.end(), u);                          \
     }
+#endif
 
 METHOD_EXPAND(reversed)
+#if __cplusplus >= 202002L
+template <class C>
+    requires(!has_reversed_v<C>)
+#else
 template <class C, ENABLE_IF_T(!has_reversed_v<C>)>
+#endif
 inline constexpr C reversed(C t) {
-    std::reverse(t.begin(), t.end());
+#if __cplusplus >= 202002L
+    if constexpr (requires { std::ranges::reverse(t); }) {
+        std::ranges::reverse(t);
+    } else
+#endif
+    {
+        std::reverse(t.begin(), t.end());
+    }
     return t;
 }
 
 namespace internal_container_func {
 // comp(proj(a), proj(b)) で比べられるか
+#if __cplusplus >= 202002L
+template <class C, class F, class P>
+concept projected_comp = requires(F& comp, P& proj, const typename C::value_type& value) {
+    { std::invoke(comp, std::invoke(proj, value), std::invoke(proj, value)) } -> std::convertible_to<bool>;
+};
+#else
 template <class C, class F, class P, class = void>
 struct is_projected_comp : std::false_type {};
 template <class C, class F, class P>
 struct is_projected_comp<C, F, P, std::void_t<std::invoke_result_t<P&, const mem_value_type<C>&>>>
     : std::is_invocable_r<bool, F&, std::invoke_result_t<P&, const mem_value_type<C>&>, std::invoke_result_t<P&, const mem_value_type<C>&>> {};
+#endif
+// ranges で扱える iterator では射影を直接渡す。vector<bool> などは従来のアルゴリズムを使う。
+template <class C, class F, class P>
+constexpr void sort(C& values, F& comp, P& proj) {
+#if __cplusplus >= 202002L
+    if constexpr (requires { std::ranges::sort(values, std::ref(comp), std::ref(proj)); }) {
+        std::ranges::sort(values, std::ref(comp), std::ref(proj));
+    } else
+#endif
+    {
+        std::sort(values.begin(), values.end(), [&](const mem_value_type<C>& a, const mem_value_type<C>& b) {
+            return std::invoke(comp, std::invoke(proj, a), std::invoke(proj, b));
+        });
+    }
+}
 }  // namespace internal_container_func
 
 METHOD_EXPAND(sorted)
+#if __cplusplus >= 202002L
+template <class C, class F = std::less<>, class P = internal_traits::identity>
+    requires(!has_sorted_v<C> && internal_container_func::projected_comp<C, F, P>)
+#else
 template <class C, class F = std::less<>, class P = internal_traits::identity, ENABLE_IF_T(!has_sorted_v<C> && internal_container_func::is_projected_comp<C, F, P>::value)>
+#endif
 inline constexpr C sorted(C t, F comp = F(), P proj = P()) {
-    std::sort(t.begin(), t.end(), [&](const mem_value_type<C>& a, const mem_value_type<C>& b) {
-        return std::invoke(comp, std::invoke(proj, a), std::invoke(proj, b));
-    });
+    internal_container_func::sort(t, comp, proj);
     return t;
 }
 
+#if __cplusplus >= 202002L
+template <class C, class F = std::less<>, class P = internal_traits::identity>
+    requires(internal_container_func::projected_comp<C, F, P>)
+#else
 template <class C, class F = std::less<>, class P = internal_traits::identity, ENABLE_IF_T(internal_container_func::is_projected_comp<C, F, P>::value)>
+#endif
 inline constexpr void sort(C& t, F comp = F(), P proj = P()) {
-    std::sort(t.begin(), t.end(), [&](const mem_value_type<C>& a, const mem_value_type<C>& b) {
-        return std::invoke(comp, std::invoke(proj, a), std::invoke(proj, b));
-    });
+    internal_container_func::sort(t, comp, proj);
 }
 // sort(c, {}, proj) 用。std::vector などでは ADL で std::sort(first, last, comp) も候補になり、
 // {} を F で受けると std::sort が選ばれるので、{} が標準変換で渡る std::nullptr_t で受ける
+#if __cplusplus >= 202002L
+template <class C, class P>
+    requires(internal_container_func::projected_comp<C, std::less<>, P>)
+#else
 template <class C, class P, ENABLE_IF_T(internal_container_func::is_projected_comp<C, std::less<>, P>::value)>
+#endif
 inline constexpr void sort(C& t, std::nullptr_t, P proj) {
     sort(t, std::less<>(), proj);
 }
 
 template <class C>
 inline constexpr void reverse(C& t) {
-    std::reverse(t.begin(), t.end());
+#if __cplusplus >= 202002L
+    if constexpr (requires { std::ranges::reverse(t); }) {
+        std::ranges::reverse(t);
+    } else
+#endif
+    {
+        std::reverse(t.begin(), t.end());
+    }
 }
 
 METHOD_EXPAND(max)
+#if __cplusplus >= 202002L
+template <class C>
+    requires(!has_max_v<C> && is_sorted_container_v<C>)
+#else
 template <class C, ENABLE_IF_T(!has_max_v<C> && is_sorted_container_v<C>)>
+#endif
 inline constexpr mem_value_type<C> max(const C& v) {
     assert(v.begin() != v.end());
     return *v.rbegin();
 }
+#if __cplusplus >= 202002L
+template <class C>
+    requires(!has_max_v<C> && !is_sorted_container_v<C>)
+#else
 template <class C, ENABLE_IF_T(!has_max_v<C> && !is_sorted_container_v<C>)>
+#endif
 inline constexpr mem_value_type<C> max(const C& v) {
     assert(v.begin() != v.end());
-    return *std::max_element(v.begin(), v.end());
+#if __cplusplus >= 202002L
+    if constexpr (requires { std::ranges::max_element(v, std::less<>{}); }) {
+        return *std::ranges::max_element(v, std::less<>{});
+    } else
+#endif
+    {
+        return *std::max_element(v.begin(), v.end());
+    }
 }
 template <typename T>
 inline constexpr T max(const std::initializer_list<T>& v) {
@@ -96,15 +185,32 @@ inline constexpr T max(const std::initializer_list<T>& v) {
 }
 
 METHOD_EXPAND(min)
+#if __cplusplus >= 202002L
+template <class C>
+    requires(!has_min_v<C> && is_sorted_container_v<C>)
+#else
 template <class C, ENABLE_IF_T(!has_min_v<C> && is_sorted_container_v<C>)>
+#endif
 inline constexpr mem_value_type<C> min(const C& v) {
     assert(v.begin() != v.end());
     return *v.begin();
 }
+#if __cplusplus >= 202002L
+template <class C>
+    requires(!has_min_v<C> && !is_sorted_container_v<C>)
+#else
 template <class C, ENABLE_IF_T(!has_min_v<C> && !is_sorted_container_v<C>)>
+#endif
 inline constexpr mem_value_type<C> min(const C& v) {
     assert(v.begin() != v.end());
-    return *std::min_element(v.begin(), v.end());
+#if __cplusplus >= 202002L
+    if constexpr (requires { std::ranges::min_element(v, std::less<>{}); }) {
+        return *std::ranges::min_element(v, std::less<>{});
+    } else
+#endif
+    {
+        return *std::min_element(v.begin(), v.end());
+    }
 }
 template <typename T>
 inline constexpr T min(const std::initializer_list<T>& v) {
@@ -112,7 +218,12 @@ inline constexpr T min(const std::initializer_list<T>& v) {
 }
 
 METHOD_EXPAND(sum)
+#if __cplusplus >= 202002L
+template <class C>
+    requires(!has_sum_v<C>)
+#else
 template <class C, ENABLE_IF_T(!has_sum_v<C>)>
+#endif
 inline constexpr mem_value_type<C> sum(const C& v) {
     return std::accumulate(v.begin(), v.end(), mem_value_type<C>{});
 }
@@ -122,7 +233,12 @@ inline constexpr T sum(const std::initializer_list<T>& v) {
 }
 
 METHOD_EXPAND(product)
+#if __cplusplus >= 202002L
+template <class C>
+    requires(!has_product_v<C>)
+#else
 template <class C, ENABLE_IF_T(!has_product_v<C>)>
+#endif
 inline constexpr mem_value_type<C> product(const C& v) {
     return std::accumulate(v.begin(), v.end(), mem_value_type<C>{1}, std::multiplies<mem_value_type<C>>());
 }
@@ -132,7 +248,12 @@ inline constexpr T product(const std::initializer_list<T>& v) {
 }
 
 METHOD_EXPAND(product_xor)
+#if __cplusplus >= 202002L
+template <class C>
+    requires(!has_product_xor_v<C>)
+#else
 template <class C, ENABLE_IF_T(!has_product_xor_v<C>)>
+#endif
 inline constexpr mem_value_type<C> product_xor(const C& v) {
     return std::accumulate(v.begin(), v.end(), mem_value_type<C>{0}, std::bit_xor<mem_value_type<C>>());
 }
@@ -244,7 +365,12 @@ inline constexpr auto hamming_distance(const R1& s, const R2& t) -> decltype(std
     return res;
 }
 
+#if __cplusplus >= 202002L
+template <class C>
+    requires(std::integral<mem_value_type<C>>)
+#else
 template <class C, ENABLE_IF_T(std::is_integral_v<mem_value_type<C>>)>
+#endif
 inline constexpr mem_value_type<C> mex(const C& v) {
     std::vector<bool> b(v.size() + 1);
     for (const auto& a : v) {

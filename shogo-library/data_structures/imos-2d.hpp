@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "../utility/range.hpp"
-// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/data_structures/imos-2d.hpp
+// https://github.com/shogo314/shogo-library/blob/9a3850ecb2614059a50786efbc668c34530bbd74/src/data_structures/imos-2d.hpp
 
 /**
  * @brief 2 次元のいもす法 (長方形への加算をためておき、最後にまとめて各マスの値を求める)

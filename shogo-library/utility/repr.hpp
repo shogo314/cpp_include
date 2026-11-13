@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/utility/repr.hpp
+// https://github.com/shogo314/shogo-library/blob/9a3850ecb2614059a50786efbc668c34530bbd74/src/utility/repr.hpp
 
 namespace internal_repr {
 
@@ -119,27 +119,57 @@ inline std::string repr(const std::array<T, N>&);
 /////////////////////////// definition ////////////////////////////
 ///////////////////////////////////////////////////////////////////
 
+#if __cplusplus >= 202002L
+template <typename T>
+    requires(!has_type_str_v<T>)
+#else
 template <typename T, ENABLE_IF_T(!has_type_str_v<T>)>
+#endif
 inline std::string type_str(const T&) {
     return "T";
 }
+#if __cplusplus >= 202002L
+template <typename T>
+    requires(has_type_str_v<T>)
+#else
 template <typename T, ENABLE_IF_T(has_type_str_v<T>)>
+#endif
 inline std::string type_str(const T& t) {
     return t.type_str();
 }
+#if __cplusplus >= 202002L
+template <typename T>
+    requires(!has_initializer_str_v<T>)
+#else
 template <typename T, ENABLE_IF_T(!has_initializer_str_v<T>)>
+#endif
 inline std::string initializer_str(const T&) {
     return "{}";
 }
+#if __cplusplus >= 202002L
+template <typename T>
+    requires(has_initializer_str_v<T>)
+#else
 template <typename T, ENABLE_IF_T(has_initializer_str_v<T>)>
+#endif
 inline std::string initializer_str(const T& t) {
     return t.initializer_str();
 }
+#if __cplusplus >= 202002L
+template <typename T>
+    requires(!has_repr_v<T>)
+#else
 template <typename T, ENABLE_IF_T(!has_repr_v<T>)>
+#endif
 inline std::string repr(const T& t) {
     return internal_repr::type_str(t) + internal_repr::initializer_str(t);
 }
+#if __cplusplus >= 202002L
+template <typename T>
+    requires(has_repr_v<T>)
+#else
 template <typename T, ENABLE_IF_T(has_repr_v<T>)>
+#endif
 inline std::string repr(const T& t) {
     return t.repr();
 }

@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/27998142f20ef4e094add3b53cc9c070db4ddbf8/src/utility/range.hpp
+// https://github.com/shogo314/shogo-library/blob/9a3850ecb2614059a50786efbc668c34530bbd74/src/utility/range.hpp
 
 /**
  * @file range.hpp
@@ -17,7 +17,7 @@
 struct Range {
    public:
     using value_type = long long;
-    using const_reference = const value_type&;
+    using const_reference = value_type;
     using size_type = long long;
     using difference_type = std::ptrdiff_t;
 
@@ -71,42 +71,35 @@ struct Range {
        public:
         using difference_type = Range::difference_type;
         using value_type = Range::value_type;
-        using pointer = const Range::value_type*;
-        using reference = const Range::value_type&;
+        using pointer = void;
+        using reference = Range::const_reference;
         using iterator_category = std::random_access_iterator_tag;
 
        private:
-        const Range& range;
-        value_type value;
+        value_type first = 0, stop = 0, step = 1, value = 0;
 
         constexpr bool same_range(const const_iterator& o) const noexcept {
-            return range.start == o.range.start && range.stop == o.range.stop && range.step == o.range.step;
+            return first == o.first && stop == o.stop && step == o.step;
         }
 
        public:
-        constexpr const_iterator(const Range& _range, value_type _value) noexcept
-            : range(_range), value(_value) {}
-        constexpr const_iterator(const const_iterator& o) noexcept
-            : range(o.range), value(o.value) {}
+        constexpr const_iterator() noexcept = default;
+        constexpr const_iterator(const Range& range, value_type value) noexcept
+            : first(range.start), stop(range.stop), step(range.step), value(value) {}
         constexpr reference base() const noexcept {
             return value;
         }
-        constexpr const_iterator& operator=(const const_iterator& o) {
-            assert(same_range(o));
-            value = o.value;
-            return *this;
-        };
         constexpr const_iterator& operator++() noexcept {
-            value += range.step;
+            value += step;
             return *this;
         }
         constexpr const_iterator operator++(int) noexcept {
             const_iterator ret(*this);
-            value += range.step;
+            value += step;
             return ret;
         }
         constexpr const_iterator& operator+=(difference_type _n) noexcept {
-            value += _n * range.step;
+            value += _n * step;
             return *this;
         }
         constexpr friend const_iterator operator+(const const_iterator& i, difference_type _n) noexcept {
@@ -120,16 +113,16 @@ struct Range {
             return ret;
         }
         constexpr const_iterator& operator--() noexcept {
-            value -= range.step;
+            value -= step;
             return *this;
         }
         constexpr const_iterator operator--(int) noexcept {
             const_iterator ret(*this);
-            value -= range.step;
+            value -= step;
             return ret;
         }
         constexpr const_iterator& operator-=(difference_type _n) noexcept {
-            value -= _n * range.step;
+            value -= _n * step;
             return *this;
         }
         constexpr friend const_iterator operator-(const const_iterator& i, difference_type _n) noexcept {
@@ -137,6 +130,7 @@ struct Range {
             ret -= _n;
             return ret;
         }
+        constexpr reference operator[](difference_type i) const noexcept { return value + i * step; }
         constexpr reference operator*() const noexcept {
             return value;
         }
@@ -146,12 +140,19 @@ struct Range {
         constexpr friend bool operator==(const const_iterator& a, const const_iterator& b) noexcept {
             return !(a != b);
         }
+        constexpr friend bool operator<(const const_iterator& a, const const_iterator& b) noexcept {
+            assert(a.same_range(b));
+            return a.step > 0 ? a.value < b.value : a.value > b.value;
+        }
+        constexpr friend bool operator>(const const_iterator& a, const const_iterator& b) noexcept { return b < a; }
+        constexpr friend bool operator<=(const const_iterator& a, const const_iterator& b) noexcept { return !(b < a); }
+        constexpr friend bool operator>=(const const_iterator& a, const const_iterator& b) noexcept { return !(a < b); }
         constexpr friend difference_type operator-(const const_iterator& a, const const_iterator& b) {
             assert(a.same_range(b));
-            if (a.range.step > 0) {
-                return (a.value - b.value) / a.range.step;
+            if (a.step > 0) {
+                return (a.value - b.value) / a.step;
             } else {
-                return (b.value - a.value) / (-a.range.step);
+                return (b.value - a.value) / (-a.step);
             }
         }
     };
