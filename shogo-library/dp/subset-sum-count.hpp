@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "../math/fps.hpp"
-// https://github.com/shogo314/shogo-library/blob/b48c9d4e216e88f98508754641ece058498659e6/src/dp/subset-sum-count.hpp
+// https://github.com/shogo314/shogo-library/blob/9bc3e46b77081cb98f6fa36dd27a8ecbc4bcacd2/src/dp/subset-sum-count.hpp
 
 /**
  * @brief 和が s になる部分集合 (各要素は 1 回まで) の個数を、s = 0, 1, ..., S について求める (DP) O(N S)

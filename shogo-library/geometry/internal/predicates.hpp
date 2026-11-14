@@ -9,7 +9,7 @@
 #include <type_traits>
 
 #include "../vector.hpp"
-// https://github.com/shogo314/shogo-library/blob/b48c9d4e216e88f98508754641ece058498659e6/src/geometry/internal/predicates.hpp
+// https://github.com/shogo314/shogo-library/blob/9bc3e46b77081cb98f6fa36dd27a8ecbc4bcacd2/src/geometry/internal/predicates.hpp
 
 namespace internal_predicates {
 // 整数座標の外積・体積の計算に使う型 (座標が 1e9 なら体積は 1e27 程度になる)

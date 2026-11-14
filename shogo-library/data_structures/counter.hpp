@@ -17,7 +17,7 @@
 #include <vector>
 
 #include "../utility/traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/b48c9d4e216e88f98508754641ece058498659e6/src/data_structures/counter.hpp
+// https://github.com/shogo314/shogo-library/blob/9bc3e46b77081cb98f6fa36dd27a8ecbc4bcacd2/src/data_structures/counter.hpp
 
 template <typename T = long long>
 struct Counter {
@@ -35,7 +35,7 @@ struct Counter {
     std::set<value_type, CompareFrequency> frequency;
 
    public:
-    void inc(const key_type& key, const mapped_type& t) {
+    void inc(const key_type& key, const mapped_type& t = 1) {
         set(key, get(key) + t);
     }
     Counter() = default;
@@ -54,7 +54,7 @@ struct Counter {
 #endif
     explicit Counter(C&& v) {
         for (const key_type& a : v) {
-            inc(a, 1);
+            inc(a);
         }
     }
     Counter(std::initializer_list<value_type> init) {

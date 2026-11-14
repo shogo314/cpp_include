@@ -13,7 +13,7 @@
 
 #include "../algebra/monoid.hpp"
 #include "../geometry/rectangle.hpp"
-// https://github.com/shogo314/shogo-library/blob/b48c9d4e216e88f98508754641ece058498659e6/src/data_structures/segtree-2d.hpp
+// https://github.com/shogo314/shogo-library/blob/9bc3e46b77081cb98f6fa36dd27a8ecbc4bcacd2/src/data_structures/segtree-2d.hpp
 
 /**
  * @brief 2次元セグメント木 (更新する点を先読みする領域木)

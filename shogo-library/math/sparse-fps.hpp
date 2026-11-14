@@ -13,7 +13,7 @@
 #include "combinatorics.hpp"
 #include "fps.hpp"
 #include "modular-arithmetic.hpp"
-// https://github.com/shogo314/shogo-library/blob/b48c9d4e216e88f98508754641ece058498659e6/src/math/sparse-fps.hpp
+// https://github.com/shogo314/shogo-library/blob/9bc3e46b77081cb98f6fa36dd27a8ecbc4bcacd2/src/math/sparse-fps.hpp
 
 namespace internal_sparse_fps {
 // f の 0 でない項 (次数, 係数) を、次数 min_deg 以上のものだけ集める

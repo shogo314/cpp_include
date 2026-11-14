@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "graph.hpp"
-// https://github.com/shogo314/shogo-library/blob/b48c9d4e216e88f98508754641ece058498659e6/src/graph/eulerian-trail.hpp
+// https://github.com/shogo314/shogo-library/blob/9bc3e46b77081cb98f6fa36dd27a8ecbc4bcacd2/src/graph/eulerian-trail.hpp
 
 namespace internal_eulerian_trail {
 

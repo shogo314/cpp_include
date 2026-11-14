@@ -11,7 +11,7 @@
 #include "internal/predicates.hpp"
 #include "segment.hpp"
 #include "vector.hpp"
-// https://github.com/shogo314/shogo-library/blob/b48c9d4e216e88f98508754641ece058498659e6/src/geometry/triangle.hpp
+// https://github.com/shogo314/shogo-library/blob/9bc3e46b77081cb98f6fa36dd27a8ecbc4bcacd2/src/geometry/triangle.hpp
 
 /**
  * @brief 一直線上にない 3 頂点で表す三角形。等値比較では頂点の順序を無視する
