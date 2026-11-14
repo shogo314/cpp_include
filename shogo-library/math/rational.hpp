@@ -13,7 +13,7 @@
 #include <utility>
 
 #include "../base/functions.hpp"
-// https://github.com/shogo314/shogo-library/blob/9a3850ecb2614059a50786efbc668c34530bbd74/src/math/rational.hpp
+// https://github.com/shogo314/shogo-library/blob/adb06bae4b0e202b3a1fe53ef9f9a1b30077d8cc/src/math/rational.hpp
 
 /**
  * @brief 有理数 (分数)
