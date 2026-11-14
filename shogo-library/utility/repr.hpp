@@ -16,13 +16,11 @@
 #include <vector>
 
 #include "traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/adb06bae4b0e202b3a1fe53ef9f9a1b30077d8cc/src/utility/repr.hpp
+// https://github.com/shogo314/shogo-library/blob/b48c9d4e216e88f98508754641ece058498659e6/src/utility/repr.hpp
 
 namespace internal_repr {
 
-///////////////////////////////////////////////////////////////////
-/////////////////////////// declaration ///////////////////////////
-///////////////////////////////////////////////////////////////////
+// declaration
 
 inline std::string type_str(const char*);
 inline std::string initializer_str(const char*);
@@ -115,9 +113,7 @@ inline std::string initializer_str(const std::array<T, N>&);
 template <typename T, std::size_t N>
 inline std::string repr(const std::array<T, N>&);
 
-///////////////////////////////////////////////////////////////////
-/////////////////////////// definition ////////////////////////////
-///////////////////////////////////////////////////////////////////
+// definition
 
 #if __cplusplus >= 202002L
 template <typename T>

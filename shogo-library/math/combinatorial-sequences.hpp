@@ -12,7 +12,7 @@
 #include "convolution.hpp"
 #include "fps.hpp"
 #include "multipoint.hpp"
-// https://github.com/shogo314/shogo-library/blob/adb06bae4b0e202b3a1fe53ef9f9a1b30077d8cc/src/math/combinatorial-sequences.hpp
+// https://github.com/shogo314/shogo-library/blob/b48c9d4e216e88f98508754641ece058498659e6/src/math/combinatorial-sequences.hpp
 
 /**
  * @brief 分割数 p(0), ..., p(n) (n を正の整数の和に分ける方法の数。和の順番は区別しない) O(n log n)

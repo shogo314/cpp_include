@@ -15,7 +15,7 @@
 
 #include "../algebra/monoid.hpp"
 #include "../utility/traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/adb06bae4b0e202b3a1fe53ef9f9a1b30077d8cc/src/data_structures/segtree.hpp
+// https://github.com/shogo314/shogo-library/blob/b48c9d4e216e88f98508754641ece058498659e6/src/data_structures/segtree.hpp
 
 /**
  * @brief セグメント木

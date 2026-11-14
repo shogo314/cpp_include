@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/adb06bae4b0e202b3a1fe53ef9f9a1b30077d8cc/src/dp/longest-common-subsequence.hpp
+// https://github.com/shogo314/shogo-library/blob/b48c9d4e216e88f98508754641ece058498659e6/src/dp/longest-common-subsequence.hpp
 
 /**
  * @file longest-common-subsequence.hpp
@@ -59,7 +59,6 @@ LongestCommonSubsequence longest_common_subsequence_restore(const R1& s, const R
             dp[i][j] = a[i - 1] == b[j - 1] ? dp[i - 1][j - 1] + 1 : std::max(dp[i - 1][j], dp[i][j - 1]);
         }
     }
-    // 後ろからたどる
     std::vector<std::pair<long long, long long>> res;
     for (long long i = n, j = m; i > 0 && j > 0;) {
         if (a[i - 1] == b[j - 1]) {

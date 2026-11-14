@@ -14,7 +14,7 @@
 
 #include "../utility/range.hpp"
 #include "graph.hpp"
-// https://github.com/shogo314/shogo-library/blob/adb06bae4b0e202b3a1fe53ef9f9a1b30077d8cc/src/graph/grid-graph.hpp
+// https://github.com/shogo314/shogo-library/blob/b48c9d4e216e88f98508754641ece058498659e6/src/graph/grid-graph.hpp
 
 /**
  * @brief 壁以外のマスを頂点とする、4 近傍・重み 1 の無向グラフ

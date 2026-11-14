@@ -1,22 +1,22 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/adb06bae4b0e202b3a1fe53ef9f9a1b30077d8cc/src/dp/maximum-subarray.hpp
+// https://github.com/shogo314/shogo-library/blob/b48c9d4e216e88f98508754641ece058498659e6/src/dp/maximum-subarray.hpp
 
 /**
  * @file maximum-subarray.hpp
- * @brief 連続部分列の和の最大値 (Kadane のアルゴリズム)
+ * @brief 部分配列の和の最大値 (Kadane のアルゴリズム)
  */
 
 #include <cassert>
 
 /**
- * @brief 空でない連続部分列の和の最大値 O(n)
+ * @brief 空でない部分配列の和の最大値 O(n)
  * @param v begin()、end() を持つ空でないコンテナ
  */
 template <class C>
 constexpr typename C::value_type maximum_subarray(const C& v) {
     assert(!v.empty());
     auto itr = v.begin();
-    // tmp は、いま見ている要素で終わる連続部分列の和の最大値
+    // tmp は、いま見ている要素で終わる部分配列の和の最大値
     typename C::value_type tmp = *itr++;
     typename C::value_type res = tmp;
     while (itr != v.end()) {
@@ -29,9 +29,9 @@ constexpr typename C::value_type maximum_subarray(const C& v) {
 }
 
 /**
- * @brief 空の部分列 (和 init) も許した連続部分列の和の最大値 O(n)
+ * @brief 空の部分配列 (和 init) も許した部分配列の和の最大値 O(n)
  * @param v begin()、end() を持つコンテナ
- * @param init 空の部分列の和
+ * @param init 空の部分配列の和
  */
 template <class C>
 constexpr typename C::value_type maximum_subarray(const C& v, typename C::value_type init) {

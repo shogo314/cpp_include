@@ -15,8 +15,9 @@
 #include <type_traits>
 #include <vector>
 
+#include "../base/functions.hpp"
 #include "traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/adb06bae4b0e202b3a1fe53ef9f9a1b30077d8cc/src/utility/container_func.hpp
+// https://github.com/shogo314/shogo-library/blob/b48c9d4e216e88f98508754641ece058498659e6/src/utility/container_func.hpp
 
 #if __cplusplus >= 202002L
 #define METHOD_EXPAND(func)         \
@@ -297,9 +298,7 @@ inline constexpr mem_value_type<C> median(const C& v) {
     if (v.size() & 1) {
         return v[u[v.size() / 2]];
     }
-    // C++20
-    // return std::midpoint(v[u[v.size() / 2]], v[u[v.size() / 2 - 1]]);
-    return (v[u[v.size() / 2]] + v[u[v.size() / 2 - 1]]) / 2;
+    return midpoint(v[u[v.size() / 2 - 1]], v[u[v.size() / 2]]);
 }
 
 // x が最初に現れる位置。なければ -1

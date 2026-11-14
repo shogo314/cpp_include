@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "suffix-array.hpp"
-// https://github.com/shogo314/shogo-library/blob/adb06bae4b0e202b3a1fe53ef9f9a1b30077d8cc/src/string/longest-common-substring.hpp
+// https://github.com/shogo314/shogo-library/blob/b48c9d4e216e88f98508754641ece058498659e6/src/string/longest-common-substring.hpp
 
 /**
  * @brief longest_common_substring・longest_repeated_substring・longest_non_overlapping_repeated_substring の結果

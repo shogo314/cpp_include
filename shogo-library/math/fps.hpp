@@ -18,7 +18,7 @@
 #include "combinatorics.hpp"
 #include "convolution.hpp"
 #include "modular-arithmetic.hpp"
-// https://github.com/shogo314/shogo-library/blob/adb06bae4b0e202b3a1fe53ef9f9a1b30077d8cc/src/math/fps.hpp
+// https://github.com/shogo314/shogo-library/blob/b48c9d4e216e88f98508754641ece058498659e6/src/math/fps.hpp
 
 template <typename mint>
 struct FPS;

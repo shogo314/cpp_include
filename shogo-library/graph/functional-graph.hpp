@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/shogo314/shogo-library/blob/adb06bae4b0e202b3a1fe53ef9f9a1b30077d8cc/src/graph/functional-graph.hpp
+// https://github.com/shogo314/shogo-library/blob/b48c9d4e216e88f98508754641ece058498659e6/src/graph/functional-graph.hpp
 
 /**
  * @file functional-graph.hpp
@@ -26,7 +26,7 @@ class FunctionalGraph {
     std::vector<std::vector<long long>> _cycles;   //!< 各連結成分のサイクル
     std::vector<long long> _group_id;              //!< その頂点が属する連結成分のindex
     std::vector<long long> _root_index;            //!< rootのcycles上のindex
-    std::vector<std::vector<long long>> doubling;  //!< DoublingClimbTree
+    std::vector<std::vector<long long>> doubling;  //!< doubling[v][k] は v から 2^k 回進んだ頂点
 
     bool built = false;
 
