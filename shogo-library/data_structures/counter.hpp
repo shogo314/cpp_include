@@ -17,7 +17,7 @@
 #include <vector>
 
 #include "../utility/traits.hpp"
-// https://github.com/shogo314/shogo-library/blob/9bc3e46b77081cb98f6fa36dd27a8ecbc4bcacd2/src/data_structures/counter.hpp
+// https://github.com/shogo314/shogo-library/blob/4bf7186583aab637052483a0405b096031a02ca0/src/data_structures/counter.hpp
 
 template <typename T = long long>
 struct Counter {
@@ -37,6 +37,9 @@ struct Counter {
    public:
     void inc(const key_type& key, const mapped_type& t = 1) {
         set(key, get(key) + t);
+    }
+    void dec(const key_type& key, const mapped_type& t = 1) {
+        set(key, get(key) - t);
     }
     Counter() = default;
     explicit Counter(const key_type& x) { set(x, 1); }
@@ -80,7 +83,7 @@ struct Counter {
             return *this;
         }
         for (const auto& [i, c] : o.data) {
-            inc(i, -c);
+            dec(i, c);
         }
         return *this;
     }
@@ -174,7 +177,7 @@ struct Counter {
             return *this;
         }
         CounterReference& operator-=(const mapped_type& x) {
-            base.inc(key, -x);
+            base.dec(key, x);
             return *this;
         }
         operator mapped_type() const {

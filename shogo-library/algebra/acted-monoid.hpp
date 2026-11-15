@@ -24,7 +24,7 @@
 #include <utility>
 
 #include "monoid.hpp"
-// https://github.com/shogo314/shogo-library/blob/9bc3e46b77081cb98f6fa36dd27a8ecbc4bcacd2/src/algebra/acted-monoid.hpp
+// https://github.com/shogo314/shogo-library/blob/4bf7186583aab637052483a0405b096031a02ca0/src/algebra/acted-monoid.hpp
 
 #if __cplusplus < 202002L
 namespace internal_acted_monoid {

@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "../algebra/group.hpp"
-// https://github.com/shogo314/shogo-library/blob/9bc3e46b77081cb98f6fa36dd27a8ecbc4bcacd2/src/data_structures/merge-sort-tree.hpp
+// https://github.com/shogo314/shogo-library/blob/4bf7186583aab637052483a0405b096031a02ca0/src/data_structures/merge-sort-tree.hpp
 
 /**
  * @brief 区間の閾値以内の値の積

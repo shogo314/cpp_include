@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "tree.hpp"
-// https://github.com/shogo314/shogo-library/blob/9bc3e46b77081cb98f6fa36dd27a8ecbc4bcacd2/src/graph/tree_util.hpp
+// https://github.com/shogo314/shogo-library/blob/4bf7186583aab637052483a0405b096031a02ca0/src/graph/tree_util.hpp
 
 namespace internal_tree_util {
 

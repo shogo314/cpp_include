@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "../utility/range.hpp"
-// https://github.com/shogo314/shogo-library/blob/9bc3e46b77081cb98f6fa36dd27a8ecbc4bcacd2/src/dp/largest-rectangle.hpp
+// https://github.com/shogo314/shogo-library/blob/4bf7186583aab637052483a0405b096031a02ca0/src/dp/largest-rectangle.hpp
 
 /**
  * @brief ヒストグラム (幅 1 の棒が並んだもの) に含まれる長方形の面積の最大値 O(n)
